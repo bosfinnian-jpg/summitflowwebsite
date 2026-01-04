@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SummitFlow | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}:root{--bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;--border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);--text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;--calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);--emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);--success:#10B981;--success-glow:rgba(16,185,129,0.25);--warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);--danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);--purple:#8B5CF6;--radius:16px;--radius-sm:10px}body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh}#landing{position:fixed;inset:0;background:var(--bg-deep);display:flex;align-items:center;justify-content:center;z-index:9999;transition:all .6s}#landing.hidden{opacity:0;pointer-events:none}.landing-content{text-align:center;max-width:700px;padding:2rem;position:relative}.landing-content::before{content:'';position:absolute;top:50%;left:50%;width:500px;height:500px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(-50%,-50%);z-index:-1;animation:pulse 4s infinite}@keyframes pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:.3;transform:translate(-50%,-50%) scale(1.2)}}.landing-stats{display:flex;justify-content:center;gap:2rem;margin-bottom:2rem}.landing-stat-value{font-size:2.5rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--calls)}.landing-stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase}.quote{font-size:1.75rem;font-weight:600;margin-bottom:.75rem}.quote-author{font-size:.85rem;color:var(--calls);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2.5rem}.enter-btn{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none;padding:1rem 2.5rem;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;font-family:inherit}.enter-btn:hover{transform:translateY(-3px);box-shadow:0 15px 40px var(--calls-glow)}.nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}.nav-left{display:flex;align-items:center;gap:2rem}.logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center}.nav-tabs{display:flex;gap:.5rem}.nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}.nav-tab:hover{background:var(--surface);color:var(--text)}.nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}.nav-right{display:flex;align-items:center;gap:1rem}.date{font-size:.9rem;color:var(--text-secondary)}.session-btn{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;border:none;padding:.75rem 1.5rem;font-size:.875rem;font-weight:700;border-radius:50px;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-family:inherit;transition:all .2s}.session-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--success-glow)}.session-btn.active{background:var(--danger);animation:sessionPulse 2s infinite}@keyframes sessionPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.3)}50%{box-shadow:0 0 40px rgba(239,68,68,.5)}}#app{opacity:0;transition:opacity .5s;padding-top:70px}#app.visible{opacity:1}.main{max-width:1800px;margin:0 auto;padding:1.5rem}.main-grid{display:grid;grid-template-columns:1fr 380px;gap:1.5rem}.session-panel{background:var(--bg-card);border:2px solid var(--success);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:none}.session-panel.active{display:block;animation:slideDown .3s}@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}.session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}.session-title{display:flex;align-items:center;gap:.75rem;font-size:1.125rem;font-weight:600}.live-dot{width:10px;height:10px;background:var(--success);border-radius:50%;animation:blink 1s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}.session-timer{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:600;color:var(--success)}.session-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.session-stat{background:var(--surface);border-radius:var(--radius-sm);padding:1rem;text-align:center}.session-stat-value{font-size:2rem;font-weight:700;font-family:'JetBrains Mono',monospace}.session-stat-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase}.session-stat.calls .session-stat-value{color:var(--calls)}.session-stat.emails .session-stat-value{color:var(--emails)}.session-stat.meetings .session-stat-value{color:var(--success)}.session-stat.callbacks .session-stat-value{color:var(--warning)}.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.section-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem}.queue-count{background:var(--surface);padding:.25rem .75rem;border-radius:50px;font-size:.8rem;font-family:'JetBrains Mono',monospace;color:var(--text-secondary)}.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;gap:1rem}.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}.stat-value{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace}.stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase}.current-lead{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:2px solid var(--calls);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}.current-lead::before{content:'';position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(50%,-50%)}.current-lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;position:relative}.current-lead-company{font-size:1.5rem;font-weight:700}.current-lead-contact{font-size:.9rem;color:var(--text-secondary);margin-top:.25rem}.lead-index{background:var(--calls);color:#fff;padding:.375rem .875rem;border-radius:50px;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace}.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}.contact-item{display:flex;align-items:center;gap:.75rem}.contact-icon{width:40px;height:40px;background:var(--surface);border-radius:10px;display:flex;align-items:center;justify-content:center}.contact-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase}.contact-value{font-size:.95rem;font-weight:500}.contact-value a{color:var(--text);text-decoration:none}.contact-value a:hover{color:var(--calls)}.quick-log{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.quick-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:1rem;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:.375rem;transition:all .2s}.quick-btn:hover{border-color:var(--calls);background:var(--calls-glow)}.quick-btn.success:hover{border-color:var(--success);background:var(--success-glow)}.quick-btn.warning:hover{border-color:var(--warning);background:var(--warning-glow)}.quick-btn:disabled{opacity:.5;cursor:not-allowed}.quick-icon{font-size:1.5rem}.lead-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}.nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.75rem 1.25rem;border-radius:50px;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.5rem;transition:all .2s}.nav-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}.nav-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);border:none;color:#fff}.nav-btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--calls-glow)}.empty-queue{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--radius);padding:3rem 2rem;text-align:center}.empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.5}.empty-title{font-size:1.125rem;font-weight:600;margin-bottom:.5rem}.empty-text{color:var(--text-secondary);margin-bottom:1.5rem}.btn{padding:.75rem 1.5rem;font-size:.875rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none}.btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none}.followups-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem}.followups-list{display:flex;flex-direction:column;gap:.75rem;max-height:300px;overflow-y:auto}.followup-item{display:flex;align-items:center;gap:1rem;padding:.875rem;background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s}.followup-item:hover{background:var(--bg-elevated)}.followup-time{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;color:var(--warning);min-width:60px}.followup-time.overdue{color:var(--danger)}.followup-company{font-weight:600;font-size:.9rem}.followup-stage{font-size:.75rem;color:var(--text-secondary)}.followup-action{background:var(--calls-glow);border:none;color:var(--calls);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}.followup-action:hover{background:var(--calls);color:#fff}.sidebar{display:flex;flex-direction:column;gap:1.25rem}.mission-card{background:linear-gradient(135deg,var(--calls),#FF8F6B);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden}.mission-card::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 60%)}.mission-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;opacity:.8;margin-bottom:.75rem}.mission-text{font-size:1.125rem;font-weight:600;line-height:1.4;position:relative}.target-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}.target-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.target-title{font-weight:700}.target-status{font-size:.75rem;font-weight:600;padding:.375rem .75rem;border-radius:50px}.target-status.good{background:var(--success-glow);color:var(--success)}.target-status.warning{background:var(--warning-glow);color:var(--warning)}.target-progress{margin-bottom:1.5rem}.progress-header{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.5rem}.progress-value{font-family:'JetBrains Mono',monospace;font-weight:600}.progress-bar{height:8px;background:var(--surface);border-radius:4px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--calls),var(--success));border-radius:4px;transition:width .5s}.target-items{display:flex;flex-direction:column;gap:.75rem}.target-item{display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:var(--surface);border-radius:8px}.target-item-left{display:flex;align-items:center;gap:.75rem}.target-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem}.target-check.done{background:var(--success);border-color:var(--success);color:#fff}.target-item-text{font-size:.85rem}.target-item-value{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600}.pipeline-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}.pipeline-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.pipeline-stages{display:flex;flex-direction:column;gap:.5rem}.pipeline-stage{display:flex;align-items:center;gap:.75rem;padding:.5rem 0}.pipeline-stage-icon{font-size:1rem;width:24px;text-align:center}.pipeline-stage-name{flex:1;font-size:.85rem;color:var(--text-secondary)}.pipeline-stage-count{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.9rem}.achievements-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}.achievements-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.achievement{display:flex;flex-direction:column;align-items:center;gap:.375rem;padding:.75rem;background:var(--surface);border-radius:var(--radius-sm);opacity:.4;transition:all .2s}.achievement.unlocked{opacity:1;background:var(--success-glow)}.achievement-icon{font-size:1.5rem}.achievement-name{font-size:.65rem;text-align:center;color:var(--text-secondary)}.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.celebration{position:fixed;inset:0;pointer-events:none;z-index:9999}.confetti{position:absolute;width:10px;height:10px;animation:confettiFall 3s forwards}@keyframes confettiFall{0%{transform:translateY(-100vh) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}@media(max-width:1200px){.main-grid{grid-template-columns:1fr}}@media(max-width:768px){.stats-row,.session-stats,.quick-log{grid-template-columns:repeat(2,1fr)}.contact-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div id="landing">
+        <div class="landing-content">
+            <div class="landing-stats">
+                <div><div class="landing-stat-value" id="l-calls">0</div><div class="landing-stat-label">Calls</div></div>
+                <div><div class="landing-stat-value" id="l-meetings">0</div><div class="landing-stat-label">Meetings</div></div>
+                <div><div class="landing-stat-value" id="l-clients">0</div><div class="landing-stat-label">Clients</div></div>
+            </div>
+            <div class="quote" id="quote">"Every dial gets you closer."</div>
+            <div class="quote-author">— Jordan Platten</div>
+            <button class="enter-btn" onclick="enter()">Enter Command Center →</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a href="#" class="logo"><div class="logo-icon">⚡</div>SummitFlow</a>
+            <div class="nav-tabs">
+                <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
+                <a href="summitflow-pipeline.html" class="nav-tab">Pipeline</a>
+                <span class="nav-tab active">Dashboard</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="date" id="date"></div>
+            <button class="session-btn" id="session-btn" onclick="toggleSession()">▶ Start Session</button>
+        </div>
+    </nav>
+
+    <div id="app">
+        <main class="main">
+            <div class="session-panel" id="session-panel">
+                <div class="session-header">
+                    <div class="session-title"><span class="live-dot"></span>Session Active</div>
+                    <div class="session-timer" id="timer">00:00:00</div>
+                </div>
+                <div class="session-stats">
+                    <div class="session-stat calls"><div class="session-stat-value" id="s-calls">0</div><div class="session-stat-label">Calls</div></div>
+                    <div class="session-stat emails"><div class="session-stat-value" id="s-emails">0</div><div class="session-stat-label">Emails</div></div>
+                    <div class="session-stat meetings"><div class="session-stat-value" id="s-meetings">0</div><div class="session-stat-label">Meetings</div></div>
+                    <div class="session-stat callbacks"><div class="session-stat-value" id="s-callbacks">0</div><div class="session-stat-label">Callbacks</div></div>
+                </div>
+            </div>
+
+            <div class="main-grid">
+                <div>
+                    <div class="stats-row">
+                        <div class="stat-card"><div class="stat-icon" style="background:var(--calls-glow)">📞</div><div><div class="stat-value" id="total-calls">0</div><div class="stat-label">Total Calls</div></div></div>
+                        <div class="stat-card"><div class="stat-icon" style="background:var(--emails-glow)">📧</div><div><div class="stat-value" id="total-emails">0</div><div class="stat-label">Total Emails</div></div></div>
+                        <div class="stat-card"><div class="stat-icon" style="background:var(--success-glow)">📅</div><div><div class="stat-value" id="total-meetings">0</div><div class="stat-label">Meetings</div></div></div>
+                        <div class="stat-card"><div class="stat-icon" style="background:rgba(139,92,246,.25)">🏆</div><div><div class="stat-value" id="total-clients">0/5</div><div class="stat-label">Clients</div></div></div>
+                    </div>
+
+                    <div class="section-header"><div class="section-title">🎯 Current Lead</div><div class="queue-count" id="queue-count">0 in queue</div></div>
+                    <div id="current-lead"></div>
+
+                    <div class="followups-panel">
+                        <div class="section-header"><div class="section-title">⏰ Today's Follow-ups</div><span class="queue-count" id="followups-count">0</span></div>
+                        <div class="followups-list" id="followups-list"></div>
+                    </div>
+                </div>
+
+                <div class="sidebar">
+                    <div class="mission-card"><div class="mission-label">Today's Mission</div><div class="mission-text" id="mission">Hit 100 dials. Every call counts.</div></div>
+                    
+                    <div class="target-card">
+                        <div class="target-header"><div class="target-title">📊 Weekly Target</div><div class="target-status good" id="target-status">On Track</div></div>
+                        <div class="target-progress">
+                            <div class="progress-header"><span>Progress</span><span class="progress-value"><span id="weekly-calls">0</span>/150</span></div>
+                            <div class="progress-bar"><div class="progress-fill" id="weekly-progress" style="width:0%"></div></div>
+                        </div>
+                        <div class="target-items">
+                            <div class="target-item"><div class="target-item-left"><div class="target-check" id="check-wed">✓</div><div class="target-item-text">Wednesday</div></div><div class="target-item-value" id="wed-calls">0/100</div></div>
+                            <div class="target-item"><div class="target-item-left"><div class="target-check" id="check-thu">✓</div><div class="target-item-text">Thursday</div></div><div class="target-item-value" id="thu-calls">0/50</div></div>
+                            <div class="target-item"><div class="target-item-left"><div class="target-check" id="check-streak">✓</div><div class="target-item-text">Streak</div></div><div class="target-item-value" id="streak">0</div></div>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-card">
+                        <div class="pipeline-header"><div class="target-title">📈 Pipeline</div><a href="summitflow-pipeline.html" class="btn" style="padding:.5rem 1rem;font-size:.75rem">View →</a></div>
+                        <div class="pipeline-stages" id="pipeline-stages"></div>
+                    </div>
+
+                    <div class="achievements-card">
+                        <div class="target-title" style="margin-bottom:1rem">🏆 Achievements</div>
+                        <div class="achievements-grid" id="achievements"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeG1lb2V1Z3ltbGdhZGFqd21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NTcxNjEsImV4cCI6MjA4MzAzMzE2MX0.ciWAoTstogM4MWrK73q9VasVWECa9kucCoHlgkyHLIw';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const STAGES = [{id:'prospecting',name:'Prospecting',icon:'🎯'},{id:'outreach',name:'Outreach',icon:'📤'},{id:'interested',name:'Interested',icon:'🔥'},{id:'meeting',name:'Meeting',icon:'📅'},{id:'proposal',name:'Proposal',icon:'📋'},{id:'negotiation',name:'Negotiation',icon:'🤝'}];
+        const ACHIEVEMENTS = [{id:'first_call',name:'First Call',icon:'📞',fn:s=>s.calls>=1},{id:'ten_calls',name:'10 Calls',icon:'🔥',fn:s=>s.calls>=10},{id:'fifty',name:'50 Calls',icon:'⚡',fn:s=>s.calls>=50},{id:'century',name:'Century',icon:'💯',fn:s=>s.calls>=100},{id:'first_meeting',name:'1st Meeting',icon:'📅',fn:s=>s.meetings>=1},{id:'five_meetings',name:'5 Meetings',icon:'🌟',fn:s=>s.meetings>=5},{id:'first_client',name:'1st Client',icon:'🏆',fn:s=>s.clients>=1},{id:'goal',name:'5 Clients',icon:'👑',fn:s=>s.clients>=5}];
+        const QUOTES = ["Every dial gets you closer.","The fortune is in the follow-up.","80% of sales require 5 follow-ups.","Speed to lead is everything.","This is where most people quit. You're not most people."];
+
+        let leads=[],logs=[],queue=[],currentIdx=0,sessionActive=false,sessionStart=null,sessionTimer=null,sessionData={calls:0,emails:0,meetings:0,callbacks:0};
+
+        document.addEventListener('DOMContentLoaded',load);
+
+        async function load(){
+            try{
+                const{data:ld}=await db.from('leads').select('*').order('created_at',{ascending:false});
+                leads=ld||[];
+                const{data:lg}=await db.from('daily_logs').select('*');
+                logs=lg||[];
+                queue=leads.filter(l=>l.stage==='prospecting'||l.stage==='outreach').slice(0,50).map(l=>l.id);
+                setDate();setQuote();renderLanding();renderStats();renderCurrent();renderFollowups();renderPipeline();renderAchievements();
+            }catch(e){console.error(e);toast('❌ Connection failed');}
+        }
+
+        function enter(){document.getElementById('landing').classList.add('hidden');setTimeout(()=>document.getElementById('app').classList.add('visible'),300);}
+        function setDate(){document.getElementById('date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});}
+        function setQuote(){document.getElementById('quote').textContent='"'+QUOTES[Math.floor(Math.random()*QUOTES.length)]+'"';}
+
+        function getStats(){
+            const calls=logs.reduce((s,l)=>s+(l.calls||0),0),emails=logs.reduce((s,l)=>s+(l.emails||0),0),meetings=logs.reduce((s,l)=>s+(l.meetings||0),0),clients=leads.filter(l=>l.stage==='won').length;
+            const ws=getWeekStart(),wl=logs.filter(l=>new Date(l.date)>=ws),wc=wl.reduce((s,l)=>s+(l.calls||0),0);
+            return{calls,emails,meetings,clients,weeklyCalls:wc};
+        }
+
+        function getWeekStart(){const n=new Date(),d=n.getDay(),diff=n.getDate()-d+(d===0?-6:1);const m=new Date(n.setDate(diff));m.setHours(0,0,0,0);return m;}
+
+        function renderLanding(){const s=getStats();document.getElementById('l-calls').textContent=s.calls;document.getElementById('l-meetings').textContent=s.meetings;document.getElementById('l-clients').textContent=s.clients;}
+
+        function renderStats(){
+            const s=getStats();
+            document.getElementById('total-calls').textContent=s.calls;
+            document.getElementById('total-emails').textContent=s.emails;
+            document.getElementById('total-meetings').textContent=s.meetings;
+            document.getElementById('total-clients').textContent=s.clients+'/5';
+            document.getElementById('weekly-calls').textContent=s.weeklyCalls;
+            document.getElementById('weekly-progress').style.width=Math.min(s.weeklyCalls/150*100,100)+'%';
+            const ws=getWeekStart(),wl=logs.filter(l=>new Date(l.date)>=ws);
+            const wed=wl.find(l=>new Date(l.date).getDay()===3),thu=wl.find(l=>new Date(l.date).getDay()===4);
+            const wc=wed?.calls||0,tc=thu?.calls||0;
+            document.getElementById('wed-calls').textContent=wc+'/100';
+            document.getElementById('thu-calls').textContent=tc+'/50';
+            document.getElementById('check-wed').classList.toggle('done',wc>=100);
+            document.getElementById('check-thu').classList.toggle('done',tc>=50);
+            const streak=0;document.getElementById('streak').textContent=streak;
+            document.getElementById('check-streak').classList.toggle('done',streak>0);
+            const st=document.getElementById('target-status');
+            if(s.weeklyCalls>=150){st.textContent='Complete!';st.className='target-status good';}
+            else if(s.weeklyCalls>=75){st.textContent='On Track';st.className='target-status good';}
+            else{st.textContent='Behind';st.className='target-status warning';}
+        }
+
+        function renderCurrent(){
+            const c=document.getElementById('current-lead');
+            document.getElementById('queue-count').textContent=queue.length+' in queue';
+            if(!queue.length){c.innerHTML='<div class="empty-queue"><div class="empty-icon">📭</div><div class="empty-title">No leads in queue</div><div class="empty-text">Add leads from Pipeline or Leads Hub</div><a href="summitflow-leads-hub.html" class="btn primary">Go to Leads Hub</a></div>';return;}
+            const l=leads.find(x=>x.id===queue[currentIdx]);
+            if(!l){queue.splice(currentIdx,1);if(currentIdx>=queue.length)currentIdx=Math.max(0,queue.length-1);renderCurrent();return;}
+            c.innerHTML=`<div class="current-lead">
+                <div class="current-lead-header"><div><div class="current-lead-company">${l.company}</div>${l.contact?`<div class="current-lead-contact">${l.contact}</div>`:''}</div><div class="lead-index">${currentIdx+1} / ${queue.length}</div></div>
+                <div class="contact-grid">
+                    <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label">Phone</div><div class="contact-value">${l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'—'}</div></div></div>
+                    <div class="contact-item"><div class="contact-icon">📧</div><div><div class="contact-label">Email</div><div class="contact-value">${l.email?`<a href="mailto:${l.email}">${l.email}</a>`:'—'}</div></div></div>
+                    ${l.website?`<div class="contact-item"><div class="contact-icon">🌐</div><div><div class="contact-label">Website</div><div class="contact-value"><a href="${l.website.startsWith('http')?l.website:'https://'+l.website}" target="_blank">${l.website}</a></div></div></div>`:''}
+                    ${l.address?`<div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label">Address</div><div class="contact-value">${l.address}</div></div></div>`:''}
+                </div>
+                <div class="quick-log">
+                    <button class="quick-btn" onclick="logOutcome('no_answer')" ${!sessionActive?'disabled':''}><span class="quick-icon">📵</span>No Answer</button>
+                    <button class="quick-btn" onclick="logOutcome('voicemail')" ${!sessionActive?'disabled':''}><span class="quick-icon">📝</span>Voicemail</button>
+                    <button class="quick-btn" onclick="logOutcome('gatekeeper')" ${!sessionActive?'disabled':''}><span class="quick-icon">🚪</span>Gatekeeper</button>
+                    <button class="quick-btn" onclick="logOutcome('not_interested')" ${!sessionActive?'disabled':''}><span class="quick-icon">👎</span>Not Interested</button>
+                    <button class="quick-btn warning" onclick="logOutcome('callback')" ${!sessionActive?'disabled':''}><span class="quick-icon">⏰</span>Callback</button>
+                    <button class="quick-btn warning" onclick="logOutcome('interested')" ${!sessionActive?'disabled':''}><span class="quick-icon">🔥</span>Interested!</button>
+                    <button class="quick-btn success" onclick="logOutcome('meeting')" ${!sessionActive?'disabled':''}><span class="quick-icon">📅</span>Meeting!</button>
+                    <button class="quick-btn" onclick="logOutcome('email')" ${!sessionActive?'disabled':''}><span class="quick-icon">📧</span>Email Sent</button>
+                </div>
+                <div class="lead-nav">
+                    <button class="nav-btn" onclick="prev()" ${currentIdx===0?'disabled':''}>← Previous</button>
+                    <button class="nav-btn" onclick="skip()">Skip</button>
+                    <button class="nav-btn primary" onclick="next()" ${currentIdx>=queue.length-1?'disabled':''}>Next →</button>
+                </div>
+            </div>`;
+        }
+
+        async function logOutcome(o){
+            if(!sessionActive)return;
+            const lid=queue[currentIdx],l=leads.find(x=>x.id===lid);if(!l)return;
+            const type=o==='email'?'email':'call';
+            try{
+                await db.from('activities').insert({lead_id:lid,type,outcome:o,notes:'Logged during session'});
+                let upd={last_activity_at:new Date().toISOString()};
+                if(o==='interested'&&(l.stage==='prospecting'||l.stage==='outreach'))upd.stage='interested';
+                else if(o==='meeting')upd.stage='meeting';
+                else if(l.stage==='prospecting')upd.stage='outreach';
+                await db.from('leads').update(upd).eq('id',lid);
+                Object.assign(l,upd);
+                if(o==='email')sessionData.emails++;else sessionData.calls++;
+                if(o==='meeting'){sessionData.meetings++;celebrate();toast('🎉 MEETING BOOKED!');}
+                else if(o==='callback'){sessionData.callbacks++;toast('⏰ Callback scheduled');}
+                else if(o==='interested')toast('🔥 Interested!');
+                updateSession();
+                setTimeout(next,300);
+            }catch(e){console.error(e);toast('❌ Failed');}
+        }
+
+        function prev(){if(currentIdx>0){currentIdx--;renderCurrent();}}
+        function next(){if(currentIdx<queue.length-1){currentIdx++;renderCurrent();}}
+        function skip(){const id=queue.splice(currentIdx,1)[0];queue.push(id);if(currentIdx>=queue.length)currentIdx=0;renderCurrent();}
+
+        function toggleSession(){if(sessionActive)endSession();else startSession();}
+
+        function startSession(){
+            sessionActive=true;sessionStart=Date.now();sessionData={calls:0,emails:0,meetings:0,callbacks:0};
+            const btn=document.getElementById('session-btn');btn.classList.add('active');btn.innerHTML='⏹ End Session';
+            document.getElementById('session-panel').classList.add('active');
+            sessionTimer=setInterval(updateTimer,1000);
+            renderCurrent();toast('🎯 Session started!');
+        }
+
+        async function endSession(){
+            sessionActive=false;clearInterval(sessionTimer);
+            const btn=document.getElementById('session-btn');btn.classList.remove('active');btn.innerHTML='▶ Start Session';
+            document.getElementById('session-panel').classList.remove('active');
+            const today=new Date().toISOString().split('T')[0];
+            try{
+                const{data:existing}=await db.from('daily_logs').select('*').eq('date',today).single();
+                if(existing){
+                    await db.from('daily_logs').update({calls:(existing.calls||0)+sessionData.calls,emails:(existing.emails||0)+sessionData.emails,meetings:(existing.meetings||0)+sessionData.meetings,callbacks:(existing.callbacks||0)+sessionData.callbacks}).eq('id',existing.id);
+                    const l=logs.find(x=>x.date===today);if(l){l.calls=(l.calls||0)+sessionData.calls;l.emails=(l.emails||0)+sessionData.emails;l.meetings=(l.meetings||0)+sessionData.meetings;l.callbacks=(l.callbacks||0)+sessionData.callbacks;}
+                }else{
+                    const{data:newLog}=await db.from('daily_logs').insert({date:today,...sessionData}).select().single();
+                    logs.push(newLog);
+                }
+                renderStats();renderCurrent();renderAchievements();
+                toast(`✅ Saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
+            }catch(e){console.error(e);toast('❌ Save failed');}
+        }
+
+        function updateTimer(){const e=Date.now()-sessionStart,h=Math.floor(e/3600000),m=Math.floor((e%3600000)/60000),s=Math.floor((e%60000)/1000);document.getElementById('timer').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+        function updateSession(){document.getElementById('s-calls').textContent=sessionData.calls;document.getElementById('s-emails').textContent=sessionData.emails;document.getElementById('s-meetings').textContent=sessionData.meetings;document.getElementById('s-callbacks').textContent=sessionData.callbacks;}
+
+        function renderFollowups(){
+            const today=new Date();today.setHours(23,59,59,999);
+            const fu=leads.filter(l=>l.follow_up&&new Date(l.follow_up)<=today).sort((a,b)=>new Date(a.follow_up)-new Date(b.follow_up)).slice(0,10);
+            document.getElementById('followups-count').textContent=fu.length;
+            const list=document.getElementById('followups-list');
+            if(!fu.length){list.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:2rem">No follow-ups today 🎉</div>';return;}
+            list.innerHTML=fu.map(l=>{
+                const s=STAGES.find(x=>x.id===l.stage)||STAGES[0];
+                const d=new Date(l.follow_up),od=d<new Date(),t=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+                return`<div class="followup-item" onclick="jumpTo('${l.id}')"><div class="followup-time ${od?'overdue':''}">${od?'Overdue':t}</div><div style="flex:1"><div class="followup-company">${l.company}</div><div class="followup-stage">${s.icon} ${s.name}</div></div><button class="followup-action" onclick="event.stopPropagation();window.open('tel:${l.phone}')">📞</button></div>`;
+            }).join('');
+        }
+
+        function jumpTo(id){const i=queue.indexOf(id);if(i!==-1){currentIdx=i;}else{queue.unshift(id);currentIdx=0;}renderCurrent();}
+
+        function renderPipeline(){
+            document.getElementById('pipeline-stages').innerHTML=STAGES.map(s=>`<div class="pipeline-stage"><div class="pipeline-stage-icon">${s.icon}</div><div class="pipeline-stage-name">${s.name}</div><div class="pipeline-stage-count">${leads.filter(l=>l.stage===s.id).length}</div></div>`).join('');
+        }
+
+        function renderAchievements(){
+            const s=getStats();
+            document.getElementById('achievements').innerHTML=ACHIEVEMENTS.map(a=>`<div class="achievement ${a.fn(s)?'unlocked':''}"><div class="achievement-icon">${a.icon}</div><div class="achievement-name">${a.name}</div></div>`).join('');
+        }
+
+        function celebrate(){
+            const colors=['#FF6B35','#3B82F6','#10B981','#F59E0B','#8B5CF6'];
+            const c=document.createElement('div');c.className='celebration';
+            for(let i=0;i<50;i++){const cf=document.createElement('div');cf.className='confetti';cf.style.left=Math.random()*100+'%';cf.style.background=colors[Math.floor(Math.random()*colors.length)];cf.style.animationDelay=Math.random()*.5+'s';cf.style.borderRadius=Math.random()>.5?'50%':'0';c.appendChild(cf);}
+            document.body.appendChild(c);setTimeout(()=>c.remove(),3000);
+        }
+
+        function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+    </script>
+</body>
+</html>
