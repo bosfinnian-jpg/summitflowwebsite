@@ -3,27 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SummitFlow | Dashboard</title>
+    <title>SummitFlow | Command Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}:root{--bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;--border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);--text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;--calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);--emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);--success:#10B981;--success-glow:rgba(16,185,129,0.25);--warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);--danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);--purple:#8B5CF6;--radius:16px;--radius-sm:10px}body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh}#landing{position:fixed;inset:0;background:var(--bg-deep);display:flex;align-items:center;justify-content:center;z-index:9999;transition:all .6s}#landing.hidden{opacity:0;pointer-events:none}.landing-content{text-align:center;max-width:700px;padding:2rem;position:relative}.landing-content::before{content:'';position:absolute;top:50%;left:50%;width:500px;height:500px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(-50%,-50%);z-index:-1;animation:pulse 4s infinite}@keyframes pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:.3;transform:translate(-50%,-50%) scale(1.2)}}.landing-stats{display:flex;justify-content:center;gap:2rem;margin-bottom:2rem}.landing-stat-value{font-size:2.5rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--calls)}.landing-stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase}.quote{font-size:1.75rem;font-weight:600;margin-bottom:.75rem}.quote-author{font-size:.85rem;color:var(--calls);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2.5rem}.enter-btn{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none;padding:1rem 2.5rem;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;font-family:inherit}.enter-btn:hover{transform:translateY(-3px);box-shadow:0 15px 40px var(--calls-glow)}.nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}.nav-left{display:flex;align-items:center;gap:2rem}.logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center}.nav-tabs{display:flex;gap:.5rem}.nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}.nav-tab:hover{background:var(--surface);color:var(--text)}.nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}.nav-right{display:flex;align-items:center;gap:1rem}.date{font-size:.9rem;color:var(--text-secondary)}.session-btn{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;border:none;padding:.75rem 1.5rem;font-size:.875rem;font-weight:700;border-radius:50px;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-family:inherit;transition:all .2s}.session-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--success-glow)}.session-btn.active{background:var(--danger);animation:sessionPulse 2s infinite}@keyframes sessionPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.3)}50%{box-shadow:0 0 40px rgba(239,68,68,.5)}}#app{opacity:0;transition:opacity .5s;padding-top:70px}#app.visible{opacity:1}.main{max-width:1800px;margin:0 auto;padding:1.5rem}.main-grid{display:grid;grid-template-columns:1fr 380px;gap:1.5rem}.session-panel{background:var(--bg-card);border:2px solid var(--success);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:none}.session-panel.active{display:block;animation:slideDown .3s}@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}.session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}.session-title{display:flex;align-items:center;gap:.75rem;font-size:1.125rem;font-weight:600}.live-dot{width:10px;height:10px;background:var(--success);border-radius:50%;animation:blink 1s infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}.session-timer{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:600;color:var(--success)}.session-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.session-stat{background:var(--surface);border-radius:var(--radius-sm);padding:1rem;text-align:center}.session-stat-value{font-size:2rem;font-weight:700;font-family:'JetBrains Mono',monospace}.session-stat-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase}.session-stat.calls .session-stat-value{color:var(--calls)}.session-stat.emails .session-stat-value{color:var(--emails)}.session-stat.meetings .session-stat-value{color:var(--success)}.session-stat.callbacks .session-stat-value{color:var(--warning)}.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.section-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem}.queue-count{background:var(--surface);padding:.25rem .75rem;border-radius:50px;font-size:.8rem;font-family:'JetBrains Mono',monospace;color:var(--text-secondary)}.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;gap:1rem}.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}.stat-value{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace}.stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase}.current-lead{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:2px solid var(--calls);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}.current-lead::before{content:'';position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(50%,-50%)}.current-lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;position:relative}.current-lead-company{font-size:1.5rem;font-weight:700}.current-lead-contact{font-size:.9rem;color:var(--text-secondary);margin-top:.25rem}.lead-index{background:var(--calls);color:#fff;padding:.375rem .875rem;border-radius:50px;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace}.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}.contact-item{display:flex;align-items:center;gap:.75rem}.contact-icon{width:40px;height:40px;background:var(--surface);border-radius:10px;display:flex;align-items:center;justify-content:center}.contact-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase}.contact-value{font-size:.95rem;font-weight:500}.contact-value a{color:var(--text);text-decoration:none}.contact-value a:hover{color:var(--calls)}.quick-log{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.quick-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:1rem;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:.375rem;transition:all .2s}.quick-btn:hover{border-color:var(--calls);background:var(--calls-glow)}.quick-btn.success:hover{border-color:var(--success);background:var(--success-glow)}.quick-btn.warning:hover{border-color:var(--warning);background:var(--warning-glow)}.quick-btn:disabled{opacity:.5;cursor:not-allowed}.quick-icon{font-size:1.5rem}.lead-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}.nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.75rem 1.25rem;border-radius:50px;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.5rem;transition:all .2s}.nav-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}.nav-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);border:none;color:#fff}.nav-btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--calls-glow)}.empty-queue{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--radius);padding:3rem 2rem;text-align:center}.empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.5}.empty-title{font-size:1.125rem;font-weight:600;margin-bottom:.5rem}.empty-text{color:var(--text-secondary);margin-bottom:1.5rem}.btn{padding:.75rem 1.5rem;font-size:.875rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none}.btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none}.followups-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem}.followups-list{display:flex;flex-direction:column;gap:.75rem;max-height:300px;overflow-y:auto}.followup-item{display:flex;align-items:center;gap:1rem;padding:.875rem;background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s}.followup-item:hover{background:var(--bg-elevated)}.followup-time{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;color:var(--warning);min-width:60px}.followup-time.overdue{color:var(--danger)}.followup-company{font-weight:600;font-size:.9rem}.followup-stage{font-size:.75rem;color:var(--text-secondary)}.followup-action{background:var(--calls-glow);border:none;color:var(--calls);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}.followup-action:hover{background:var(--calls);color:#fff}.sidebar{display:flex;flex-direction:column;gap:1.25rem}.mission-card{background:linear-gradient(135deg,var(--calls),#FF8F6B);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden}.mission-card::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 60%)}.mission-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;opacity:.8;margin-bottom:.75rem}.mission-text{font-size:1.125rem;font-weight:600;line-height:1.4;position:relative}.target-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}.target-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.target-title{font-weight:700}.target-status{font-size:.75rem;font-weight:600;padding:.375rem .75rem;border-radius:50px}.target-status.good{background:var(--success-glow);color:var(--success)}.target-status.warning{background:var(--warning-glow);color:var(--warning)}.target-progress{margin-bottom:1.5rem}.progress-header{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.5rem}.progress-value{font-family:'JetBrains Mono',monospace;font-weight:600}.progress-bar{height:8px;background:var(--surface);border-radius:4px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--calls),var(--success));border-radius:4px;transition:width .5s}.target-items{display:flex;flex-direction:column;gap:.75rem}.target-item{display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:var(--surface);border-radius:8px}.target-item-left{display:flex;align-items:center;gap:.75rem}.target-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem}.target-check.done{background:var(--success);border-color:var(--success);color:#fff}.target-item-text{font-size:.85rem}.target-item-value{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600}.pipeline-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}.pipeline-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.pipeline-stages{display:flex;flex-direction:column;gap:.5rem}.pipeline-stage{display:flex;align-items:center;gap:.75rem;padding:.5rem 0}.pipeline-stage-icon{font-size:1rem;width:24px;text-align:center}.pipeline-stage-name{flex:1;font-size:.85rem;color:var(--text-secondary)}.pipeline-stage-count{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.9rem}.achievements-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}.achievements-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.achievement{display:flex;flex-direction:column;align-items:center;gap:.375rem;padding:.75rem;background:var(--surface);border-radius:var(--radius-sm);opacity:.4;transition:all .2s}.achievement.unlocked{opacity:1;background:var(--success-glow)}.achievement-icon{font-size:1.5rem}.achievement-name{font-size:.65rem;text-align:center;color:var(--text-secondary)}.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.celebration{position:fixed;inset:0;pointer-events:none;z-index:9999}.confetti{position:absolute;width:10px;height:10px;animation:confettiFall 3s forwards}@keyframes confettiFall{0%{transform:translateY(-100vh) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}@media(max-width:1200px){.main-grid{grid-template-columns:1fr}}@media(max-width:768px){.stats-row,.session-stats,.quick-log{grid-template-columns:repeat(2,1fr)}.contact-grid{grid-template-columns:1fr}}
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;
+            --border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);
+            --text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;
+            --calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);
+            --emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);
+            --success:#10B981;--success-glow:rgba(16,185,129,0.25);
+            --warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);
+            --danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);
+            --purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);
+            --radius:16px;--radius-sm:10px;--radius-xs:6px;
+        }
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+        
+        /* Landing */
+        #landing{position:fixed;inset:0;background:var(--bg-deep);display:flex;align-items:center;justify-content:center;z-index:9999;transition:all .6s}
+        #landing.hidden{opacity:0;pointer-events:none}
+        .landing-content{text-align:center;max-width:700px;padding:2rem;position:relative}
+        .landing-content::before{content:'';position:absolute;top:50%;left:50%;width:500px;height:500px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(-50%,-50%);z-index:-1;animation:pulse 4s infinite}
+        @keyframes pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:.3;transform:translate(-50%,-50%) scale(1.2)}}
+        .landing-stats{display:flex;justify-content:center;gap:3rem;margin-bottom:2rem}
+        .landing-stat-value{font-size:3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--calls)}
+        .landing-stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em}
+        .quote{font-size:1.5rem;font-weight:600;margin-bottom:.5rem;line-height:1.4}
+        .quote-author{font-size:.85rem;color:var(--calls);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2.5rem}
+        .enter-btn{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none;padding:1rem 2.5rem;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;font-family:inherit}
+        .enter-btn:hover{transform:translateY(-3px);box-shadow:0 15px 40px var(--calls-glow)}
+
+        /* Nav */
+        .nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}
+        .nav-left{display:flex;align-items:center;gap:2rem}
+        .logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center}
+        .nav-tabs{display:flex;gap:.5rem}
+        .nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}
+        .nav-tab:hover{background:var(--surface);color:var(--text)}
+        .nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}
+        .nav-right{display:flex;align-items:center;gap:1rem}
+        .date{font-size:.9rem;color:var(--text-secondary)}
+        .session-btn{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;border:none;padding:.75rem 1.5rem;font-size:.875rem;font-weight:700;border-radius:50px;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-family:inherit;transition:all .2s}
+        .session-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--success-glow)}
+        .session-btn.active{background:var(--danger);animation:sessionPulse 2s infinite}
+        @keyframes sessionPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.3)}50%{box-shadow:0 0 40px rgba(239,68,68,.5)}}
+
+        /* Main App */
+        #app{opacity:0;transition:opacity .5s;padding-top:70px}
+        #app.visible{opacity:1}
+        .main{max-width:1800px;margin:0 auto;padding:1.5rem}
+
+        /* Tab Navigation */
+        .tab-nav{display:flex;gap:.5rem;margin-bottom:1.5rem;background:var(--bg-card);padding:.5rem;border-radius:var(--radius);border:1px solid var(--border)}
+        .tab-btn{flex:1;padding:.875rem 1.5rem;background:transparent;border:none;color:var(--text-secondary);font-family:inherit;font-size:.9rem;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+        .tab-btn:hover{background:var(--surface);color:var(--text)}
+        .tab-btn.active{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff}
+        .tab-content{display:none}
+        .tab-content.active{display:block}
+
+        /* Session Panel */
+        .session-panel{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:2px solid var(--success);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:none}
+        .session-panel.active{display:block;animation:slideDown .3s}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+        .session-title{display:flex;align-items:center;gap:.75rem;font-size:1.25rem;font-weight:700}
+        .live-dot{width:12px;height:12px;background:var(--success);border-radius:50%;animation:blink 1s infinite;box-shadow:0 0 10px var(--success)}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+        .session-timer{font-family:'JetBrains Mono',monospace;font-size:2.5rem;font-weight:700;color:var(--success);text-shadow:0 0 30px var(--success-glow)}
+        .session-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+        .session-stat{background:var(--surface);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;border:1px solid var(--border)}
+        .session-stat-value{font-size:2.5rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .session-stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
+        .session-stat.calls .session-stat-value{color:var(--calls)}
+        .session-stat.emails .session-stat-value{color:var(--emails)}
+        .session-stat.meetings .session-stat-value{color:var(--success)}
+        .session-stat.callbacks .session-stat-value{color:var(--warning)}
+
+        /* Dialer Tab */
+        .dialer-grid{display:grid;grid-template-columns:1fr 400px;gap:1.5rem}
+        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;gap:1rem}
+        .stat-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+        .stat-value{font-size:1.75rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em}
+
+        /* Current Lead Card */
+        .current-lead{background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-elevated) 100%);border:2px solid var(--calls);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+        .current-lead::before{content:'';position:absolute;top:0;right:0;width:250px;height:250px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(30%,-30%)}
+        .current-lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;position:relative}
+        .current-lead-company{font-size:1.75rem;font-weight:700;line-height:1.2}
+        .current-lead-contact{font-size:1rem;color:var(--text-secondary);margin-top:.375rem}
+        .lead-index{background:var(--calls);color:#fff;padding:.5rem 1rem;border-radius:50px;font-size:.85rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+        .contact-item{display:flex;align-items:center;gap:.875rem}
+        .contact-icon{width:44px;height:44px;background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+        .contact-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+        .contact-value{font-size:1rem;font-weight:500}
+        .contact-value a{color:var(--text);text-decoration:none;transition:color .2s}
+        .contact-value a:hover{color:var(--calls)}
+        
+        /* Quick Log Buttons */
+        .quick-log{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+        .quick-btn{background:var(--surface);border:2px solid var(--border);color:var(--text);padding:1rem;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:.5rem;transition:all .2s}
+        .quick-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow);transform:translateY(-2px)}
+        .quick-btn.success:hover:not(:disabled){border-color:var(--success);background:var(--success-glow)}
+        .quick-btn.warning:hover:not(:disabled){border-color:var(--warning);background:var(--warning-glow)}
+        .quick-btn:disabled{opacity:.4;cursor:not-allowed}
+        .quick-icon{font-size:1.75rem}
+        
+        /* Lead Navigation */
+        .lead-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+        .nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.875rem 1.5rem;border-radius:50px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:.5rem;transition:all .2s}
+        .nav-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow)}
+        .nav-btn:disabled{opacity:.4;cursor:not-allowed}
+        .nav-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);border:none;color:#fff}
+        .nav-btn.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}
+
+        /* Empty Queue */
+        .empty-queue{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--radius);padding:4rem 2rem;text-align:center}
+        .empty-icon{font-size:4rem;margin-bottom:1rem;opacity:.4}
+        .empty-title{font-size:1.25rem;font-weight:700;margin-bottom:.5rem}
+        .empty-text{color:var(--text-secondary);margin-bottom:1.5rem}
+        .btn{padding:.875rem 1.75rem;font-size:.9rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none}
+        .btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none}
+        .btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}
+
+        /* Sidebar */
+        .sidebar{display:flex;flex-direction:column;gap:1.25rem}
+
+        /* Scripts Panel */
+        .scripts-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+        .scripts-header{padding:1rem 1.25rem;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+        .scripts-title{font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .script-tabs{display:flex;gap:.25rem;padding:.75rem;background:var(--bg-elevated)}
+        .script-tab{padding:.5rem 1rem;background:transparent;border:none;color:var(--text-muted);font-family:inherit;font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;transition:all .2s}
+        .script-tab:hover{color:var(--text)}
+        .script-tab.active{background:var(--calls);color:#fff}
+        .script-content{padding:1.25rem;max-height:400px;overflow-y:auto}
+        .script-section{margin-bottom:1.5rem}
+        .script-section:last-child{margin-bottom:0}
+        .script-section-title{font-size:.75rem;color:var(--calls);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .script-text{background:var(--surface);padding:1rem;border-radius:var(--radius-sm);font-size:.9rem;line-height:1.6;border-left:3px solid var(--calls)}
+        .script-text strong{color:var(--calls)}
+        .script-text em{color:var(--warning);font-style:normal}
+        .script-note{font-size:.8rem;color:var(--text-muted);margin-top:.75rem;padding:.75rem;background:var(--bg-elevated);border-radius:6px}
+        .script-note strong{color:var(--text-secondary)}
+        .tone-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .625rem;background:var(--surface);border-radius:4px;font-size:.7rem;font-weight:600;margin-left:.5rem}
+        .tone-badge.confident{color:var(--success)}
+        .tone-badge.warm{color:var(--warning)}
+        .tone-badge.assertive{color:var(--calls)}
+
+        /* Objection Handler */
+        .objection-item{background:var(--surface);border-radius:var(--radius-sm);margin-bottom:.75rem;overflow:hidden}
+        .objection-header{padding:1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .2s}
+        .objection-header:hover{background:var(--bg-elevated)}
+        .objection-trigger{font-weight:600;font-size:.9rem;color:var(--danger)}
+        .objection-toggle{color:var(--text-muted);transition:transform .2s}
+        .objection-item.open .objection-toggle{transform:rotate(180deg)}
+        .objection-response{padding:0 1rem 1rem;display:none}
+        .objection-item.open .objection-response{display:block}
+        .response-step{display:flex;gap:.75rem;margin-bottom:.75rem}
+        .step-num{width:24px;height:24px;background:var(--calls);color:#fff;border-radius:50%;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .step-text{font-size:.85rem;line-height:1.5}
+
+        /* Follow-ups Panel */
+        .followups-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+        .followups-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+        .followups-title{font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .followups-count{background:var(--warning);color:#000;padding:.25rem .625rem;border-radius:50px;font-size:.75rem;font-weight:700}
+        .followups-list{display:flex;flex-direction:column;gap:.5rem;max-height:250px;overflow-y:auto}
+        .followup-item{display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;border:1px solid transparent}
+        .followup-item:hover{background:var(--bg-elevated);border-color:var(--border-hover)}
+        .followup-time{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;color:var(--warning);min-width:55px}
+        .followup-time.overdue{color:var(--danger)}
+        .followup-info{flex:1;min-width:0}
+        .followup-company{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .followup-stage{font-size:.75rem;color:var(--text-muted)}
+        .followup-call{width:32px;height:32px;background:var(--calls-glow);border:none;color:var(--calls);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .followup-call:hover{background:var(--calls);color:#fff}
+
+        /* Reports Tab */
+        .reports-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+        .report-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+        .report-card.full{grid-column:1/-1}
+        .report-card.half{grid-column:span 2}
+        .report-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+        .report-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .report-period{font-size:.8rem;color:var(--text-muted);background:var(--surface);padding:.375rem .75rem;border-radius:50px}
+        .report-value-big{font-size:3rem;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:.5rem}
+        .report-value-big.calls{color:var(--calls)}
+        .report-value-big.meetings{color:var(--success)}
+        .report-value-big.rate{color:var(--purple)}
+        .report-label{font-size:.85rem;color:var(--text-secondary)}
+        .report-chart{height:200px;display:flex;align-items:flex-end;gap:.5rem;padding-top:1rem}
+        .chart-bar{flex:1;background:linear-gradient(180deg,var(--calls),var(--calls-glow));border-radius:6px 6px 0 0;transition:height .5s;position:relative}
+        .chart-bar:hover{background:var(--calls)}
+        .chart-bar::after{content:attr(data-value);position:absolute;top:-25px;left:50%;transform:translateX(-50%);font-size:.75rem;font-weight:600;font-family:'JetBrains Mono',monospace;opacity:0;transition:opacity .2s}
+        .chart-bar:hover::after{opacity:1}
+        .chart-labels{display:flex;gap:.5rem;margin-top:.75rem}
+        .chart-label{flex:1;text-align:center;font-size:.7rem;color:var(--text-muted)}
+        .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+        .metric-item{background:var(--surface);padding:1rem;border-radius:var(--radius-sm);text-align:center}
+        .metric-value{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .metric-label{font-size:.75rem;color:var(--text-muted);margin-top:.25rem}
+        .conversion-funnel{display:flex;flex-direction:column;gap:.5rem}
+        .funnel-stage{display:flex;align-items:center;gap:1rem}
+        .funnel-bar{flex:1;height:32px;background:var(--surface);border-radius:6px;overflow:hidden;position:relative}
+        .funnel-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 .75rem}
+        .funnel-fill span{font-size:.8rem;font-weight:600;color:#fff}
+        .funnel-label{width:100px;font-size:.85rem;color:var(--text-secondary)}
+        .funnel-value{width:60px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600}
+
+        /* Email Templates Tab */
+        .templates-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem}
+        .template-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+        .template-header{padding:1.25rem;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .template-title{font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .template-type{font-size:.7rem;padding:.25rem .5rem;background:var(--surface);border-radius:4px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+        .template-body{padding:1.25rem}
+        .template-subject{margin-bottom:1rem}
+        .template-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.375rem}
+        .template-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem;color:var(--text);font-family:inherit;font-size:.9rem}
+        .template-input:focus{outline:none;border-color:var(--calls)}
+        .template-content{background:var(--surface);border-radius:var(--radius-sm);padding:1rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;min-height:200px;border:1px solid var(--border)}
+        .template-var{background:var(--calls-glow);color:var(--calls);padding:.125rem .375rem;border-radius:4px;font-weight:600}
+        .template-footer{padding:1rem 1.25rem;background:var(--bg-elevated);border-top:1px solid var(--border);display:flex;gap:.75rem}
+        .template-btn{flex:1;padding:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+        .template-btn:hover{border-color:var(--calls);background:var(--calls-glow)}
+        .template-btn.primary{background:var(--calls);border-color:var(--calls);color:#fff}
+        .template-btn.primary:hover{background:#FF8F6B}
+
+        /* Calendar Modal */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:all .3s}
+        .modal-overlay.active{opacity:1;visibility:visible}
+        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:500px;transform:scale(.95);transition:transform .3s}
+        .modal-overlay.active .modal{transform:scale(1)}
+        .modal-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .modal-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .modal-close{background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;padding:.25rem}
+        .modal-close:hover{color:var(--text)}
+        .modal-body{padding:1.5rem}
+        .form-group{margin-bottom:1.25rem}
+        .form-label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;display:block}
+        .form-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.875rem;color:var(--text);font-family:inherit;font-size:.9rem}
+        .form-input:focus{outline:none;border-color:var(--calls)}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem}
+
+        /* Toast */
+        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s;display:flex;align-items:center;gap:.75rem}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        .toast.error{border-color:var(--danger)}
+        .toast.info{border-color:var(--emails)}
+
+        /* Celebration */
+        .celebration{position:fixed;inset:0;pointer-events:none;z-index:9999}
+        .confetti{position:absolute;width:10px;height:10px;animation:confettiFall 3s forwards}
+        @keyframes confettiFall{0%{transform:translateY(-100vh) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+        /* Scrollbar */
+        ::-webkit-scrollbar{width:6px;height:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--surface);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--border-hover)}
+
+        /* Responsive */
+        @media(max-width:1200px){
+            .dialer-grid{grid-template-columns:1fr}
+            .reports-grid{grid-template-columns:1fr}
+            .report-card.half{grid-column:1}
+            .templates-grid{grid-template-columns:1fr}
+        }
+        @media(max-width:768px){
+            .stats-row,.session-stats,.quick-log{grid-template-columns:repeat(2,1fr)}
+            .contact-grid{grid-template-columns:1fr}
+            .nav{padding:0 1rem}
+            .main{padding:1rem}
+        }
     </style>
 </head>
 <body>
+    <!-- Landing -->
     <div id="landing">
         <div class="landing-content">
             <div class="landing-stats">
-                <div><div class="landing-stat-value" id="l-calls">0</div><div class="landing-stat-label">Calls</div></div>
+                <div><div class="landing-stat-value" id="l-calls">0</div><div class="landing-stat-label">Total Calls</div></div>
                 <div><div class="landing-stat-value" id="l-meetings">0</div><div class="landing-stat-label">Meetings</div></div>
-                <div><div class="landing-stat-value" id="l-clients">0</div><div class="landing-stat-label">Clients</div></div>
+                <div><div class="landing-stat-value" id="l-clients">0</div><div class="landing-stat-label">Clients Won</div></div>
             </div>
-            <div class="quote" id="quote">"Every dial gets you closer."</div>
+            <div class="quote" id="quote">"Every dial gets you closer to your goal."</div>
             <div class="quote-author">— Jordan Platten</div>
             <button class="enter-btn" onclick="enter()">Enter Command Center →</button>
         </div>
     </div>
 
+    <!-- Nav -->
     <nav class="nav">
         <div class="nav-left">
             <a href="#" class="logo"><div class="logo-icon">⚡</div>SummitFlow</a>
@@ -39,253 +317,1145 @@
         </div>
     </nav>
 
+    <!-- App -->
     <div id="app">
         <main class="main">
+            <!-- Session Panel -->
             <div class="session-panel" id="session-panel">
                 <div class="session-header">
                     <div class="session-title"><span class="live-dot"></span>Session Active</div>
                     <div class="session-timer" id="timer">00:00:00</div>
                 </div>
                 <div class="session-stats">
-                    <div class="session-stat calls"><div class="session-stat-value" id="s-calls">0</div><div class="session-stat-label">Calls</div></div>
-                    <div class="session-stat emails"><div class="session-stat-value" id="s-emails">0</div><div class="session-stat-label">Emails</div></div>
-                    <div class="session-stat meetings"><div class="session-stat-value" id="s-meetings">0</div><div class="session-stat-label">Meetings</div></div>
-                    <div class="session-stat callbacks"><div class="session-stat-value" id="s-callbacks">0</div><div class="session-stat-label">Callbacks</div></div>
+                    <div class="session-stat calls"><div class="session-stat-value" id="s-calls">0</div><div class="session-stat-label">Calls Made</div></div>
+                    <div class="session-stat emails"><div class="session-stat-value" id="s-emails">0</div><div class="session-stat-label">Emails Sent</div></div>
+                    <div class="session-stat meetings"><div class="session-stat-value" id="s-meetings">0</div><div class="session-stat-label">Meetings Booked</div></div>
+                    <div class="session-stat callbacks"><div class="session-stat-value" id="s-callbacks">0</div><div class="session-stat-label">Callbacks Set</div></div>
                 </div>
             </div>
 
-            <div class="main-grid">
-                <div>
-                    <div class="stats-row">
-                        <div class="stat-card"><div class="stat-icon" style="background:var(--calls-glow)">📞</div><div><div class="stat-value" id="total-calls">0</div><div class="stat-label">Total Calls</div></div></div>
-                        <div class="stat-card"><div class="stat-icon" style="background:var(--emails-glow)">📧</div><div><div class="stat-value" id="total-emails">0</div><div class="stat-label">Total Emails</div></div></div>
-                        <div class="stat-card"><div class="stat-icon" style="background:var(--success-glow)">📅</div><div><div class="stat-value" id="total-meetings">0</div><div class="stat-label">Meetings</div></div></div>
-                        <div class="stat-card"><div class="stat-icon" style="background:rgba(139,92,246,.25)">🏆</div><div><div class="stat-value" id="total-clients">0/5</div><div class="stat-label">Clients</div></div></div>
-                    </div>
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('dialer')">📞 Dialer</button>
+                <button class="tab-btn" onclick="switchTab('scripts')">📜 Scripts</button>
+                <button class="tab-btn" onclick="switchTab('reports')">📊 Reports</button>
+                <button class="tab-btn" onclick="switchTab('emails')">✉️ Email Templates</button>
+            </div>
 
-                    <div class="section-header"><div class="section-title">🎯 Current Lead</div><div class="queue-count" id="queue-count">0 in queue</div></div>
-                    <div id="current-lead"></div>
-
-                    <div class="followups-panel">
-                        <div class="section-header"><div class="section-title">⏰ Today's Follow-ups</div><span class="queue-count" id="followups-count">0</span></div>
-                        <div class="followups-list" id="followups-list"></div>
-                    </div>
+            <!-- Dialer Tab -->
+            <div class="tab-content active" id="tab-dialer">
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-icon" style="background:var(--calls-glow)">📞</div><div><div class="stat-value" id="total-calls">0</div><div class="stat-label">Total Calls</div></div></div>
+                    <div class="stat-card"><div class="stat-icon" style="background:var(--emails-glow)">📧</div><div><div class="stat-value" id="total-emails">0</div><div class="stat-label">Emails Sent</div></div></div>
+                    <div class="stat-card"><div class="stat-icon" style="background:var(--success-glow)">📅</div><div><div class="stat-value" id="total-meetings">0</div><div class="stat-label">Meetings</div></div></div>
+                    <div class="stat-card"><div class="stat-icon" style="background:var(--purple-glow)">🏆</div><div><div class="stat-value" id="total-clients">0/5</div><div class="stat-label">Clients</div></div></div>
                 </div>
 
-                <div class="sidebar">
-                    <div class="mission-card"><div class="mission-label">Today's Mission</div><div class="mission-text" id="mission">Hit 100 dials. Every call counts.</div></div>
-                    
-                    <div class="target-card">
-                        <div class="target-header"><div class="target-title">📊 Weekly Target</div><div class="target-status good" id="target-status">On Track</div></div>
-                        <div class="target-progress">
-                            <div class="progress-header"><span>Progress</span><span class="progress-value"><span id="weekly-calls">0</span>/150</span></div>
-                            <div class="progress-bar"><div class="progress-fill" id="weekly-progress" style="width:0%"></div></div>
+                <div class="dialer-grid">
+                    <div>
+                        <div id="current-lead"></div>
+                    </div>
+                    <div class="sidebar">
+                        <div class="followups-panel">
+                            <div class="followups-header">
+                                <div class="followups-title">⏰ Today's Follow-ups</div>
+                                <div class="followups-count" id="followups-count">0</div>
+                            </div>
+                            <div class="followups-list" id="followups-list"></div>
                         </div>
-                        <div class="target-items">
-                            <div class="target-item"><div class="target-item-left"><div class="target-check" id="check-wed">✓</div><div class="target-item-text">Wednesday</div></div><div class="target-item-value" id="wed-calls">0/100</div></div>
-                            <div class="target-item"><div class="target-item-left"><div class="target-check" id="check-thu">✓</div><div class="target-item-text">Thursday</div></div><div class="target-item-value" id="thu-calls">0/50</div></div>
-                            <div class="target-item"><div class="target-item-left"><div class="target-check" id="check-streak">✓</div><div class="target-item-text">Streak</div></div><div class="target-item-value" id="streak">0</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scripts Tab -->
+            <div class="tab-content" id="tab-scripts">
+                <div class="dialer-grid">
+                    <div class="scripts-panel">
+                        <div class="scripts-header">
+                            <div class="scripts-title">📜 Call Scripts</div>
+                        </div>
+                        <div class="script-tabs">
+                            <button class="script-tab active" onclick="switchScript('gatekeeper')">Gatekeeper</button>
+                            <button class="script-tab" onclick="switchScript('opener')">Opener</button>
+                            <button class="script-tab" onclick="switchScript('pitch')">Value Pitch</button>
+                            <button class="script-tab" onclick="switchScript('close')">Book Meeting</button>
+                        </div>
+                        
+                        <div class="script-content" id="script-gatekeeper">
+                            <div class="script-section">
+                                <div class="script-section-title">🎭 The Old Friend Approach <span class="tone-badge warm">Warm & Familiar</span></div>
+                                <div class="script-text">
+                                    <strong>"Hey, is [NAME] about?"</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Key:</strong> Assume familiarity. Speak like you're calling a friend's workplace. Lower pitch = confidence. Never reveal you're selling.
+                                </div>
+                            </div>
+                            
+                            <div class="script-section">
+                                <div class="script-section-title">🚫 If They Ask "What's It Regarding?"</div>
+                                <div class="script-text">
+                                    <strong>"[NAME] will know what it's regarding."</strong><br><br>
+                                    <em>If they push harder:</em><br>
+                                    <strong>"It's a bit complex to explain — could you pop me through?"</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Never:</strong> Pitch the gatekeeper. Reveal you're in marketing/sales. Sound uncertain or ask for permission.
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">🔄 Building Gatekeeper Relationships</div>
+                                <div class="script-text">
+                                    <em>If blocked multiple times:</em><br><br>
+                                    <strong>"No worries at all. When would be best to catch [NAME]?"</strong><br><br>
+                                    <em>Note their name. Next call:</em><br>
+                                    <strong>"Hey [GATEKEEPER NAME], it's Finn — is [NAME] about?"</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Remember:</strong> Gatekeepers can become your biggest allies. Be persistent but respectful. I got Universal Studios' Creative Director through gatekeeper relationship building.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="script-content" id="script-opener" style="display:none">
+                            <div class="script-section">
+                                <div class="script-section-title">✅ Validate You're Speaking to the Right Person</div>
+                                <div class="script-text">
+                                    <strong>"Am I speaking to [NAME]?"</strong><br>
+                                    <em>Wait for confirmation</em>
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">🎯 Position Opener <span class="tone-badge confident">Respectful & Confident</span></div>
+                                <div class="script-text">
+                                    <strong>"Have I caught you in the middle of something?"</strong><br><br>
+                                    <em>If yes:</em> <strong>"No worries — I just need 20 seconds."</strong><br>
+                                    <em>If no:</em> <strong>"Perfect. I'll be brief."</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Why this works:</strong> Shows respect. They don't expect it from cold callers. Creates permission to proceed.
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">📍 Location Opener (For Local Businesses)</div>
+                                <div class="script-text">
+                                    <strong>"Are you still based on [STREET/AREA]?"</strong><br><br>
+                                    <em>Conversational, builds rapport, shows you've done research.</em>
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">🔥 Desire Opener <span class="tone-badge assertive">Direct & Curious</span></div>
+                                <div class="script-text">
+                                    <strong>"Could you handle more patients right now?"</strong><br><br>
+                                    <em>Alternative:</em> <strong>"Are you getting more than 20 new patient enquiries per month?"</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Pro tip:</strong> "Could you handle" feeds their ego. They'll give you a genuine answer vs. "Can you take on" which triggers defensive "we're busy" responses.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="script-content" id="script-pitch" style="display:none">
+                            <div class="script-section">
+                                <div class="script-section-title">💎 Value Proposition <span class="tone-badge confident">Clear & Controlled</span></div>
+                                <div class="script-text">
+                                    <strong>"I help [NICHE] practices in Leeds get more high-value patients using AI systems."</strong><br><br>
+                                    <em>Pause. Let them respond.</em>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Focus on RESULTS not features.</strong> They don't care about "meta ads" or "AI bots." They care about more patients and more revenue.
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">🎯 Niche-Specific Value (Healthcare)</div>
+                                <div class="script-text">
+                                    <strong>For Chiropractors:</strong><br>
+                                    "We generate new patient enquiries, qualify them automatically, and book them straight into your calendar — so you're only seeing people who are ready to start treatment."<br><br>
+                                    
+                                    <strong>For Physios:</strong><br>
+                                    "We help physio clinics fill their appointment books with qualified patients who actually show up — using AI to handle all the follow-up."<br><br>
+                                    
+                                    <strong>For Massage Therapists:</strong><br>
+                                    "We bring in a steady stream of new clients and handle all the booking — so you can focus on what you do best."
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">🔍 Discovery Questions</div>
+                                <div class="script-text">
+                                    <strong>"How are you currently getting new patients?"</strong><br><br>
+                                    <strong>"What's working well for you right now?"</strong><br><br>
+                                    <strong>"If you could wave a magic wand, what would you change about your patient acquisition?"</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Listen actively.</strong> Nod, affirm ("I see", "That makes sense"), and mirror their language back. The best salespeople are the best listeners.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="script-content" id="script-close" style="display:none">
+                            <div class="script-section">
+                                <div class="script-section-title">📅 Guide The Next Step <span class="tone-badge assertive">Assumptive & Direct</span></div>
+                                <div class="script-text">
+                                    <strong>"Look, I don't have time to go into everything now — why don't I pop back in a couple of days and run you through how this could work for you specifically?"</strong><br><br>
+                                    <em>Or for Zoom:</em><br>
+                                    <strong>"Let's jump on a quick 15-minute call — I'll show you exactly how this works. Are you free Thursday at 2pm?"</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Always offer a specific time.</strong> Don't ask "when are you free?" — propose a slot and let them counter.
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">📧 If They Ask For An Email</div>
+                                <div class="script-text">
+                                    <strong>"I'll be honest — it takes a lot of time to put together a personalised email, and I think it would be much more effective for us to spend 15 minutes on a call where I can learn about your specific situation. Are you free Friday at 11?"</strong><br><br>
+                                    <em>If they push back again:</em><br>
+                                    <strong>"I've got some great ideas here and this is the future of patient acquisition. What have you got to lose by spending 15 minutes with me? Worst case, you can take these ideas and implement them yourself."</strong>
+                                </div>
+                            </div>
+
+                            <div class="script-section">
+                                <div class="script-section-title">✅ Lock In The Meeting</div>
+                                <div class="script-text">
+                                    <strong>"Perfect. So that's [DAY] at [TIME]. What's the best email to send the calendar invite to?"</strong><br><br>
+                                    <em>Then:</em><br>
+                                    <strong>"Great — I'll send that over now. Looking forward to it, [NAME]."</strong>
+                                </div>
+                                <div class="script-note">
+                                    <strong>Always get their email and send the invite immediately.</strong> The faster you lock it in, the higher your show rate.
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="pipeline-card">
-                        <div class="pipeline-header"><div class="target-title">📈 Pipeline</div><a href="summitflow-pipeline.html" class="btn" style="padding:.5rem 1rem;font-size:.75rem">View →</a></div>
-                        <div class="pipeline-stages" id="pipeline-stages"></div>
+                    <div class="sidebar">
+                        <div class="scripts-panel">
+                            <div class="scripts-header">
+                                <div class="scripts-title">🛡️ Objection Handlers</div>
+                            </div>
+                            <div style="padding:1rem">
+                                <div class="objection-item" onclick="toggleObjection(this)">
+                                    <div class="objection-header">
+                                        <span class="objection-trigger">"I'm not interested"</span>
+                                        <span class="objection-toggle">▼</span>
+                                    </div>
+                                    <div class="objection-response">
+                                        <div class="response-step">
+                                            <div class="step-num">1</div>
+                                            <div class="step-text"><strong>Agree:</strong> "That's completely fair — most people say that initially."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">2</div>
+                                            <div class="step-text"><strong>Reframe:</strong> "Can I ask — is it that you're not interested in more patients, or just not interested in another marketing pitch?"</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">3</div>
+                                            <div class="step-text"><strong>Bridge:</strong> "Because what we do is genuinely different — we only get paid when you get results."</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="objection-item" onclick="toggleObjection(this)">
+                                    <div class="objection-header">
+                                        <span class="objection-trigger">"We already work with someone"</span>
+                                        <span class="objection-toggle">▼</span>
+                                    </div>
+                                    <div class="objection-response">
+                                        <div class="response-step">
+                                            <div class="step-num">1</div>
+                                            <div class="step-text"><strong>Validate:</strong> "That's great — means you understand the value of marketing."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">2</div>
+                                            <div class="step-text"><strong>Probe:</strong> "How's that going for you? Getting the results you expected?"</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">3</div>
+                                            <div class="step-text"><strong>Differentiate:</strong> "The AI systems we use typically cut cost-per-lead in half. Worth 15 mins to compare?"</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="objection-item" onclick="toggleObjection(this)">
+                                    <div class="objection-header">
+                                        <span class="objection-trigger">"I don't have the budget"</span>
+                                        <span class="objection-toggle">▼</span>
+                                    </div>
+                                    <div class="objection-response">
+                                        <div class="response-step">
+                                            <div class="step-num">1</div>
+                                            <div class="step-text"><strong>Empathize:</strong> "I completely understand — that's exactly why we work the way we do."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">2</div>
+                                            <div class="step-text"><strong>Reframe:</strong> "Our model means you're investing in growth that pays for itself from month one."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">3</div>
+                                            <div class="step-text"><strong>Offer:</strong> "Let me show you the numbers on a quick call — you can decide if it makes sense."</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="objection-item" onclick="toggleObjection(this)">
+                                    <div class="objection-header">
+                                        <span class="objection-trigger">"I tried marketing before, didn't work"</span>
+                                        <span class="objection-toggle">▼</span>
+                                    </div>
+                                    <div class="objection-response">
+                                        <div class="response-step">
+                                            <div class="step-num">1</div>
+                                            <div class="step-text"><strong>Validate:</strong> "I completely understand how you feel — and honestly, it frustrates me that other agencies damage our reputation."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">2</div>
+                                            <div class="step-text"><strong>Differentiate:</strong> "The difference is we use AI to actually qualify and book the leads — so you're not chasing time-wasters."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">3</div>
+                                            <div class="step-text"><strong>Prove:</strong> "I can show you exactly how it's working for [similar business] right now."</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="objection-item" onclick="toggleObjection(this)">
+                                    <div class="objection-header">
+                                        <span class="objection-trigger">"Send me an email"</span>
+                                        <span class="objection-toggle">▼</span>
+                                    </div>
+                                    <div class="objection-response">
+                                        <div class="response-step">
+                                            <div class="step-num">1</div>
+                                            <div class="step-text"><strong>Redirect:</strong> "I'll be honest — emails don't do it justice. Everything we do is tailored to your specific situation."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">2</div>
+                                            <div class="step-text"><strong>Offer value:</strong> "15 minutes on a call and I'll show you exactly what's possible. Worst case, you'll get some free ideas."</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">3</div>
+                                            <div class="step-text"><strong>Close:</strong> "Are you free Thursday afternoon?"</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="objection-item" onclick="toggleObjection(this)">
+                                    <div class="objection-header">
+                                        <span class="objection-trigger">"I need to think about it"</span>
+                                        <span class="objection-toggle">▼</span>
+                                    </div>
+                                    <div class="objection-response">
+                                        <div class="response-step">
+                                            <div class="step-num">1</div>
+                                            <div class="step-text"><strong>Understand:</strong> "Absolutely — what specifically do you need to think through?"</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">2</div>
+                                            <div class="step-text"><strong>Address:</strong> Handle whatever specific concern they raise.</div>
+                                        </div>
+                                        <div class="response-step">
+                                            <div class="step-num">3</div>
+                                            <div class="step-text"><strong>Secure next step:</strong> "Let's book a follow-up for next week — gives you time to think and we can pick up where we left off."</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div class="tab-content" id="tab-reports">
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <div class="report-header">
+                            <div class="report-title">📞 Total Calls</div>
+                            <div class="report-period">This Week</div>
+                        </div>
+                        <div class="report-value-big calls" id="report-calls">0</div>
+                        <div class="report-label">of 150 weekly target</div>
                     </div>
 
-                    <div class="achievements-card">
-                        <div class="target-title" style="margin-bottom:1rem">🏆 Achievements</div>
-                        <div class="achievements-grid" id="achievements"></div>
+                    <div class="report-card">
+                        <div class="report-header">
+                            <div class="report-title">📅 Meetings Booked</div>
+                            <div class="report-period">This Week</div>
+                        </div>
+                        <div class="report-value-big meetings" id="report-meetings">0</div>
+                        <div class="report-label">booked this week</div>
+                    </div>
+
+                    <div class="report-card">
+                        <div class="report-header">
+                            <div class="report-title">📈 Conversion Rate</div>
+                            <div class="report-period">Calls → Meetings</div>
+                        </div>
+                        <div class="report-value-big rate" id="report-rate">0%</div>
+                        <div class="report-label">industry avg: 2-3%</div>
+                    </div>
+
+                    <div class="report-card half">
+                        <div class="report-header">
+                            <div class="report-title">📊 Daily Call Volume</div>
+                            <div class="report-period">Last 7 Days</div>
+                        </div>
+                        <div class="report-chart" id="calls-chart"></div>
+                        <div class="chart-labels" id="chart-labels"></div>
+                    </div>
+
+                    <div class="report-card">
+                        <div class="report-header">
+                            <div class="report-title">🎯 Call Outcomes</div>
+                            <div class="report-period">All Time</div>
+                        </div>
+                        <div class="metric-grid" id="outcomes-grid"></div>
+                    </div>
+
+                    <div class="report-card full">
+                        <div class="report-header">
+                            <div class="report-title">🔄 Pipeline Conversion Funnel</div>
+                            <div class="report-period">All Time</div>
+                        </div>
+                        <div class="conversion-funnel" id="funnel"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Templates Tab -->
+            <div class="tab-content" id="tab-emails">
+                <div class="templates-grid">
+                    <div class="template-card">
+                        <div class="template-header">
+                            <div class="template-title">📧 Post-Call Follow-Up</div>
+                            <div class="template-type">After Good Call</div>
+                        </div>
+                        <div class="template-body">
+                            <div class="template-subject">
+                                <div class="template-label">Subject</div>
+                                <input type="text" class="template-input" id="tpl1-subject" value="Quick follow-up from our call">
+                            </div>
+                            <div class="template-label">Message</div>
+                            <div class="template-content" id="tpl1-body">Hi <span class="template-var">[NAME]</span>,
+
+Great speaking with you just now.
+
+As promised, here's a quick summary:
+
+• We help practices like <span class="template-var">[COMPANY]</span> get more qualified patients using AI-powered lead generation
+• Our system handles the follow-up automatically — so you only speak to people who are ready to book
+• We work on a results-first basis
+
+I'll send over the calendar invite for our call on <span class="template-var">[DATE]</span> at <span class="template-var">[TIME]</span>.
+
+Looking forward to showing you how this could work for you.
+
+Best,
+Finn
+SummitFlow</div>
+                        </div>
+                        <div class="template-footer">
+                            <button class="template-btn" onclick="copyTemplate('tpl1')">📋 Copy</button>
+                            <button class="template-btn primary" onclick="openEmailClient('tpl1')">📤 Open in Email</button>
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <div class="template-header">
+                            <div class="template-title">⏰ Meeting Reminder</div>
+                            <div class="template-type">24hrs Before</div>
+                        </div>
+                        <div class="template-body">
+                            <div class="template-subject">
+                                <div class="template-label">Subject</div>
+                                <input type="text" class="template-input" id="tpl2-subject" value="Looking forward to tomorrow">
+                            </div>
+                            <div class="template-label">Message</div>
+                            <div class="template-content" id="tpl2-body">Hi <span class="template-var">[NAME]</span>,
+
+Just a quick note to confirm our call tomorrow at <span class="template-var">[TIME]</span>.
+
+I've put together some specific ideas for <span class="template-var">[COMPANY]</span> that I think you'll find valuable.
+
+If anything's come up and you need to reschedule, just let me know — but I'm hoping we're still on!
+
+Speak tomorrow,
+Finn</div>
+                        </div>
+                        <div class="template-footer">
+                            <button class="template-btn" onclick="copyTemplate('tpl2')">📋 Copy</button>
+                            <button class="template-btn primary" onclick="openEmailClient('tpl2')">📤 Open in Email</button>
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <div class="template-header">
+                            <div class="template-title">🔄 No-Show Follow-Up</div>
+                            <div class="template-type">After Missed Call</div>
+                        </div>
+                        <div class="template-body">
+                            <div class="template-subject">
+                                <div class="template-label">Subject</div>
+                                <input type="text" class="template-input" id="tpl3-subject" value="Missed you earlier — no worries">
+                            </div>
+                            <div class="template-label">Message</div>
+                            <div class="template-content" id="tpl3-body">Hi <span class="template-var">[NAME]</span>,
+
+I know how hectic things can get running a practice — completely understand if something came up.
+
+I had some good ideas prepared for <span class="template-var">[COMPANY]</span> and would still love to share them with you.
+
+Would any of these times work to reschedule?
+
+• [OPTION 1]
+• [OPTION 2]
+• [OPTION 3]
+
+Just let me know what works best.
+
+Finn</div>
+                        </div>
+                        <div class="template-footer">
+                            <button class="template-btn" onclick="copyTemplate('tpl3')">📋 Copy</button>
+                            <button class="template-btn primary" onclick="openEmailClient('tpl3')">📤 Open in Email</button>
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <div class="template-header">
+                            <div class="template-title">🎯 Cold Outreach</div>
+                            <div class="template-type">Initial Contact</div>
+                        </div>
+                        <div class="template-body">
+                            <div class="template-subject">
+                                <div class="template-label">Subject</div>
+                                <input type="text" class="template-input" id="tpl4-subject" value="Quick question about [COMPANY]">
+                            </div>
+                            <div class="template-label">Message</div>
+                            <div class="template-content" id="tpl4-body">Hi <span class="template-var">[NAME]</span>,
+
+I came across <span class="template-var">[COMPANY]</span> and noticed you're doing great work helping people in Leeds.
+
+Quick question — are you currently looking for more patients, or is capacity pretty full right now?
+
+I ask because we've been helping similar practices fill their books using AI-powered patient acquisition — and I had a few ideas specific to your area.
+
+If you're open to it, I'd love to share them on a quick 15-minute call.
+
+Worth a chat?
+
+Finn
+SummitFlow</div>
+                        </div>
+                        <div class="template-footer">
+                            <button class="template-btn" onclick="copyTemplate('tpl4')">📋 Copy</button>
+                            <button class="template-btn primary" onclick="openEmailClient('tpl4')">📤 Open in Email</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Calendar Modal -->
+    <div class="modal-overlay" id="calendar-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">📅 Book Meeting</div>
+                <button class="modal-close" onclick="closeCalendarModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Meeting Title</label>
+                    <input type="text" class="form-input" id="cal-title" placeholder="Discovery Call - Company Name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="cal-date">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-input" id="cal-time" value="10:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration (minutes)</label>
+                    <input type="number" class="form-input" id="cal-duration" value="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <input type="text" class="form-input" id="cal-notes" placeholder="Any notes for the meeting...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeCalendarModal()">Cancel</button>
+                <button class="btn primary" onclick="createCalendarEvent()">📅 Add to Google Calendar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
+        // ========== SUPABASE CONFIG ==========
         const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeG1lb2V1Z3ltbGdhZGFqd21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NTcxNjEsImV4cCI6MjA4MzAzMzE2MX0.ciWAoTstogM4MWrK73q9VasVWECa9kucCoHlgkyHLIw';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // =====================================
 
-        const STAGES = [{id:'prospecting',name:'Prospecting',icon:'🎯'},{id:'outreach',name:'Outreach',icon:'📤'},{id:'interested',name:'Interested',icon:'🔥'},{id:'meeting',name:'Meeting',icon:'📅'},{id:'proposal',name:'Proposal',icon:'📋'},{id:'negotiation',name:'Negotiation',icon:'🤝'}];
-        const ACHIEVEMENTS = [{id:'first_call',name:'First Call',icon:'📞',fn:s=>s.calls>=1},{id:'ten_calls',name:'10 Calls',icon:'🔥',fn:s=>s.calls>=10},{id:'fifty',name:'50 Calls',icon:'⚡',fn:s=>s.calls>=50},{id:'century',name:'Century',icon:'💯',fn:s=>s.calls>=100},{id:'first_meeting',name:'1st Meeting',icon:'📅',fn:s=>s.meetings>=1},{id:'five_meetings',name:'5 Meetings',icon:'🌟',fn:s=>s.meetings>=5},{id:'first_client',name:'1st Client',icon:'🏆',fn:s=>s.clients>=1},{id:'goal',name:'5 Clients',icon:'👑',fn:s=>s.clients>=5}];
-        const QUOTES = ["Every dial gets you closer.","The fortune is in the follow-up.","80% of sales require 5 follow-ups.","Speed to lead is everything.","This is where most people quit. You're not most people."];
+        const STAGES = [
+            {id:'prospecting',name:'Prospecting',icon:'🎯'},
+            {id:'outreach',name:'Outreach',icon:'📤'},
+            {id:'interested',name:'Interested',icon:'🔥'},
+            {id:'meeting',name:'Meeting',icon:'📅'},
+            {id:'proposal',name:'Proposal',icon:'📋'},
+            {id:'negotiation',name:'Negotiation',icon:'🤝'},
+            {id:'won',name:'Won',icon:'🏆'},
+            {id:'lost',name:'Lost',icon:'❌'}
+        ];
 
-        let leads=[],logs=[],queue=[],currentIdx=0,sessionActive=false,sessionStart=null,sessionTimer=null,sessionData={calls:0,emails:0,meetings:0,callbacks:0};
+        const QUOTES = [
+            {text:"Every dial gets you closer to your goal.", author:"Jordan Platten"},
+            {text:"The fortune is in the follow-up.", author:"Jim Rohn"},
+            {text:"80% of sales require 5 follow-ups. Most quit after 1.", author:"Marketing Donut"},
+            {text:"Speed to lead is everything.", author:"InsideSales"},
+            {text:"This is where most people quit. You're not most people.", author:"SummitFlow"},
+            {text:"The sale doesn't start until the first objection.", author:"Jordan Platten"}
+        ];
 
-        document.addEventListener('DOMContentLoaded',load);
+        let leads=[], logs=[], activities=[], queue=[], currentIdx=0;
+        let sessionActive=false, sessionStart=null, sessionTimer=null;
+        let sessionData={calls:0,emails:0,meetings:0,callbacks:0};
+        let currentLead=null;
 
-        async function load(){
-            try{
-                const{data:ld}=await db.from('leads').select('*').order('created_at',{ascending:false});
-                leads=ld||[];
-                const{data:lg}=await db.from('daily_logs').select('*');
-                logs=lg||[];
-                queue=leads.filter(l=>l.stage==='prospecting'||l.stage==='outreach').slice(0,50).map(l=>l.id);
-                setDate();setQuote();renderLanding();renderStats();renderCurrent();renderFollowups();renderPipeline();renderAchievements();
-            }catch(e){console.error(e);toast('❌ Connection failed');}
+        // Initialize
+        document.addEventListener('DOMContentLoaded', load);
+
+        async function load() {
+            try {
+                const {data:ld} = await db.from('leads').select('*').order('created_at',{ascending:false});
+                leads = ld || [];
+                
+                const {data:lg} = await db.from('daily_logs').select('*').order('date',{ascending:false});
+                logs = lg || [];
+                
+                const {data:acts} = await db.from('activities').select('*').order('created_at',{ascending:false});
+                activities = acts || [];
+
+                queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,50).map(l => l.id);
+                
+                setDate();
+                setQuote();
+                renderLanding();
+                renderStats();
+                renderCurrent();
+                renderFollowups();
+                renderReports();
+            } catch(e) {
+                console.error(e);
+                toast('❌ Connection failed', 'error');
+            }
         }
 
-        function enter(){document.getElementById('landing').classList.add('hidden');setTimeout(()=>document.getElementById('app').classList.add('visible'),300);}
-        function setDate(){document.getElementById('date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});}
-        function setQuote(){document.getElementById('quote').textContent='"'+QUOTES[Math.floor(Math.random()*QUOTES.length)]+'"';}
-
-        function getStats(){
-            const calls=logs.reduce((s,l)=>s+(l.calls||0),0),emails=logs.reduce((s,l)=>s+(l.emails||0),0),meetings=logs.reduce((s,l)=>s+(l.meetings||0),0),clients=leads.filter(l=>l.stage==='won').length;
-            const ws=getWeekStart(),wl=logs.filter(l=>new Date(l.date)>=ws),wc=wl.reduce((s,l)=>s+(l.calls||0),0);
-            return{calls,emails,meetings,clients,weeklyCalls:wc};
+        function enter() {
+            document.getElementById('landing').classList.add('hidden');
+            setTimeout(() => document.getElementById('app').classList.add('visible'), 300);
         }
 
-        function getWeekStart(){const n=new Date(),d=n.getDay(),diff=n.getDate()-d+(d===0?-6:1);const m=new Date(n.setDate(diff));m.setHours(0,0,0,0);return m;}
-
-        function renderLanding(){const s=getStats();document.getElementById('l-calls').textContent=s.calls;document.getElementById('l-meetings').textContent=s.meetings;document.getElementById('l-clients').textContent=s.clients;}
-
-        function renderStats(){
-            const s=getStats();
-            document.getElementById('total-calls').textContent=s.calls;
-            document.getElementById('total-emails').textContent=s.emails;
-            document.getElementById('total-meetings').textContent=s.meetings;
-            document.getElementById('total-clients').textContent=s.clients+'/5';
-            document.getElementById('weekly-calls').textContent=s.weeklyCalls;
-            document.getElementById('weekly-progress').style.width=Math.min(s.weeklyCalls/150*100,100)+'%';
-            const ws=getWeekStart(),wl=logs.filter(l=>new Date(l.date)>=ws);
-            const wed=wl.find(l=>new Date(l.date).getDay()===3),thu=wl.find(l=>new Date(l.date).getDay()===4);
-            const wc=wed?.calls||0,tc=thu?.calls||0;
-            document.getElementById('wed-calls').textContent=wc+'/100';
-            document.getElementById('thu-calls').textContent=tc+'/50';
-            document.getElementById('check-wed').classList.toggle('done',wc>=100);
-            document.getElementById('check-thu').classList.toggle('done',tc>=50);
-            const streak=0;document.getElementById('streak').textContent=streak;
-            document.getElementById('check-streak').classList.toggle('done',streak>0);
-            const st=document.getElementById('target-status');
-            if(s.weeklyCalls>=150){st.textContent='Complete!';st.className='target-status good';}
-            else if(s.weeklyCalls>=75){st.textContent='On Track';st.className='target-status good';}
-            else{st.textContent='Behind';st.className='target-status warning';}
+        function setDate() {
+            document.getElementById('date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
         }
 
-        function renderCurrent(){
-            const c=document.getElementById('current-lead');
-            document.getElementById('queue-count').textContent=queue.length+' in queue';
-            if(!queue.length){c.innerHTML='<div class="empty-queue"><div class="empty-icon">📭</div><div class="empty-title">No leads in queue</div><div class="empty-text">Add leads from Pipeline or Leads Hub</div><a href="summitflow-leads-hub.html" class="btn primary">Go to Leads Hub</a></div>';return;}
-            const l=leads.find(x=>x.id===queue[currentIdx]);
-            if(!l){queue.splice(currentIdx,1);if(currentIdx>=queue.length)currentIdx=Math.max(0,queue.length-1);renderCurrent();return;}
-            c.innerHTML=`<div class="current-lead">
-                <div class="current-lead-header"><div><div class="current-lead-company">${l.company}</div>${l.contact?`<div class="current-lead-contact">${l.contact}</div>`:''}</div><div class="lead-index">${currentIdx+1} / ${queue.length}</div></div>
-                <div class="contact-grid">
-                    <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label">Phone</div><div class="contact-value">${l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'—'}</div></div></div>
-                    <div class="contact-item"><div class="contact-icon">📧</div><div><div class="contact-label">Email</div><div class="contact-value">${l.email?`<a href="mailto:${l.email}">${l.email}</a>`:'—'}</div></div></div>
-                    ${l.website?`<div class="contact-item"><div class="contact-icon">🌐</div><div><div class="contact-label">Website</div><div class="contact-value"><a href="${l.website.startsWith('http')?l.website:'https://'+l.website}" target="_blank">${l.website}</a></div></div></div>`:''}
-                    ${l.address?`<div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label">Address</div><div class="contact-value">${l.address}</div></div></div>`:''}
-                </div>
-                <div class="quick-log">
-                    <button class="quick-btn" onclick="logOutcome('no_answer')" ${!sessionActive?'disabled':''}><span class="quick-icon">📵</span>No Answer</button>
-                    <button class="quick-btn" onclick="logOutcome('voicemail')" ${!sessionActive?'disabled':''}><span class="quick-icon">📝</span>Voicemail</button>
-                    <button class="quick-btn" onclick="logOutcome('gatekeeper')" ${!sessionActive?'disabled':''}><span class="quick-icon">🚪</span>Gatekeeper</button>
-                    <button class="quick-btn" onclick="logOutcome('not_interested')" ${!sessionActive?'disabled':''}><span class="quick-icon">👎</span>Not Interested</button>
-                    <button class="quick-btn warning" onclick="logOutcome('callback')" ${!sessionActive?'disabled':''}><span class="quick-icon">⏰</span>Callback</button>
-                    <button class="quick-btn warning" onclick="logOutcome('interested')" ${!sessionActive?'disabled':''}><span class="quick-icon">🔥</span>Interested!</button>
-                    <button class="quick-btn success" onclick="logOutcome('meeting')" ${!sessionActive?'disabled':''}><span class="quick-icon">📅</span>Meeting!</button>
-                    <button class="quick-btn" onclick="logOutcome('email')" ${!sessionActive?'disabled':''}><span class="quick-icon">📧</span>Email Sent</button>
-                </div>
-                <div class="lead-nav">
-                    <button class="nav-btn" onclick="prev()" ${currentIdx===0?'disabled':''}>← Previous</button>
-                    <button class="nav-btn" onclick="skip()">Skip</button>
-                    <button class="nav-btn primary" onclick="next()" ${currentIdx>=queue.length-1?'disabled':''}>Next →</button>
-                </div>
-            </div>`;
+        function setQuote() {
+            const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+            document.getElementById('quote').textContent = `"${q.text}"`;
         }
 
-        async function logOutcome(o){
-            if(!sessionActive)return;
-            const lid=queue[currentIdx],l=leads.find(x=>x.id===lid);if(!l)return;
-            const type=o==='email'?'email':'call';
-            try{
-                await db.from('activities').insert({lead_id:lid,type,outcome:o,notes:'Logged during session'});
-                let upd={last_activity_at:new Date().toISOString()};
-                if(o==='interested'&&(l.stage==='prospecting'||l.stage==='outreach'))upd.stage='interested';
-                else if(o==='meeting')upd.stage='meeting';
-                else if(l.stage==='prospecting')upd.stage='outreach';
-                await db.from('leads').update(upd).eq('id',lid);
-                Object.assign(l,upd);
-                if(o==='email')sessionData.emails++;else sessionData.calls++;
-                if(o==='meeting'){sessionData.meetings++;celebrate();toast('🎉 MEETING BOOKED!');}
-                else if(o==='callback'){sessionData.callbacks++;toast('⏰ Callback scheduled');}
-                else if(o==='interested')toast('🔥 Interested!');
-                updateSession();
-                setTimeout(next,300);
-            }catch(e){console.error(e);toast('❌ Failed');}
+        // Stats
+        function getStats() {
+            const calls = logs.reduce((s,l) => s + (l.calls||0), 0);
+            const emails = logs.reduce((s,l) => s + (l.emails||0), 0);
+            const meetings = logs.reduce((s,l) => s + (l.meetings||0), 0);
+            const clients = leads.filter(l => l.stage === 'won').length;
+            
+            const ws = getWeekStart();
+            const weekLogs = logs.filter(l => new Date(l.date) >= ws);
+            const weeklyCalls = weekLogs.reduce((s,l) => s + (l.calls||0), 0);
+            const weeklyMeetings = weekLogs.reduce((s,l) => s + (l.meetings||0), 0);
+            
+            return {calls, emails, meetings, clients, weeklyCalls, weeklyMeetings};
         }
 
-        function prev(){if(currentIdx>0){currentIdx--;renderCurrent();}}
-        function next(){if(currentIdx<queue.length-1){currentIdx++;renderCurrent();}}
-        function skip(){const id=queue.splice(currentIdx,1)[0];queue.push(id);if(currentIdx>=queue.length)currentIdx=0;renderCurrent();}
-
-        function toggleSession(){if(sessionActive)endSession();else startSession();}
-
-        function startSession(){
-            sessionActive=true;sessionStart=Date.now();sessionData={calls:0,emails:0,meetings:0,callbacks:0};
-            const btn=document.getElementById('session-btn');btn.classList.add('active');btn.innerHTML='⏹ End Session';
-            document.getElementById('session-panel').classList.add('active');
-            sessionTimer=setInterval(updateTimer,1000);
-            renderCurrent();toast('🎯 Session started!');
+        function getWeekStart() {
+            const n = new Date();
+            const d = n.getDay();
+            const diff = n.getDate() - d + (d === 0 ? -6 : 1);
+            const m = new Date(n.setDate(diff));
+            m.setHours(0,0,0,0);
+            return m;
         }
 
-        async function endSession(){
-            sessionActive=false;clearInterval(sessionTimer);
-            const btn=document.getElementById('session-btn');btn.classList.remove('active');btn.innerHTML='▶ Start Session';
-            document.getElementById('session-panel').classList.remove('active');
-            const today=new Date().toISOString().split('T')[0];
-            try{
-                const{data:existing}=await db.from('daily_logs').select('*').eq('date',today).single();
-                if(existing){
-                    await db.from('daily_logs').update({calls:(existing.calls||0)+sessionData.calls,emails:(existing.emails||0)+sessionData.emails,meetings:(existing.meetings||0)+sessionData.meetings,callbacks:(existing.callbacks||0)+sessionData.callbacks}).eq('id',existing.id);
-                    const l=logs.find(x=>x.date===today);if(l){l.calls=(l.calls||0)+sessionData.calls;l.emails=(l.emails||0)+sessionData.emails;l.meetings=(l.meetings||0)+sessionData.meetings;l.callbacks=(l.callbacks||0)+sessionData.callbacks;}
-                }else{
-                    const{data:newLog}=await db.from('daily_logs').insert({date:today,...sessionData}).select().single();
-                    logs.push(newLog);
+        function renderLanding() {
+            const s = getStats();
+            document.getElementById('l-calls').textContent = s.calls;
+            document.getElementById('l-meetings').textContent = s.meetings;
+            document.getElementById('l-clients').textContent = s.clients;
+        }
+
+        function renderStats() {
+            const s = getStats();
+            document.getElementById('total-calls').textContent = s.calls;
+            document.getElementById('total-emails').textContent = s.emails;
+            document.getElementById('total-meetings').textContent = s.meetings;
+            document.getElementById('total-clients').textContent = `${s.clients}/5`;
+        }
+
+        // Dialer
+        function renderCurrent() {
+            const c = document.getElementById('current-lead');
+            
+            if (!queue.length) {
+                c.innerHTML = `
+                    <div class="empty-queue">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-title">No leads in queue</div>
+                        <div class="empty-text">Add leads from the Leads Hub to start calling</div>
+                        <a href="summitflow-leads-hub.html" class="btn primary">Go to Leads Hub</a>
+                    </div>`;
+                return;
+            }
+
+            const l = leads.find(x => x.id === queue[currentIdx]);
+            if (!l) {
+                queue.splice(currentIdx, 1);
+                if (currentIdx >= queue.length) currentIdx = Math.max(0, queue.length - 1);
+                renderCurrent();
+                return;
+            }
+            
+            currentLead = l;
+
+            c.innerHTML = `
+                <div class="current-lead">
+                    <div class="current-lead-header">
+                        <div>
+                            <div class="current-lead-company">${l.company}</div>
+                            ${l.contact ? `<div class="current-lead-contact">${l.contact}</div>` : ''}
+                        </div>
+                        <div class="lead-index">${currentIdx + 1} / ${queue.length}</div>
+                    </div>
+                    <div class="contact-grid">
+                        <div class="contact-item">
+                            <div class="contact-icon">📞</div>
+                            <div>
+                                <div class="contact-label">Phone</div>
+                                <div class="contact-value">${l.phone ? `<a href="tel:${l.phone}">${l.phone}</a>` : '—'}</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">📧</div>
+                            <div>
+                                <div class="contact-label">Email</div>
+                                <div class="contact-value">${l.email ? `<a href="mailto:${l.email}">${l.email}</a>` : '—'}</div>
+                            </div>
+                        </div>
+                        ${l.website ? `
+                        <div class="contact-item">
+                            <div class="contact-icon">🌐</div>
+                            <div>
+                                <div class="contact-label">Website</div>
+                                <div class="contact-value"><a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank">${l.website}</a></div>
+                            </div>
+                        </div>` : ''}
+                        ${l.address ? `
+                        <div class="contact-item">
+                            <div class="contact-icon">📍</div>
+                            <div>
+                                <div class="contact-label">Address</div>
+                                <div class="contact-value">${l.address}</div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    <div class="quick-log">
+                        <button class="quick-btn" onclick="logOutcome('no_answer')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📵</span>No Answer</button>
+                        <button class="quick-btn" onclick="logOutcome('voicemail')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📝</span>Voicemail</button>
+                        <button class="quick-btn" onclick="logOutcome('gatekeeper')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">🚪</span>Gatekeeper</button>
+                        <button class="quick-btn" onclick="logOutcome('not_interested')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">👎</span>Not Interested</button>
+                        <button class="quick-btn warning" onclick="logOutcome('callback')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">⏰</span>Callback</button>
+                        <button class="quick-btn warning" onclick="logOutcome('interested')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">🔥</span>Interested!</button>
+                        <button class="quick-btn success" onclick="logOutcome('meeting')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📅</span>Meeting!</button>
+                        <button class="quick-btn" onclick="logOutcome('email')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📧</span>Email Sent</button>
+                    </div>
+                    <div class="lead-nav">
+                        <button class="nav-btn" onclick="prev()" ${currentIdx === 0 ? 'disabled' : ''}>← Previous</button>
+                        <button class="nav-btn" onclick="skip()">Skip →</button>
+                        <button class="nav-btn primary" onclick="next()" ${currentIdx >= queue.length - 1 ? 'disabled' : ''}>Next →</button>
+                    </div>
+                </div>`;
+        }
+
+        async function logOutcome(o) {
+            if (!sessionActive) return;
+            const lid = queue[currentIdx];
+            const l = leads.find(x => x.id === lid);
+            if (!l) return;
+
+            const type = o === 'email' ? 'email' : 'call';
+            
+            try {
+                await db.from('activities').insert({lead_id: lid, type, outcome: o, notes: 'Logged during session'});
+                
+                let upd = {last_activity_at: new Date().toISOString()};
+                if (o === 'interested' && (l.stage === 'prospecting' || l.stage === 'outreach')) upd.stage = 'interested';
+                else if (o === 'meeting') upd.stage = 'meeting';
+                else if (l.stage === 'prospecting') upd.stage = 'outreach';
+                
+                await db.from('leads').update(upd).eq('id', lid);
+                Object.assign(l, upd);
+
+                if (o === 'email') sessionData.emails++;
+                else sessionData.calls++;
+                
+                if (o === 'meeting') {
+                    sessionData.meetings++;
+                    celebrate();
+                    toast('🎉 MEETING BOOKED!');
+                    openCalendarModal(l);
+                } else if (o === 'callback') {
+                    sessionData.callbacks++;
+                    toast('⏰ Callback scheduled');
+                } else if (o === 'interested') {
+                    toast('🔥 Interested!');
                 }
-                renderStats();renderCurrent();renderAchievements();
-                toast(`✅ Saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
-            }catch(e){console.error(e);toast('❌ Save failed');}
+                
+                updateSession();
+                if (o !== 'meeting') setTimeout(next, 300);
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed to log', 'error');
+            }
         }
 
-        function updateTimer(){const e=Date.now()-sessionStart,h=Math.floor(e/3600000),m=Math.floor((e%3600000)/60000),s=Math.floor((e%60000)/1000);document.getElementById('timer').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
-        function updateSession(){document.getElementById('s-calls').textContent=sessionData.calls;document.getElementById('s-emails').textContent=sessionData.emails;document.getElementById('s-meetings').textContent=sessionData.meetings;document.getElementById('s-callbacks').textContent=sessionData.callbacks;}
+        function prev() { if (currentIdx > 0) { currentIdx--; renderCurrent(); }}
+        function next() { if (currentIdx < queue.length - 1) { currentIdx++; renderCurrent(); }}
+        function skip() {
+            const id = queue.splice(currentIdx, 1)[0];
+            queue.push(id);
+            if (currentIdx >= queue.length) currentIdx = 0;
+            renderCurrent();
+        }
 
-        function renderFollowups(){
-            const today=new Date();today.setHours(23,59,59,999);
-            const fu=leads.filter(l=>l.follow_up&&new Date(l.follow_up)<=today).sort((a,b)=>new Date(a.follow_up)-new Date(b.follow_up)).slice(0,10);
-            document.getElementById('followups-count').textContent=fu.length;
-            const list=document.getElementById('followups-list');
-            if(!fu.length){list.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:2rem">No follow-ups today 🎉</div>';return;}
-            list.innerHTML=fu.map(l=>{
-                const s=STAGES.find(x=>x.id===l.stage)||STAGES[0];
-                const d=new Date(l.follow_up),od=d<new Date(),t=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-                return`<div class="followup-item" onclick="jumpTo('${l.id}')"><div class="followup-time ${od?'overdue':''}">${od?'Overdue':t}</div><div style="flex:1"><div class="followup-company">${l.company}</div><div class="followup-stage">${s.icon} ${s.name}</div></div><button class="followup-action" onclick="event.stopPropagation();window.open('tel:${l.phone}')">📞</button></div>`;
+        // Session
+        function toggleSession() { sessionActive ? endSession() : startSession(); }
+
+        function startSession() {
+            sessionActive = true;
+            sessionStart = Date.now();
+            sessionData = {calls:0, emails:0, meetings:0, callbacks:0};
+            
+            const btn = document.getElementById('session-btn');
+            btn.classList.add('active');
+            btn.innerHTML = '⏹ End Session';
+            document.getElementById('session-panel').classList.add('active');
+            
+            sessionTimer = setInterval(updateTimer, 1000);
+            renderCurrent();
+            toast('🎯 Session started — let\'s go!');
+        }
+
+        async function endSession() {
+            sessionActive = false;
+            clearInterval(sessionTimer);
+            
+            const btn = document.getElementById('session-btn');
+            btn.classList.remove('active');
+            btn.innerHTML = '▶ Start Session';
+            document.getElementById('session-panel').classList.remove('active');
+
+            const today = new Date().toISOString().split('T')[0];
+            
+            try {
+                const {data: existing} = await db.from('daily_logs').select('*').eq('date', today).single();
+                
+                if (existing) {
+                    await db.from('daily_logs').update({
+                        calls: (existing.calls||0) + sessionData.calls,
+                        emails: (existing.emails||0) + sessionData.emails,
+                        meetings: (existing.meetings||0) + sessionData.meetings,
+                        callbacks: (existing.callbacks||0) + sessionData.callbacks
+                    }).eq('id', existing.id);
+                } else {
+                    await db.from('daily_logs').insert({date: today, ...sessionData});
+                }
+                
+                // Reload logs
+                const {data:lg} = await db.from('daily_logs').select('*').order('date',{ascending:false});
+                logs = lg || [];
+                
+                renderStats();
+                renderCurrent();
+                renderReports();
+                toast(`✅ Session saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed to save session', 'error');
+            }
+        }
+
+        function updateTimer() {
+            const e = Date.now() - sessionStart;
+            const h = Math.floor(e / 3600000);
+            const m = Math.floor((e % 3600000) / 60000);
+            const s = Math.floor((e % 60000) / 1000);
+            document.getElementById('timer').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        function updateSession() {
+            document.getElementById('s-calls').textContent = sessionData.calls;
+            document.getElementById('s-emails').textContent = sessionData.emails;
+            document.getElementById('s-meetings').textContent = sessionData.meetings;
+            document.getElementById('s-callbacks').textContent = sessionData.callbacks;
+        }
+
+        // Follow-ups
+        function renderFollowups() {
+            const today = new Date();
+            today.setHours(23,59,59,999);
+            
+            const fu = leads.filter(l => l.follow_up && new Date(l.follow_up) <= today)
+                .sort((a,b) => new Date(a.follow_up) - new Date(b.follow_up))
+                .slice(0, 8);
+            
+            document.getElementById('followups-count').textContent = fu.length;
+            const list = document.getElementById('followups-list');
+            
+            if (!fu.length) {
+                list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">No follow-ups today 🎉</div>';
+                return;
+            }
+
+            list.innerHTML = fu.map(l => {
+                const s = STAGES.find(x => x.id === l.stage) || STAGES[0];
+                const d = new Date(l.follow_up);
+                const od = d < new Date();
+                const t = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+                return `
+                    <div class="followup-item" onclick="jumpTo('${l.id}')">
+                        <div class="followup-time ${od ? 'overdue' : ''}">${od ? 'DUE' : t}</div>
+                        <div class="followup-info">
+                            <div class="followup-company">${l.company}</div>
+                            <div class="followup-stage">${s.icon} ${s.name}</div>
+                        </div>
+                        ${l.phone ? `<button class="followup-call" onclick="event.stopPropagation();window.open('tel:${l.phone}')">📞</button>` : ''}
+                    </div>`;
             }).join('');
         }
 
-        function jumpTo(id){const i=queue.indexOf(id);if(i!==-1){currentIdx=i;}else{queue.unshift(id);currentIdx=0;}renderCurrent();}
-
-        function renderPipeline(){
-            document.getElementById('pipeline-stages').innerHTML=STAGES.map(s=>`<div class="pipeline-stage"><div class="pipeline-stage-icon">${s.icon}</div><div class="pipeline-stage-name">${s.name}</div><div class="pipeline-stage-count">${leads.filter(l=>l.stage===s.id).length}</div></div>`).join('');
+        function jumpTo(id) {
+            const i = queue.indexOf(id);
+            if (i !== -1) {
+                currentIdx = i;
+            } else {
+                queue.unshift(id);
+                currentIdx = 0;
+            }
+            renderCurrent();
+            switchTab('dialer');
         }
 
-        function renderAchievements(){
-            const s=getStats();
-            document.getElementById('achievements').innerHTML=ACHIEVEMENTS.map(a=>`<div class="achievement ${a.fn(s)?'unlocked':''}"><div class="achievement-icon">${a.icon}</div><div class="achievement-name">${a.name}</div></div>`).join('');
+        // Reports
+        function renderReports() {
+            const s = getStats();
+            
+            document.getElementById('report-calls').textContent = s.weeklyCalls;
+            document.getElementById('report-meetings').textContent = s.weeklyMeetings;
+            document.getElementById('report-rate').textContent = s.calls > 0 ? `${((s.meetings / s.calls) * 100).toFixed(1)}%` : '0%';
+
+            // Daily chart
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const log = logs.find(l => l.date === dateStr);
+                days.push({
+                    date: d,
+                    calls: log?.calls || 0,
+                    label: d.toLocaleDateString('en-GB', {weekday:'short'})
+                });
+            }
+            
+            const maxCalls = Math.max(...days.map(d => d.calls), 1);
+            document.getElementById('calls-chart').innerHTML = days.map(d => 
+                `<div class="chart-bar" style="height:${(d.calls/maxCalls)*100}%" data-value="${d.calls}"></div>`
+            ).join('');
+            document.getElementById('chart-labels').innerHTML = days.map(d => 
+                `<div class="chart-label">${d.label}</div>`
+            ).join('');
+
+            // Outcomes
+            const outcomes = {};
+            activities.filter(a => a.type === 'call').forEach(a => {
+                outcomes[a.outcome] = (outcomes[a.outcome] || 0) + 1;
+            });
+            
+            document.getElementById('outcomes-grid').innerHTML = `
+                <div class="metric-item"><div class="metric-value" style="color:var(--text-muted)">${outcomes.no_answer || 0}</div><div class="metric-label">No Answer</div></div>
+                <div class="metric-item"><div class="metric-value" style="color:var(--warning)">${outcomes.voicemail || 0}</div><div class="metric-label">Voicemails</div></div>
+                <div class="metric-item"><div class="metric-value" style="color:var(--calls)">${outcomes.interested || 0}</div><div class="metric-label">Interested</div></div>
+                <div class="metric-item"><div class="metric-value" style="color:var(--success)">${outcomes.meeting || 0}</div><div class="metric-label">Meetings</div></div>
+            `;
+
+            // Funnel
+            const stageCounts = {};
+            leads.forEach(l => stageCounts[l.stage] = (stageCounts[l.stage] || 0) + 1);
+            const total = leads.length || 1;
+            
+            const funnelStages = [
+                {id:'prospecting', color:'var(--surface)'},
+                {id:'outreach', color:'var(--calls)'},
+                {id:'interested', color:'var(--warning)'},
+                {id:'meeting', color:'var(--emails)'},
+                {id:'proposal', color:'var(--purple)'},
+                {id:'won', color:'var(--success)'}
+            ];
+            
+            document.getElementById('funnel').innerHTML = funnelStages.map(fs => {
+                const stage = STAGES.find(s => s.id === fs.id);
+                const count = stageCounts[fs.id] || 0;
+                const pct = (count / total * 100).toFixed(0);
+                return `
+                    <div class="funnel-stage">
+                        <div class="funnel-label">${stage.icon} ${stage.name}</div>
+                        <div class="funnel-bar">
+                            <div class="funnel-fill" style="width:${pct}%;background:${fs.color}">
+                                <span>${count}</span>
+                            </div>
+                        </div>
+                        <div class="funnel-value">${pct}%</div>
+                    </div>`;
+            }).join('');
         }
 
-        function celebrate(){
-            const colors=['#FF6B35','#3B82F6','#10B981','#F59E0B','#8B5CF6'];
-            const c=document.createElement('div');c.className='celebration';
-            for(let i=0;i<50;i++){const cf=document.createElement('div');cf.className='confetti';cf.style.left=Math.random()*100+'%';cf.style.background=colors[Math.floor(Math.random()*colors.length)];cf.style.animationDelay=Math.random()*.5+'s';cf.style.borderRadius=Math.random()>.5?'50%':'0';c.appendChild(cf);}
-            document.body.appendChild(c);setTimeout(()=>c.remove(),3000);
+        // Tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
         }
 
-        function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+        function switchScript(script) {
+            document.querySelectorAll('.script-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.script-content').forEach(c => c.style.display = 'none');
+            document.querySelector(`[onclick="switchScript('${script}')"]`).classList.add('active');
+            document.getElementById(`script-${script}`).style.display = 'block';
+        }
+
+        function toggleObjection(el) {
+            el.classList.toggle('open');
+        }
+
+        // Email Templates
+        function copyTemplate(id) {
+            const subject = document.getElementById(`${id}-subject`).value;
+            const body = document.getElementById(`${id}-body`).innerText;
+            
+            // Replace vars with current lead if available
+            let text = body;
+            if (currentLead) {
+                text = text.replace(/\[NAME\]/g, currentLead.contact || 'there');
+                text = text.replace(/\[COMPANY\]/g, currentLead.company || '');
+            }
+            
+            navigator.clipboard.writeText(`Subject: ${subject}\n\n${text}`);
+            toast('📋 Copied to clipboard!', 'info');
+        }
+
+        function openEmailClient(id) {
+            const subject = encodeURIComponent(document.getElementById(`${id}-subject`).value);
+            let body = document.getElementById(`${id}-body`).innerText;
+            
+            if (currentLead) {
+                body = body.replace(/\[NAME\]/g, currentLead.contact || 'there');
+                body = body.replace(/\[COMPANY\]/g, currentLead.company || '');
+            }
+            
+            const email = currentLead?.email || '';
+            window.open(`mailto:${email}?subject=${subject}&body=${encodeURIComponent(body)}`);
+        }
+
+        // Calendar
+        function openCalendarModal(lead) {
+            document.getElementById('cal-title').value = `Discovery Call - ${lead?.company || ''}`;
+            
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('cal-date').value = tomorrow.toISOString().split('T')[0];
+            
+            document.getElementById('calendar-modal').classList.add('active');
+        }
+
+        function closeCalendarModal() {
+            document.getElementById('calendar-modal').classList.remove('active');
+        }
+
+        function createCalendarEvent() {
+            const title = encodeURIComponent(document.getElementById('cal-title').value);
+            const date = document.getElementById('cal-date').value;
+            const time = document.getElementById('cal-time').value;
+            const duration = parseInt(document.getElementById('cal-duration').value) || 30;
+            const notes = encodeURIComponent(document.getElementById('cal-notes').value);
+            
+            const start = new Date(`${date}T${time}`);
+            const end = new Date(start.getTime() + duration * 60000);
+            
+            const formatDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatDate(start)}/${formatDate(end)}&details=${notes}`;
+            
+            window.open(url, '_blank');
+            closeCalendarModal();
+            toast('📅 Opening Google Calendar...', 'info');
+        }
+
+        // Utils
+        function celebrate() {
+            const colors = ['#FF6B35','#3B82F6','#10B981','#F59E0B','#8B5CF6'];
+            const c = document.createElement('div');
+            c.className = 'celebration';
+            for (let i = 0; i < 50; i++) {
+                const cf = document.createElement('div');
+                cf.className = 'confetti';
+                cf.style.left = Math.random() * 100 + '%';
+                cf.style.background = colors[Math.floor(Math.random() * colors.length)];
+                cf.style.animationDelay = Math.random() * .5 + 's';
+                cf.style.borderRadius = Math.random() > .5 ? '50%' : '0';
+                c.appendChild(cf);
+            }
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+
+        function toast(msg, type='success') {
+            const t = document.getElementById('toast');
+            t.innerHTML = msg;
+            t.className = 'toast show' + (type === 'error' ? ' error' : type === 'info' ? ' info' : '');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // Modal close
+        document.getElementById('calendar-modal').addEventListener('click', e => {
+            if (e.target.id === 'calendar-modal') closeCalendarModal();
+        });
     </script>
 </body>
 </html>
