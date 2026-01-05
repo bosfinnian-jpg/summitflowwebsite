@@ -1,1461 +1,1352 @@
+<!--
+=================================================================
+SUMMITFLOW DASHBOARD INTEGRATION
+=================================================================
+Add these components to your existing summitflow-dashboard.html
+
+This file contains:
+1. Actions Stats Component (for top bar)
+2. Quick Action Creation (from log buttons)
+3. End Session Logic with Carryover + Recap
+4. Full standalone Dashboard if you want to test
+=================================================================
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SummitFlow | Command Center</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Dashboard | SummitFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        :root{
-            --bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;
-            --border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);
-            --text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;
-            --calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);
-            --emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);
-            --success:#10B981;--success-glow:rgba(16,185,129,0.25);
-            --warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);
-            --danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);
-            --purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);
-            --radius:16px;--radius-sm:10px;--radius-xs:6px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
-        
-        /* Landing */
-        #landing{position:fixed;inset:0;background:var(--bg-deep);display:flex;align-items:center;justify-content:center;z-index:9999;transition:all .6s}
-        #landing.hidden{opacity:0;pointer-events:none}
-        .landing-content{text-align:center;max-width:700px;padding:2rem;position:relative}
-        .landing-content::before{content:'';position:absolute;top:50%;left:50%;width:500px;height:500px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(-50%,-50%);z-index:-1;animation:pulse 4s infinite}
-        @keyframes pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:.3;transform:translate(-50%,-50%) scale(1.2)}}
-        .landing-stats{display:flex;justify-content:center;gap:3rem;margin-bottom:2rem}
-        .landing-stat-value{font-size:3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--calls)}
-        .landing-stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em}
-        .quote{font-size:1.5rem;font-weight:600;margin-bottom:.5rem;line-height:1.4}
-        .quote-author{font-size:.85rem;color:var(--calls);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2.5rem}
-        .enter-btn{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none;padding:1rem 2.5rem;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer;transition:all .3s;font-family:inherit}
-        .enter-btn:hover{transform:translateY(-3px);box-shadow:0 15px 40px var(--calls-glow)}
 
-        /* Nav */
-        .nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}
-        .nav-left{display:flex;align-items:center;gap:2rem}
-        .logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}
-        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center}
-        .nav-tabs{display:flex;gap:.5rem}
-        .nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}
-        .nav-tab:hover{background:var(--surface);color:var(--text)}
-        .nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}
-        .nav-right{display:flex;align-items:center;gap:1rem}
-        .date{font-size:.9rem;color:var(--text-secondary)}
-        .session-btn{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;border:none;padding:.75rem 1.5rem;font-size:.875rem;font-weight:700;border-radius:50px;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-family:inherit;transition:all .2s}
-        .session-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--success-glow)}
-        .session-btn.active{background:var(--danger);animation:sessionPulse 2s infinite}
-        @keyframes sessionPulse{0%,100%{box-shadow:0 0 20px rgba(239,68,68,.3)}50%{box-shadow:0 0 40px rgba(239,68,68,.5)}}
+        :root {
+            --bg-primary: #08090A;
+            --bg-card: #131416;
+            --bg-card-hover: #1a1c1f;
+            --bg-elevated: #1d1f23;
+            --border-subtle: #2a2d32;
+            --border-default: #3a3d42;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --green-primary: #10B981;
+            --green-secondary: #059669;
+            --green-muted: rgba(16, 185, 129, 0.15);
+            --red-primary: #EF4444;
+            --red-secondary: #DC2626;
+            --red-muted: rgba(239, 68, 68, 0.15);
+            --blue-primary: #3B82F6;
+            --blue-muted: rgba(59, 130, 246, 0.15);
+            --yellow-primary: #F59E0B;
+            --yellow-muted: rgba(245, 158, 11, 0.15);
+            --purple-primary: #8B5CF6;
+            --purple-muted: rgba(139, 92, 246, 0.15);
+        }
 
-        /* Main App */
-        #app{opacity:0;transition:opacity .5s;padding-top:70px}
-        #app.visible{opacity:1}
-        .main{max-width:1800px;margin:0 auto;padding:1.5rem}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
 
-        /* Tab Navigation */
-        .tab-nav{display:flex;gap:.5rem;margin-bottom:1.5rem;background:var(--bg-card);padding:.5rem;border-radius:var(--radius);border:1px solid var(--border)}
-        .tab-btn{flex:1;padding:.875rem 1.5rem;background:transparent;border:none;color:var(--text-secondary);font-family:inherit;font-size:.9rem;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
-        .tab-btn:hover{background:var(--surface);color:var(--text)}
-        .tab-btn.active{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff}
-        .tab-content{display:none}
-        .tab-content.active{display:block}
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .nav-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--green-muted);
+            color: var(--green-primary);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* ================================================
+           ACTIONS STATS BAR - ADD THIS TO YOUR DASHBOARD
+           ================================================ */
+        .actions-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .action-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-stat:hover {
+            border-color: var(--green-primary);
+            transform: translateY(-2px);
+        }
+
+        .action-stat.has-overdue {
+            border-color: var(--red-primary);
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--red-muted) 100%);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+
+        .action-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .action-stat-icon.today {
+            background: var(--green-muted);
+        }
+
+        .action-stat-icon.overdue {
+            background: var(--red-muted);
+        }
+
+        .action-stat-content h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .action-stat-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .action-stat.has-overdue .action-stat-content h3 {
+            color: var(--red-primary);
+        }
+
+        /* War Room Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
         /* Session Panel */
-        .session-panel{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:2px solid var(--success);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:none}
-        .session-panel.active{display:block;animation:slideDown .3s}
-        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-        .session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
-        .session-title{display:flex;align-items:center;gap:.75rem;font-size:1.25rem;font-weight:700}
-        .live-dot{width:12px;height:12px;background:var(--success);border-radius:50%;animation:blink 1s infinite;box-shadow:0 0 10px var(--success)}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-        .session-timer{font-family:'JetBrains Mono',monospace;font-size:2.5rem;font-weight:700;color:var(--success);text-shadow:0 0 30px var(--success-glow)}
-        .session-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
-        .session-stat{background:var(--surface);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;border:1px solid var(--border)}
-        .session-stat-value{font-size:2.5rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-        .session-stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
-        .session-stat.calls .session-stat-value{color:var(--calls)}
-        .session-stat.emails .session-stat-value{color:var(--emails)}
-        .session-stat.meetings .session-stat-value{color:var(--success)}
-        .session-stat.callbacks .session-stat-value{color:var(--warning)}
+        .session-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            overflow: hidden;
+        }
 
-        /* Dialer Tab */
-        .dialer-grid{display:grid;grid-template-columns:1fr 400px;gap:1.5rem}
-        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
-        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;gap:1rem}
-        .stat-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
-        .stat-value{font-size:1.75rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-        .stat-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em}
+        .session-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* Current Lead Card */
-        .current-lead{background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-elevated) 100%);border:2px solid var(--calls);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
-        .current-lead::before{content:'';position:absolute;top:0;right:0;width:250px;height:250px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(30%,-30%)}
-        .current-lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;position:relative}
-        .current-lead-company{font-size:1.75rem;font-weight:700;line-height:1.2}
-        .current-lead-contact{font-size:1rem;color:var(--text-secondary);margin-top:.375rem}
-        .lead-index{background:var(--calls);color:#fff;padding:.5rem 1rem;border-radius:50px;font-size:.85rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-        .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
-        .contact-item{display:flex;align-items:center;gap:.875rem}
-        .contact-icon{width:44px;height:44px;background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-        .contact-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
-        .contact-value{font-size:1rem;font-weight:500}
-        .contact-value a{color:var(--text);text-decoration:none;transition:color .2s}
-        .contact-value a:hover{color:var(--calls)}
-        
-        /* Quick Log Buttons */
-        .quick-log{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
-        .quick-btn{background:var(--surface);border:2px solid var(--border);color:var(--text);padding:1rem;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:.5rem;transition:all .2s}
-        .quick-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow);transform:translateY(-2px)}
-        .quick-btn.success:hover:not(:disabled){border-color:var(--success);background:var(--success-glow)}
-        .quick-btn.warning:hover:not(:disabled){border-color:var(--warning);background:var(--warning-glow)}
-        .quick-btn:disabled{opacity:.4;cursor:not-allowed}
-        .quick-icon{font-size:1.75rem}
-        
-        /* Lead Navigation */
-        .lead-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
-        .nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.875rem 1.5rem;border-radius:50px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:.5rem;transition:all .2s}
-        .nav-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow)}
-        .nav-btn:disabled{opacity:.4;cursor:not-allowed}
-        .nav-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);border:none;color:#fff}
-        .nav-btn.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}
+        .session-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
 
-        /* Empty Queue */
-        .empty-queue{background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--radius);padding:4rem 2rem;text-align:center}
-        .empty-icon{font-size:4rem;margin-bottom:1rem;opacity:.4}
-        .empty-title{font-size:1.25rem;font-weight:700;margin-bottom:.5rem}
-        .empty-text{color:var(--text-secondary);margin-bottom:1.5rem}
-        .btn{padding:.875rem 1.75rem;font-size:.9rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none}
-        .btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none}
-        .btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}
+        .session-timer {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--green-primary);
+        }
 
-        /* Sidebar */
-        .sidebar{display:flex;flex-direction:column;gap:1.25rem}
+        .session-body {
+            padding: 24px;
+        }
 
-        /* Scripts Panel */
-        .scripts-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-        .scripts-header{padding:1rem 1.25rem;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-        .scripts-title{font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .script-tabs{display:flex;gap:.25rem;padding:.75rem;background:var(--bg-elevated)}
-        .script-tab{padding:.5rem 1rem;background:transparent;border:none;color:var(--text-muted);font-family:inherit;font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;transition:all .2s}
-        .script-tab:hover{color:var(--text)}
-        .script-tab.active{background:var(--calls);color:#fff}
-        .script-content{padding:1.25rem;max-height:400px;overflow-y:auto}
-        .script-section{margin-bottom:1.5rem}
-        .script-section:last-child{margin-bottom:0}
-        .script-section-title{font-size:.75rem;color:var(--calls);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .script-text{background:var(--surface);padding:1rem;border-radius:var(--radius-sm);font-size:.9rem;line-height:1.6;border-left:3px solid var(--calls)}
-        .script-text strong{color:var(--calls)}
-        .script-text em{color:var(--warning);font-style:normal}
-        .script-note{font-size:.8rem;color:var(--text-muted);margin-top:.75rem;padding:.75rem;background:var(--bg-elevated);border-radius:6px}
-        .script-note strong{color:var(--text-secondary)}
-        .tone-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .625rem;background:var(--surface);border-radius:4px;font-size:.7rem;font-weight:600;margin-left:.5rem}
-        .tone-badge.confident{color:var(--success)}
-        .tone-badge.warm{color:var(--warning)}
-        .tone-badge.assertive{color:var(--calls)}
+        /* Current Lead */
+        .current-lead {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
 
-        /* Objection Handler */
-        .objection-item{background:var(--surface);border-radius:var(--radius-sm);margin-bottom:.75rem;overflow:hidden}
-        .objection-header{padding:1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .2s}
-        .objection-header:hover{background:var(--bg-elevated)}
-        .objection-trigger{font-weight:600;font-size:.9rem;color:var(--danger)}
-        .objection-toggle{color:var(--text-muted);transition:transform .2s}
-        .objection-item.open .objection-toggle{transform:rotate(180deg)}
-        .objection-response{padding:0 1rem 1rem;display:none}
-        .objection-item.open .objection-response{display:block}
-        .response-step{display:flex;gap:.75rem;margin-bottom:.75rem}
-        .step-num{width:24px;height:24px;background:var(--calls);color:#fff;border-radius:50%;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .step-text{font-size:.85rem;line-height:1.5}
+        .current-lead-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
 
-        /* Follow-ups Panel */
-        .followups-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
-        .followups-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
-        .followups-title{font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .followups-count{background:var(--warning);color:#000;padding:.25rem .625rem;border-radius:50px;font-size:.75rem;font-weight:700}
-        .followups-list{display:flex;flex-direction:column;gap:.5rem;max-height:250px;overflow-y:auto}
-        .followup-item{display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;border:1px solid transparent}
-        .followup-item:hover{background:var(--bg-elevated);border-color:var(--border-hover)}
-        .followup-time{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;color:var(--warning);min-width:55px}
-        .followup-time.overdue{color:var(--danger)}
-        .followup-info{flex:1;min-width:0}
-        .followup-company{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .followup-stage{font-size:.75rem;color:var(--text-muted)}
-        .followup-call{width:32px;height:32px;background:var(--calls-glow);border:none;color:var(--calls);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-        .followup-call:hover{background:var(--calls);color:#fff}
+        .lead-avatar {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+        }
 
-        /* Reports Tab */
-        .reports-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
-        .report-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
-        .report-card.full{grid-column:1/-1}
-        .report-card.half{grid-column:span 2}
-        .report-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
-        .report-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .report-period{font-size:.8rem;color:var(--text-muted);background:var(--surface);padding:.375rem .75rem;border-radius:50px}
-        .report-value-big{font-size:3rem;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:.5rem}
-        .report-value-big.calls{color:var(--calls)}
-        .report-value-big.meetings{color:var(--success)}
-        .report-value-big.rate{color:var(--purple)}
-        .report-label{font-size:.85rem;color:var(--text-secondary)}
-        .report-chart{height:200px;display:flex;align-items:flex-end;gap:.5rem;padding-top:1rem}
-        .chart-bar{flex:1;background:linear-gradient(180deg,var(--calls),var(--calls-glow));border-radius:6px 6px 0 0;transition:height .5s;position:relative}
-        .chart-bar:hover{background:var(--calls)}
-        .chart-bar::after{content:attr(data-value);position:absolute;top:-25px;left:50%;transform:translateX(-50%);font-size:.75rem;font-weight:600;font-family:'JetBrains Mono',monospace;opacity:0;transition:opacity .2s}
-        .chart-bar:hover::after{opacity:1}
-        .chart-labels{display:flex;gap:.5rem;margin-top:.75rem}
-        .chart-label{flex:1;text-align:center;font-size:.7rem;color:var(--text-muted)}
-        .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
-        .metric-item{background:var(--surface);padding:1rem;border-radius:var(--radius-sm);text-align:center}
-        .metric-value{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-        .metric-label{font-size:.75rem;color:var(--text-muted);margin-top:.25rem}
-        .conversion-funnel{display:flex;flex-direction:column;gap:.5rem}
-        .funnel-stage{display:flex;align-items:center;gap:1rem}
-        .funnel-bar{flex:1;height:32px;background:var(--surface);border-radius:6px;overflow:hidden;position:relative}
-        .funnel-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 .75rem}
-        .funnel-fill span{font-size:.8rem;font-weight:600;color:#fff}
-        .funnel-label{width:100px;font-size:.85rem;color:var(--text-secondary)}
-        .funnel-value{width:60px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600}
+        .lead-info h3 {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
 
-        /* Email Templates Tab */
-        .templates-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem}
-        .template-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-        .template-header{padding:1.25rem;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-        .template-title{font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .template-type{font-size:.7rem;padding:.25rem .5rem;background:var(--surface);border-radius:4px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
-        .template-body{padding:1.25rem}
-        .template-subject{margin-bottom:1rem}
-        .template-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.375rem}
-        .template-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem;color:var(--text);font-family:inherit;font-size:.9rem}
-        .template-input:focus{outline:none;border-color:var(--calls)}
-        .template-content{background:var(--surface);border-radius:var(--radius-sm);padding:1rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;min-height:200px;border:1px solid var(--border)}
-        .template-var{background:var(--calls-glow);color:var(--calls);padding:.125rem .375rem;border-radius:4px;font-weight:600}
-        .template-footer{padding:1rem 1.25rem;background:var(--bg-elevated);border-top:1px solid var(--border);display:flex;gap:.75rem}
-        .template-btn{flex:1;padding:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
-        .template-btn:hover{border-color:var(--calls);background:var(--calls-glow)}
-        .template-btn.primary{background:var(--calls);border-color:var(--calls);color:#fff}
-        .template-btn.primary:hover{background:#FF8F6B}
+        .lead-info p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
 
-        /* Calendar Modal */
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:all .3s}
-        .modal-overlay.active{opacity:1;visibility:visible}
-        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:500px;transform:scale(.95);transition:transform .3s}
-        .modal-overlay.active .modal{transform:scale(1)}
-        .modal-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-        .modal-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .modal-close{background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;padding:.25rem}
-        .modal-close:hover{color:var(--text)}
-        .modal-body{padding:1.5rem}
-        .form-group{margin-bottom:1.25rem}
-        .form-label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;display:block}
-        .form-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.875rem;color:var(--text);font-family:inherit;font-size:.9rem}
-        .form-input:focus{outline:none;border-color:var(--calls)}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-        .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem}
+        .lead-details {
+            display: grid;
+            gap: 8px;
+        }
 
-        /* Toast */
-        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s;display:flex;align-items:center;gap:.75rem}
-        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-        .toast.error{border-color:var(--danger)}
-        .toast.info{border-color:var(--emails)}
+        .lead-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
 
-        /* Celebration */
-        .celebration{position:fixed;inset:0;pointer-events:none;z-index:9999}
-        .confetti{position:absolute;width:10px;height:10px;animation:confettiFall 3s forwards}
-        @keyframes confettiFall{0%{transform:translateY(-100vh) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+        .lead-detail-icon {
+            color: var(--text-muted);
+        }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar{width:6px;height:6px}
-        ::-webkit-scrollbar-track{background:transparent}
-        ::-webkit-scrollbar-thumb{background:var(--surface);border-radius:3px}
-        ::-webkit-scrollbar-thumb:hover{background:var(--border-hover)}
+        .lead-detail a {
+            color: var(--green-primary);
+            text-decoration: none;
+        }
+
+        .lead-detail a:hover {
+            text-decoration: underline;
+        }
+
+        /* ================================================
+           OUTCOME BUTTONS - INTEGRATE WITH ACTIONS
+           ================================================ */
+        .outcome-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .outcome-btn {
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .outcome-btn:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-default);
+        }
+
+        .outcome-btn.positive {
+            border-color: var(--green-primary);
+            background: var(--green-muted);
+        }
+
+        .outcome-btn.positive:hover {
+            background: var(--green-primary);
+            color: white;
+        }
+
+        .outcome-btn.negative {
+            border-color: var(--red-primary);
+            background: var(--red-muted);
+        }
+
+        .outcome-btn.negative:hover {
+            background: var(--red-primary);
+            color: white;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--green-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--green-secondary);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+        }
+
+        .btn-danger {
+            background: var(--red-muted);
+            color: var(--red-primary);
+            border: 1px solid var(--red-primary);
+        }
+
+        .btn-danger:hover {
+            background: var(--red-primary);
+            color: white;
+        }
+
+        /* Activity Feed */
+        .activity-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .activity-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .activity-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            gap: 12px;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.call {
+            background: var(--blue-muted);
+        }
+
+        .activity-icon.meeting {
+            background: var(--green-muted);
+        }
+
+        .activity-icon.email {
+            background: var(--purple-muted);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ================================================
+           RECAP MODAL - SESSION END
+           ================================================ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 24px 24px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-actions {
+            padding: 0 24px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .recap-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .recap-stat {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+        }
+
+        .recap-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .recap-stat-value.completed {
+            color: var(--green-primary);
+        }
+
+        .recap-stat-value.skipped {
+            color: var(--yellow-primary);
+        }
+
+        .recap-stat-value.carried {
+            color: var(--blue-primary);
+        }
+
+        .recap-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .recap-tomorrow {
+            background: var(--green-muted);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .recap-tomorrow-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .recap-tomorrow-count {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--green-primary);
+        }
+
+        /* Follow-up Modal */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--green-primary);
+        }
 
         /* Responsive */
-        @media(max-width:1200px){
-            .dialer-grid{grid-template-columns:1fr}
-            .reports-grid{grid-template-columns:1fr}
-            .report-card.half{grid-column:1}
-            .templates-grid{grid-template-columns:1fr}
-        }
-        @media(max-width:768px){
-            .stats-row,.session-stats,.quick-log{grid-template-columns:repeat(2,1fr)}
-            .contact-grid{grid-template-columns:1fr}
-            .nav{padding:0 1rem}
-            .main{padding:1rem}
+        @media (max-width: 768px) {
+            .nav-inner {
+                flex-direction: column;
+                height: auto;
+                padding: 12px 0;
+                gap: 12px;
+            }
+
+            .actions-bar {
+                flex-direction: column;
+            }
+
+            .outcome-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recap-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Landing -->
-    <div id="landing">
-        <div class="landing-content">
-            <div class="landing-stats">
-                <div><div class="landing-stat-value" id="l-calls">0</div><div class="landing-stat-label">Total Calls</div></div>
-                <div><div class="landing-stat-value" id="l-meetings">0</div><div class="landing-stat-label">Meetings</div></div>
-                <div><div class="landing-stat-value" id="l-clients">0</div><div class="landing-stat-label">Clients Won</div></div>
-            </div>
-            <div class="quote" id="quote">"Every dial gets you closer to your goal."</div>
-            <div class="quote-author">— Jordan Platten</div>
-            <button class="enter-btn" onclick="enter()">Enter Command Center →</button>
-        </div>
-    </div>
-
-    <!-- Nav -->
+    <!-- Navigation -->
     <nav class="nav">
-        <div class="nav-left">
-            <a href="#" class="logo"><div class="logo-icon">⚡</div>SummitFlow</a>
-            <div class="nav-tabs">
-                <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
-                <a href="summitflow-pipeline.html" class="nav-tab">Pipeline</a>
-                <span class="nav-tab active">Dashboard</span>
+        <div class="nav-inner">
+            <a href="#" class="nav-brand">
+                <div class="nav-logo">S</div>
+                <span class="nav-title">SummitFlow</span>
+            </a>
+            <div class="nav-links">
+                <a href="summitflow-leads.html" class="nav-link">Leads Hub</a>
+                <a href="summitflow-pipeline.html" class="nav-link">Pipeline</a>
+                <a href="summitflow-dashboard.html" class="nav-link active">Dashboard</a>
+                <a href="summitflow-calendar.html" class="nav-link">Calendar</a>
             </div>
-        </div>
-        <div class="nav-right">
-            <div class="date" id="date"></div>
-            <button class="session-btn" id="session-btn" onclick="toggleSession()">▶ Start Session</button>
         </div>
     </nav>
 
-    <!-- App -->
-    <div id="app">
-        <main class="main">
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>⚔️ War Room</h1>
+                <p class="header-subtitle">Wednesday, January 8, 2026</p>
+            </div>
+        </div>
+
+        <!-- ================================================
+             ACTIONS STATS BAR - THE KEY INTEGRATION
+             ================================================ -->
+        <div class="actions-bar">
+            <a href="summitflow-calendar.html" class="action-stat" id="todayActionsStat">
+                <div class="action-stat-icon today">📋</div>
+                <div class="action-stat-content">
+                    <h3 id="todayActionsCount">0</h3>
+                    <p>actions planned today</p>
+                </div>
+            </a>
+            <a href="summitflow-calendar.html" class="action-stat" id="overdueActionsStat" style="display: none;">
+                <div class="action-stat-icon overdue">⚠️</div>
+                <div class="action-stat-content">
+                    <h3 id="overdueActionsCount">0</h3>
+                    <p>overdue actions</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">📞 Calls Today</div>
+                <div class="stat-value" id="callsToday">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🎯 Connections</div>
+                <div class="stat-value" id="connections">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📅 Meetings Booked</div>
+                <div class="stat-value" id="meetingsBooked">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⏱️ Session Time</div>
+                <div class="stat-value" id="sessionTime">0:00</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
             <!-- Session Panel -->
-            <div class="session-panel" id="session-panel">
+            <div class="session-panel">
                 <div class="session-header">
-                    <div class="session-title"><span class="live-dot"></span>Session Active</div>
-                    <div class="session-timer" id="timer">00:00:00</div>
+                    <h2 class="session-title">Current Call</h2>
+                    <div class="session-timer" id="callTimer">0:00</div>
                 </div>
-                <div class="session-stats">
-                    <div class="session-stat calls"><div class="session-stat-value" id="s-calls">0</div><div class="session-stat-label">Calls Made</div></div>
-                    <div class="session-stat emails"><div class="session-stat-value" id="s-emails">0</div><div class="session-stat-label">Emails Sent</div></div>
-                    <div class="session-stat meetings"><div class="session-stat-value" id="s-meetings">0</div><div class="session-stat-label">Meetings Booked</div></div>
-                    <div class="session-stat callbacks"><div class="session-stat-value" id="s-callbacks">0</div><div class="session-stat-label">Callbacks Set</div></div>
-                </div>
-            </div>
-
-            <!-- Tab Navigation -->
-            <div class="tab-nav">
-                <button class="tab-btn active" onclick="switchTab('dialer')">📞 Dialer</button>
-                <button class="tab-btn" onclick="switchTab('scripts')">📜 Scripts</button>
-                <button class="tab-btn" onclick="switchTab('reports')">📊 Reports</button>
-                <button class="tab-btn" onclick="switchTab('emails')">✉️ Email Templates</button>
-            </div>
-
-            <!-- Dialer Tab -->
-            <div class="tab-content active" id="tab-dialer">
-                <div class="stats-row">
-                    <div class="stat-card"><div class="stat-icon" style="background:var(--calls-glow)">📞</div><div><div class="stat-value" id="total-calls">0</div><div class="stat-label">Total Calls</div></div></div>
-                    <div class="stat-card"><div class="stat-icon" style="background:var(--emails-glow)">📧</div><div><div class="stat-value" id="total-emails">0</div><div class="stat-label">Emails Sent</div></div></div>
-                    <div class="stat-card"><div class="stat-icon" style="background:var(--success-glow)">📅</div><div><div class="stat-value" id="total-meetings">0</div><div class="stat-label">Meetings</div></div></div>
-                    <div class="stat-card"><div class="stat-icon" style="background:var(--purple-glow)">🏆</div><div><div class="stat-value" id="total-clients">0/5</div><div class="stat-label">Clients</div></div></div>
-                </div>
-
-                <div class="dialer-grid">
-                    <div>
-                        <div id="current-lead"></div>
-                    </div>
-                    <div class="sidebar">
-                        <div class="followups-panel">
-                            <div class="followups-header">
-                                <div class="followups-title">⏰ Today's Follow-ups</div>
-                                <div class="followups-count" id="followups-count">0</div>
-                            </div>
-                            <div class="followups-list" id="followups-list"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scripts Tab -->
-            <div class="tab-content" id="tab-scripts">
-                <div class="dialer-grid">
-                    <div class="scripts-panel">
-                        <div class="scripts-header">
-                            <div class="scripts-title">📜 Call Scripts</div>
-                        </div>
-                        <div class="script-tabs">
-                            <button class="script-tab active" onclick="switchScript('gatekeeper')">Gatekeeper</button>
-                            <button class="script-tab" onclick="switchScript('opener')">Opener</button>
-                            <button class="script-tab" onclick="switchScript('pitch')">Value Pitch</button>
-                            <button class="script-tab" onclick="switchScript('close')">Book Meeting</button>
-                        </div>
-                        
-                        <div class="script-content" id="script-gatekeeper">
-                            <div class="script-section">
-                                <div class="script-section-title">🎭 The Old Friend Approach <span class="tone-badge warm">Warm & Familiar</span></div>
-                                <div class="script-text">
-                                    <strong>"Hey, is [NAME] about?"</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Key:</strong> Assume familiarity. Speak like you're calling a friend's workplace. Lower pitch = confidence. Never reveal you're selling.
-                                </div>
-                            </div>
-                            
-                            <div class="script-section">
-                                <div class="script-section-title">🚫 If They Ask "What's It Regarding?"</div>
-                                <div class="script-text">
-                                    <strong>"[NAME] will know what it's regarding."</strong><br><br>
-                                    <em>If they push harder:</em><br>
-                                    <strong>"It's a bit complex to explain — could you pop me through?"</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Never:</strong> Pitch the gatekeeper. Reveal you're in marketing/sales. Sound uncertain or ask for permission.
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">🔄 Building Gatekeeper Relationships</div>
-                                <div class="script-text">
-                                    <em>If blocked multiple times:</em><br><br>
-                                    <strong>"No worries at all. When would be best to catch [NAME]?"</strong><br><br>
-                                    <em>Note their name. Next call:</em><br>
-                                    <strong>"Hey [GATEKEEPER NAME], it's Finn — is [NAME] about?"</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Remember:</strong> Gatekeepers can become your biggest allies. Be persistent but respectful. I got Universal Studios' Creative Director through gatekeeper relationship building.
-                                </div>
+                <div class="session-body">
+                    <!-- Current Lead -->
+                    <div class="current-lead" id="currentLeadPanel">
+                        <div class="current-lead-header">
+                            <div class="lead-avatar" id="currentLeadAvatar">?</div>
+                            <div class="lead-info">
+                                <h3 id="currentLeadName">No lead selected</h3>
+                                <p id="currentLeadCompany">Select a lead or start from queue</p>
                             </div>
                         </div>
-
-                        <div class="script-content" id="script-opener" style="display:none">
-                            <div class="script-section">
-                                <div class="script-section-title">✅ Validate You're Speaking to the Right Person</div>
-                                <div class="script-text">
-                                    <strong>"Am I speaking to [NAME]?"</strong><br>
-                                    <em>Wait for confirmation</em>
-                                </div>
+                        <div class="lead-details" id="currentLeadDetails" style="display: none;">
+                            <div class="lead-detail">
+                                <span class="lead-detail-icon">📞</span>
+                                <a href="#" id="currentLeadPhone">-</a>
                             </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">🎯 Position Opener <span class="tone-badge confident">Respectful & Confident</span></div>
-                                <div class="script-text">
-                                    <strong>"Have I caught you in the middle of something?"</strong><br><br>
-                                    <em>If yes:</em> <strong>"No worries — I just need 20 seconds."</strong><br>
-                                    <em>If no:</em> <strong>"Perfect. I'll be brief."</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Why this works:</strong> Shows respect. They don't expect it from cold callers. Creates permission to proceed.
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">📍 Location Opener (For Local Businesses)</div>
-                                <div class="script-text">
-                                    <strong>"Are you still based on [STREET/AREA]?"</strong><br><br>
-                                    <em>Conversational, builds rapport, shows you've done research.</em>
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">🔥 Desire Opener <span class="tone-badge assertive">Direct & Curious</span></div>
-                                <div class="script-text">
-                                    <strong>"Could you handle more patients right now?"</strong><br><br>
-                                    <em>Alternative:</em> <strong>"Are you getting more than 20 new patient enquiries per month?"</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Pro tip:</strong> "Could you handle" feeds their ego. They'll give you a genuine answer vs. "Can you take on" which triggers defensive "we're busy" responses.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="script-content" id="script-pitch" style="display:none">
-                            <div class="script-section">
-                                <div class="script-section-title">💎 Value Proposition <span class="tone-badge confident">Clear & Controlled</span></div>
-                                <div class="script-text">
-                                    <strong>"I help [NICHE] practices in Leeds get more high-value patients using AI systems."</strong><br><br>
-                                    <em>Pause. Let them respond.</em>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Focus on RESULTS not features.</strong> They don't care about "meta ads" or "AI bots." They care about more patients and more revenue.
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">🎯 Niche-Specific Value (Healthcare)</div>
-                                <div class="script-text">
-                                    <strong>For Chiropractors:</strong><br>
-                                    "We generate new patient enquiries, qualify them automatically, and book them straight into your calendar — so you're only seeing people who are ready to start treatment."<br><br>
-                                    
-                                    <strong>For Physios:</strong><br>
-                                    "We help physio clinics fill their appointment books with qualified patients who actually show up — using AI to handle all the follow-up."<br><br>
-                                    
-                                    <strong>For Massage Therapists:</strong><br>
-                                    "We bring in a steady stream of new clients and handle all the booking — so you can focus on what you do best."
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">🔍 Discovery Questions</div>
-                                <div class="script-text">
-                                    <strong>"How are you currently getting new patients?"</strong><br><br>
-                                    <strong>"What's working well for you right now?"</strong><br><br>
-                                    <strong>"If you could wave a magic wand, what would you change about your patient acquisition?"</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Listen actively.</strong> Nod, affirm ("I see", "That makes sense"), and mirror their language back. The best salespeople are the best listeners.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="script-content" id="script-close" style="display:none">
-                            <div class="script-section">
-                                <div class="script-section-title">📅 Guide The Next Step <span class="tone-badge assertive">Assumptive & Direct</span></div>
-                                <div class="script-text">
-                                    <strong>"Look, I don't have time to go into everything now — why don't I pop back in a couple of days and run you through how this could work for you specifically?"</strong><br><br>
-                                    <em>Or for Zoom:</em><br>
-                                    <strong>"Let's jump on a quick 15-minute call — I'll show you exactly how this works. Are you free Thursday at 2pm?"</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Always offer a specific time.</strong> Don't ask "when are you free?" — propose a slot and let them counter.
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">📧 If They Ask For An Email</div>
-                                <div class="script-text">
-                                    <strong>"I'll be honest — it takes a lot of time to put together a personalised email, and I think it would be much more effective for us to spend 15 minutes on a call where I can learn about your specific situation. Are you free Friday at 11?"</strong><br><br>
-                                    <em>If they push back again:</em><br>
-                                    <strong>"I've got some great ideas here and this is the future of patient acquisition. What have you got to lose by spending 15 minutes with me? Worst case, you can take these ideas and implement them yourself."</strong>
-                                </div>
-                            </div>
-
-                            <div class="script-section">
-                                <div class="script-section-title">✅ Lock In The Meeting</div>
-                                <div class="script-text">
-                                    <strong>"Perfect. So that's [DAY] at [TIME]. What's the best email to send the calendar invite to?"</strong><br><br>
-                                    <em>Then:</em><br>
-                                    <strong>"Great — I'll send that over now. Looking forward to it, [NAME]."</strong>
-                                </div>
-                                <div class="script-note">
-                                    <strong>Always get their email and send the invite immediately.</strong> The faster you lock it in, the higher your show rate.
-                                </div>
+                            <div class="lead-detail">
+                                <span class="lead-detail-icon">✉️</span>
+                                <span id="currentLeadEmail">-</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="sidebar">
-                        <div class="scripts-panel">
-                            <div class="scripts-header">
-                                <div class="scripts-title">🛡️ Objection Handlers</div>
-                            </div>
-                            <div style="padding:1rem">
-                                <div class="objection-item" onclick="toggleObjection(this)">
-                                    <div class="objection-header">
-                                        <span class="objection-trigger">"I'm not interested"</span>
-                                        <span class="objection-toggle">▼</span>
-                                    </div>
-                                    <div class="objection-response">
-                                        <div class="response-step">
-                                            <div class="step-num">1</div>
-                                            <div class="step-text"><strong>Agree:</strong> "That's completely fair — most people say that initially."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">2</div>
-                                            <div class="step-text"><strong>Reframe:</strong> "Can I ask — is it that you're not interested in more patients, or just not interested in another marketing pitch?"</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">3</div>
-                                            <div class="step-text"><strong>Bridge:</strong> "Because what we do is genuinely different — we only get paid when you get results."</div>
-                                        </div>
-                                    </div>
-                                </div>
+                    <!-- ================================================
+                         OUTCOME BUTTONS - WITH ACTION INTEGRATION
+                         ================================================ -->
+                    <h4 style="margin-bottom: 12px; color: var(--text-secondary);">Log Outcome</h4>
+                    <div class="outcome-grid">
+                        <button class="outcome-btn positive" onclick="logOutcome('Meeting booked')">
+                            🎉 Meeting Booked
+                        </button>
+                        <button class="outcome-btn" onclick="logOutcome('Interested - send info')">
+                            ✨ Interested
+                        </button>
+                        <button class="outcome-btn" onclick="logOutcome('Callback requested')">
+                            📞 Callback Requested
+                        </button>
+                        <button class="outcome-btn" onclick="logOutcome('Voicemail left')">
+                            📫 Voicemail Left
+                        </button>
+                        <button class="outcome-btn" onclick="logOutcome('No answer')">
+                            ❌ No Answer
+                        </button>
+                        <button class="outcome-btn" onclick="logOutcome('Gatekeeper - try again')">
+                            🚧 Gatekeeper
+                        </button>
+                        <button class="outcome-btn negative" onclick="logOutcome('Not interested')">
+                            👎 Not Interested
+                        </button>
+                        <button class="outcome-btn negative" onclick="logOutcome('Wrong number')">
+                            ❓ Wrong Number
+                        </button>
+                    </div>
 
-                                <div class="objection-item" onclick="toggleObjection(this)">
-                                    <div class="objection-header">
-                                        <span class="objection-trigger">"We already work with someone"</span>
-                                        <span class="objection-toggle">▼</span>
-                                    </div>
-                                    <div class="objection-response">
-                                        <div class="response-step">
-                                            <div class="step-num">1</div>
-                                            <div class="step-text"><strong>Validate:</strong> "That's great — means you understand the value of marketing."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">2</div>
-                                            <div class="step-text"><strong>Probe:</strong> "How's that going for you? Getting the results you expected?"</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">3</div>
-                                            <div class="step-text"><strong>Differentiate:</strong> "The AI systems we use typically cut cost-per-lead in half. Worth 15 mins to compare?"</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="objection-item" onclick="toggleObjection(this)">
-                                    <div class="objection-header">
-                                        <span class="objection-trigger">"I don't have the budget"</span>
-                                        <span class="objection-toggle">▼</span>
-                                    </div>
-                                    <div class="objection-response">
-                                        <div class="response-step">
-                                            <div class="step-num">1</div>
-                                            <div class="step-text"><strong>Empathize:</strong> "I completely understand — that's exactly why we work the way we do."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">2</div>
-                                            <div class="step-text"><strong>Reframe:</strong> "Our model means you're investing in growth that pays for itself from month one."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">3</div>
-                                            <div class="step-text"><strong>Offer:</strong> "Let me show you the numbers on a quick call — you can decide if it makes sense."</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="objection-item" onclick="toggleObjection(this)">
-                                    <div class="objection-header">
-                                        <span class="objection-trigger">"I tried marketing before, didn't work"</span>
-                                        <span class="objection-toggle">▼</span>
-                                    </div>
-                                    <div class="objection-response">
-                                        <div class="response-step">
-                                            <div class="step-num">1</div>
-                                            <div class="step-text"><strong>Validate:</strong> "I completely understand how you feel — and honestly, it frustrates me that other agencies damage our reputation."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">2</div>
-                                            <div class="step-text"><strong>Differentiate:</strong> "The difference is we use AI to actually qualify and book the leads — so you're not chasing time-wasters."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">3</div>
-                                            <div class="step-text"><strong>Prove:</strong> "I can show you exactly how it's working for [similar business] right now."</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="objection-item" onclick="toggleObjection(this)">
-                                    <div class="objection-header">
-                                        <span class="objection-trigger">"Send me an email"</span>
-                                        <span class="objection-toggle">▼</span>
-                                    </div>
-                                    <div class="objection-response">
-                                        <div class="response-step">
-                                            <div class="step-num">1</div>
-                                            <div class="step-text"><strong>Redirect:</strong> "I'll be honest — emails don't do it justice. Everything we do is tailored to your specific situation."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">2</div>
-                                            <div class="step-text"><strong>Offer value:</strong> "15 minutes on a call and I'll show you exactly what's possible. Worst case, you'll get some free ideas."</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">3</div>
-                                            <div class="step-text"><strong>Close:</strong> "Are you free Thursday afternoon?"</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="objection-item" onclick="toggleObjection(this)">
-                                    <div class="objection-header">
-                                        <span class="objection-trigger">"I need to think about it"</span>
-                                        <span class="objection-toggle">▼</span>
-                                    </div>
-                                    <div class="objection-response">
-                                        <div class="response-step">
-                                            <div class="step-num">1</div>
-                                            <div class="step-text"><strong>Understand:</strong> "Absolutely — what specifically do you need to think through?"</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">2</div>
-                                            <div class="step-text"><strong>Address:</strong> Handle whatever specific concern they raise.</div>
-                                        </div>
-                                        <div class="response-step">
-                                            <div class="step-num">3</div>
-                                            <div class="step-text"><strong>Secure next step:</strong> "Let's book a follow-up for next week — gives you time to think and we can pick up where we left off."</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" id="nextLeadBtn">Next Lead →</button>
+                        <button class="btn btn-secondary" onclick="skipLead()">Skip</button>
+                        <button class="btn btn-danger" id="endSessionBtn">End Session</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Reports Tab -->
-            <div class="tab-content" id="tab-reports">
-                <div class="reports-grid">
-                    <div class="report-card">
-                        <div class="report-header">
-                            <div class="report-title">📞 Total Calls</div>
-                            <div class="report-period">This Week</div>
-                        </div>
-                        <div class="report-value-big calls" id="report-calls">0</div>
-                        <div class="report-label">of 150 weekly target</div>
-                    </div>
-
-                    <div class="report-card">
-                        <div class="report-header">
-                            <div class="report-title">📅 Meetings Booked</div>
-                            <div class="report-period">This Week</div>
-                        </div>
-                        <div class="report-value-big meetings" id="report-meetings">0</div>
-                        <div class="report-label">booked this week</div>
-                    </div>
-
-                    <div class="report-card">
-                        <div class="report-header">
-                            <div class="report-title">📈 Conversion Rate</div>
-                            <div class="report-period">Calls → Meetings</div>
-                        </div>
-                        <div class="report-value-big rate" id="report-rate">0%</div>
-                        <div class="report-label">industry avg: 2-3%</div>
-                    </div>
-
-                    <div class="report-card half">
-                        <div class="report-header">
-                            <div class="report-title">📊 Daily Call Volume</div>
-                            <div class="report-period">Last 7 Days</div>
-                        </div>
-                        <div class="report-chart" id="calls-chart"></div>
-                        <div class="chart-labels" id="chart-labels"></div>
-                    </div>
-
-                    <div class="report-card">
-                        <div class="report-header">
-                            <div class="report-title">🎯 Call Outcomes</div>
-                            <div class="report-period">All Time</div>
-                        </div>
-                        <div class="metric-grid" id="outcomes-grid"></div>
-                    </div>
-
-                    <div class="report-card full">
-                        <div class="report-header">
-                            <div class="report-title">🔄 Pipeline Conversion Funnel</div>
-                            <div class="report-period">All Time</div>
-                        </div>
-                        <div class="conversion-funnel" id="funnel"></div>
-                    </div>
+            <!-- Activity Feed -->
+            <div class="activity-panel">
+                <div class="activity-header">
+                    <h2 class="session-title">Today's Activity</h2>
                 </div>
-            </div>
-
-            <!-- Email Templates Tab -->
-            <div class="tab-content" id="tab-emails">
-                <div class="templates-grid">
-                    <div class="template-card">
-                        <div class="template-header">
-                            <div class="template-title">📧 Post-Call Follow-Up</div>
-                            <div class="template-type">After Good Call</div>
-                        </div>
-                        <div class="template-body">
-                            <div class="template-subject">
-                                <div class="template-label">Subject</div>
-                                <input type="text" class="template-input" id="tpl1-subject" value="Quick follow-up from our call">
-                            </div>
-                            <div class="template-label">Message</div>
-                            <div class="template-content" id="tpl1-body">Hi <span class="template-var">[NAME]</span>,
-
-Great speaking with you just now.
-
-As promised, here's a quick summary:
-
-• We help practices like <span class="template-var">[COMPANY]</span> get more qualified patients using AI-powered lead generation
-• Our system handles the follow-up automatically — so you only speak to people who are ready to book
-• We work on a results-first basis
-
-I'll send over the calendar invite for our call on <span class="template-var">[DATE]</span> at <span class="template-var">[TIME]</span>.
-
-Looking forward to showing you how this could work for you.
-
-Best,
-Finn
-SummitFlow</div>
-                        </div>
-                        <div class="template-footer">
-                            <button class="template-btn" onclick="copyTemplate('tpl1')">📋 Copy</button>
-                            <button class="template-btn primary" onclick="openEmailClient('tpl1')">📤 Open in Email</button>
-                        </div>
-                    </div>
-
-                    <div class="template-card">
-                        <div class="template-header">
-                            <div class="template-title">⏰ Meeting Reminder</div>
-                            <div class="template-type">24hrs Before</div>
-                        </div>
-                        <div class="template-body">
-                            <div class="template-subject">
-                                <div class="template-label">Subject</div>
-                                <input type="text" class="template-input" id="tpl2-subject" value="Looking forward to tomorrow">
-                            </div>
-                            <div class="template-label">Message</div>
-                            <div class="template-content" id="tpl2-body">Hi <span class="template-var">[NAME]</span>,
-
-Just a quick note to confirm our call tomorrow at <span class="template-var">[TIME]</span>.
-
-I've put together some specific ideas for <span class="template-var">[COMPANY]</span> that I think you'll find valuable.
-
-If anything's come up and you need to reschedule, just let me know — but I'm hoping we're still on!
-
-Speak tomorrow,
-Finn</div>
-                        </div>
-                        <div class="template-footer">
-                            <button class="template-btn" onclick="copyTemplate('tpl2')">📋 Copy</button>
-                            <button class="template-btn primary" onclick="openEmailClient('tpl2')">📤 Open in Email</button>
-                        </div>
-                    </div>
-
-                    <div class="template-card">
-                        <div class="template-header">
-                            <div class="template-title">🔄 No-Show Follow-Up</div>
-                            <div class="template-type">After Missed Call</div>
-                        </div>
-                        <div class="template-body">
-                            <div class="template-subject">
-                                <div class="template-label">Subject</div>
-                                <input type="text" class="template-input" id="tpl3-subject" value="Missed you earlier — no worries">
-                            </div>
-                            <div class="template-label">Message</div>
-                            <div class="template-content" id="tpl3-body">Hi <span class="template-var">[NAME]</span>,
-
-I know how hectic things can get running a practice — completely understand if something came up.
-
-I had some good ideas prepared for <span class="template-var">[COMPANY]</span> and would still love to share them with you.
-
-Would any of these times work to reschedule?
-
-• [OPTION 1]
-• [OPTION 2]
-• [OPTION 3]
-
-Just let me know what works best.
-
-Finn</div>
-                        </div>
-                        <div class="template-footer">
-                            <button class="template-btn" onclick="copyTemplate('tpl3')">📋 Copy</button>
-                            <button class="template-btn primary" onclick="openEmailClient('tpl3')">📤 Open in Email</button>
-                        </div>
-                    </div>
-
-                    <div class="template-card">
-                        <div class="template-header">
-                            <div class="template-title">🎯 Cold Outreach</div>
-                            <div class="template-type">Initial Contact</div>
-                        </div>
-                        <div class="template-body">
-                            <div class="template-subject">
-                                <div class="template-label">Subject</div>
-                                <input type="text" class="template-input" id="tpl4-subject" value="Quick question about [COMPANY]">
-                            </div>
-                            <div class="template-label">Message</div>
-                            <div class="template-content" id="tpl4-body">Hi <span class="template-var">[NAME]</span>,
-
-I came across <span class="template-var">[COMPANY]</span> and noticed you're doing great work helping people in Leeds.
-
-Quick question — are you currently looking for more patients, or is capacity pretty full right now?
-
-I ask because we've been helping similar practices fill their books using AI-powered patient acquisition — and I had a few ideas specific to your area.
-
-If you're open to it, I'd love to share them on a quick 15-minute call.
-
-Worth a chat?
-
-Finn
-SummitFlow</div>
-                        </div>
-                        <div class="template-footer">
-                            <button class="template-btn" onclick="copyTemplate('tpl4')">📋 Copy</button>
-                            <button class="template-btn primary" onclick="openEmailClient('tpl4')">📤 Open in Email</button>
+                <div class="activity-list" id="activityList">
+                    <div class="activity-item">
+                        <div class="activity-icon call">📞</div>
+                        <div class="activity-content">
+                            <div class="activity-text">No activity yet</div>
+                            <div class="activity-time">Start calling to see your progress</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <!-- Calendar Modal -->
-    <div class="modal-overlay" id="calendar-modal">
+    <!-- Session Recap Modal -->
+    <div class="modal-overlay" id="recapModal">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title">📅 Book Meeting</div>
-                <button class="modal-close" onclick="closeCalendarModal()">×</button>
+                <h3 class="modal-title">🌙 Session Complete</h3>
+                <button class="modal-close" onclick="closeModal('recapModal')">×</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Meeting Title</label>
-                    <input type="text" class="form-input" id="cal-title" placeholder="Discovery Call - Company Name">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" class="form-input" id="cal-date">
+                <div class="recap-stats">
+                    <div class="recap-stat">
+                        <div class="recap-stat-value completed" id="recapCompleted">0</div>
+                        <div class="recap-stat-label">Completed</div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Time</label>
-                        <input type="time" class="form-input" id="cal-time" value="10:00">
+                    <div class="recap-stat">
+                        <div class="recap-stat-value skipped" id="recapSkipped">0</div>
+                        <div class="recap-stat-label">Skipped</div>
+                    </div>
+                    <div class="recap-stat">
+                        <div class="recap-stat-value carried" id="recapCarried">0</div>
+                        <div class="recap-stat-label">Carried Over</div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Duration (minutes)</label>
-                    <input type="number" class="form-input" id="cal-duration" value="30">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <input type="text" class="form-input" id="cal-notes" placeholder="Any notes for the meeting...">
+                <div class="recap-tomorrow">
+                    <div class="recap-tomorrow-label">Tomorrow you have</div>
+                    <div class="recap-tomorrow-count"><span id="recapTomorrowCount">0</span> actions</div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeCalendarModal()">Cancel</button>
-                <button class="btn primary" onclick="createCalendarEvent()">📅 Add to Google Calendar</button>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('recapModal')">Done</button>
+                <button class="btn btn-primary" onclick="window.location.href='summitflow-calendar.html'">View Calendar →</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <!-- Follow-up Modal (shown after certain outcomes) -->
+    <div class="modal-overlay" id="followUpModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📅 Schedule Follow-up</h3>
+                <button class="modal-close" onclick="closeModal('followUpModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-secondary);">
+                    When should you follow up with <strong id="followUpLeadName">this lead</strong>?
+                </p>
+                <div class="form-group">
+                    <select class="form-select" id="followUpDate">
+                        <option value="tomorrow">Tomorrow</option>
+                        <option value="2days">In 2 days</option>
+                        <option value="3days">In 3 days</option>
+                        <option value="week">Next week</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="skipFollowUp()">Skip</button>
+                <button class="btn btn-primary" onclick="createFollowUp()">Create Follow-up</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // ========== SUPABASE CONFIG ==========
-        const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeG1lb2V1Z3ltbGdhZGFqd21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NTcxNjEsImV4cCI6MjA4MzAzMzE2MX0.ciWAoTstogM4MWrK73q9VasVWECa9kucCoHlgkyHLIw';
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        // =====================================
+        // ==========================================
+        // SUMMITFLOW DASHBOARD - WITH ACTIONS INTEGRATION
+        // ==========================================
 
-        const STAGES = [
-            {id:'prospecting',name:'Prospecting',icon:'🎯'},
-            {id:'outreach',name:'Outreach',icon:'📤'},
-            {id:'interested',name:'Interested',icon:'🔥'},
-            {id:'meeting',name:'Meeting',icon:'📅'},
-            {id:'proposal',name:'Proposal',icon:'📋'},
-            {id:'negotiation',name:'Negotiation',icon:'🤝'},
-            {id:'won',name:'Won',icon:'🏆'},
-            {id:'lost',name:'Lost',icon:'❌'}
-        ];
+        // LocalStorage Keys (shared with Calendar)
+        const ACTIONS_KEY = 'summitflow_v3_actions';
+        const LEADS_KEY = 'summitflow_v3_leads';
+        const LOGS_KEY = 'summitflow_v3_logs';
 
-        const QUOTES = [
-            {text:"Every dial gets you closer to your goal.", author:"Jordan Platten"},
-            {text:"The fortune is in the follow-up.", author:"Jim Rohn"},
-            {text:"80% of sales require 5 follow-ups. Most quit after 1.", author:"Marketing Donut"},
-            {text:"Speed to lead is everything.", author:"InsideSales"},
-            {text:"This is where most people quit. You're not most people.", author:"SummitFlow"},
-            {text:"The sale doesn't start until the first objection.", author:"Jordan Platten"}
-        ];
+        // State
+        let actions = [];
+        let leads = [];
+        let currentLeadIndex = 0;
+        let currentLead = null;
+        let sessionStartTime = null;
+        let callStartTime = null;
+        let timerInterval = null;
+        let sessionStats = {
+            calls: 0,
+            connections: 0,
+            meetings: 0
+        };
+        let pendingOutcome = null;
 
-        let leads=[], logs=[], activities=[], queue=[], currentIdx=0;
-        let sessionActive=false, sessionStart=null, sessionTimer=null;
-        let sessionData={calls:0,emails:0,meetings:0,callbacks:0};
-        let currentLead=null;
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', load);
-
-        async function load() {
-            try {
-                const {data:ld} = await db.from('leads').select('*').order('created_at',{ascending:false});
-                leads = ld || [];
-                
-                const {data:lg} = await db.from('daily_logs').select('*').order('date',{ascending:false});
-                logs = lg || [];
-                
-                const {data:acts} = await db.from('activities').select('*').order('created_at',{ascending:false});
-                activities = acts || [];
-
-                queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,50).map(l => l.id);
-                
-                setDate();
-                setQuote();
-                renderLanding();
-                renderStats();
-                renderCurrent();
-                renderFollowups();
-                renderReports();
-            } catch(e) {
-                console.error(e);
-                toast('❌ Connection failed', 'error');
-            }
+        function generateId() {
+            return 'action_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        function enter() {
-            document.getElementById('landing').classList.add('hidden');
-            setTimeout(() => document.getElementById('app').classList.add('visible'), 300);
+        function getToday() {
+            return new Date().toISOString().split('T')[0];
         }
 
-        function setDate() {
-            document.getElementById('date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
-        }
-
-        function setQuote() {
-            const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-            document.getElementById('quote').textContent = `"${q.text}"`;
-        }
-
-        // Stats
-        function getStats() {
-            const calls = logs.reduce((s,l) => s + (l.calls||0), 0);
-            const emails = logs.reduce((s,l) => s + (l.emails||0), 0);
-            const meetings = logs.reduce((s,l) => s + (l.meetings||0), 0);
-            const clients = leads.filter(l => l.stage === 'won').length;
-            
-            const ws = getWeekStart();
-            const weekLogs = logs.filter(l => new Date(l.date) >= ws);
-            const weeklyCalls = weekLogs.reduce((s,l) => s + (l.calls||0), 0);
-            const weeklyMeetings = weekLogs.reduce((s,l) => s + (l.meetings||0), 0);
-            
-            return {calls, emails, meetings, clients, weeklyCalls, weeklyMeetings};
-        }
-
-        function getWeekStart() {
-            const n = new Date();
-            const d = n.getDay();
-            const diff = n.getDate() - d + (d === 0 ? -6 : 1);
-            const m = new Date(n.setDate(diff));
-            m.setHours(0,0,0,0);
-            return m;
-        }
-
-        function renderLanding() {
-            const s = getStats();
-            document.getElementById('l-calls').textContent = s.calls;
-            document.getElementById('l-meetings').textContent = s.meetings;
-            document.getElementById('l-clients').textContent = s.clients;
-        }
-
-        function renderStats() {
-            const s = getStats();
-            document.getElementById('total-calls').textContent = s.calls;
-            document.getElementById('total-emails').textContent = s.emails;
-            document.getElementById('total-meetings').textContent = s.meetings;
-            document.getElementById('total-clients').textContent = `${s.clients}/5`;
-        }
-
-        // Dialer
-        function renderCurrent() {
-            const c = document.getElementById('current-lead');
-            
-            if (!queue.length) {
-                c.innerHTML = `
-                    <div class="empty-queue">
-                        <div class="empty-icon">📭</div>
-                        <div class="empty-title">No leads in queue</div>
-                        <div class="empty-text">Add leads from the Leads Hub to start calling</div>
-                        <a href="summitflow-leads-hub.html" class="btn primary">Go to Leads Hub</a>
-                    </div>`;
-                return;
-            }
-
-            const l = leads.find(x => x.id === queue[currentIdx]);
-            if (!l) {
-                queue.splice(currentIdx, 1);
-                if (currentIdx >= queue.length) currentIdx = Math.max(0, queue.length - 1);
-                renderCurrent();
-                return;
-            }
-            
-            currentLead = l;
-
-            c.innerHTML = `
-                <div class="current-lead">
-                    <div class="current-lead-header">
-                        <div>
-                            <div class="current-lead-company">${l.company}</div>
-                            ${l.contact ? `<div class="current-lead-contact">${l.contact}</div>` : ''}
-                        </div>
-                        <div class="lead-index">${currentIdx + 1} / ${queue.length}</div>
-                    </div>
-                    <div class="contact-grid">
-                        <div class="contact-item">
-                            <div class="contact-icon">📞</div>
-                            <div>
-                                <div class="contact-label">Phone</div>
-                                <div class="contact-value">${l.phone ? `<a href="tel:${l.phone}">${l.phone}</a>` : '—'}</div>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <div class="contact-icon">📧</div>
-                            <div>
-                                <div class="contact-label">Email</div>
-                                <div class="contact-value">${l.email ? `<a href="mailto:${l.email}">${l.email}</a>` : '—'}</div>
-                            </div>
-                        </div>
-                        ${l.website ? `
-                        <div class="contact-item">
-                            <div class="contact-icon">🌐</div>
-                            <div>
-                                <div class="contact-label">Website</div>
-                                <div class="contact-value"><a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank">${l.website}</a></div>
-                            </div>
-                        </div>` : ''}
-                        ${l.address ? `
-                        <div class="contact-item">
-                            <div class="contact-icon">📍</div>
-                            <div>
-                                <div class="contact-label">Address</div>
-                                <div class="contact-value">${l.address}</div>
-                            </div>
-                        </div>` : ''}
-                    </div>
-                    <div class="quick-log">
-                        <button class="quick-btn" onclick="logOutcome('no_answer')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📵</span>No Answer</button>
-                        <button class="quick-btn" onclick="logOutcome('voicemail')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📝</span>Voicemail</button>
-                        <button class="quick-btn" onclick="logOutcome('gatekeeper')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">🚪</span>Gatekeeper</button>
-                        <button class="quick-btn" onclick="logOutcome('not_interested')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">👎</span>Not Interested</button>
-                        <button class="quick-btn warning" onclick="logOutcome('callback')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">⏰</span>Callback</button>
-                        <button class="quick-btn warning" onclick="logOutcome('interested')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">🔥</span>Interested!</button>
-                        <button class="quick-btn success" onclick="logOutcome('meeting')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📅</span>Meeting!</button>
-                        <button class="quick-btn" onclick="logOutcome('email')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📧</span>Email Sent</button>
-                    </div>
-                    <div class="lead-nav">
-                        <button class="nav-btn" onclick="prev()" ${currentIdx === 0 ? 'disabled' : ''}>← Previous</button>
-                        <button class="nav-btn" onclick="skip()">Skip →</button>
-                        <button class="nav-btn primary" onclick="next()" ${currentIdx >= queue.length - 1 ? 'disabled' : ''}>Next →</button>
-                    </div>
-                </div>`;
-        }
-
-        async function logOutcome(o) {
-            if (!sessionActive) return;
-            const lid = queue[currentIdx];
-            const l = leads.find(x => x.id === lid);
-            if (!l) return;
-
-            const type = o === 'email' ? 'email' : 'call';
-            
-            try {
-                await db.from('activities').insert({lead_id: lid, type, outcome: o, notes: 'Logged during session'});
-                
-                let upd = {last_activity_at: new Date().toISOString()};
-                if (o === 'interested' && (l.stage === 'prospecting' || l.stage === 'outreach')) upd.stage = 'interested';
-                else if (o === 'meeting') upd.stage = 'meeting';
-                else if (l.stage === 'prospecting') upd.stage = 'outreach';
-                
-                await db.from('leads').update(upd).eq('id', lid);
-                Object.assign(l, upd);
-
-                if (o === 'email') sessionData.emails++;
-                else sessionData.calls++;
-                
-                if (o === 'meeting') {
-                    sessionData.meetings++;
-                    celebrate();
-                    toast('🎉 MEETING BOOKED!');
-                    openCalendarModal(l);
-                } else if (o === 'callback') {
-                    sessionData.callbacks++;
-                    toast('⏰ Callback scheduled');
-                } else if (o === 'interested') {
-                    toast('🔥 Interested!');
-                }
-                
-                updateSession();
-                if (o !== 'meeting') setTimeout(next, 300);
-            } catch(e) {
-                console.error(e);
-                toast('❌ Failed to log', 'error');
-            }
-        }
-
-        function prev() { if (currentIdx > 0) { currentIdx--; renderCurrent(); }}
-        function next() { if (currentIdx < queue.length - 1) { currentIdx++; renderCurrent(); }}
-        function skip() {
-            const id = queue.splice(currentIdx, 1)[0];
-            queue.push(id);
-            if (currentIdx >= queue.length) currentIdx = 0;
-            renderCurrent();
-        }
-
-        // Session
-        function toggleSession() { sessionActive ? endSession() : startSession(); }
-
-        function startSession() {
-            sessionActive = true;
-            sessionStart = Date.now();
-            sessionData = {calls:0, emails:0, meetings:0, callbacks:0};
-            
-            const btn = document.getElementById('session-btn');
-            btn.classList.add('active');
-            btn.innerHTML = '⏹ End Session';
-            document.getElementById('session-panel').classList.add('active');
-            
-            sessionTimer = setInterval(updateTimer, 1000);
-            renderCurrent();
-            toast('🎯 Session started — let\'s go!');
-        }
-
-        async function endSession() {
-            sessionActive = false;
-            clearInterval(sessionTimer);
-            
-            const btn = document.getElementById('session-btn');
-            btn.classList.remove('active');
-            btn.innerHTML = '▶ Start Session';
-            document.getElementById('session-panel').classList.remove('active');
-
-            const today = new Date().toISOString().split('T')[0];
-            
-            try {
-                const {data: existing} = await db.from('daily_logs').select('*').eq('date', today).single();
-                
-                if (existing) {
-                    await db.from('daily_logs').update({
-                        calls: (existing.calls||0) + sessionData.calls,
-                        emails: (existing.emails||0) + sessionData.emails,
-                        meetings: (existing.meetings||0) + sessionData.meetings,
-                        callbacks: (existing.callbacks||0) + sessionData.callbacks
-                    }).eq('id', existing.id);
-                } else {
-                    await db.from('daily_logs').insert({date: today, ...sessionData});
-                }
-                
-                // Reload logs
-                const {data:lg} = await db.from('daily_logs').select('*').order('date',{ascending:false});
-                logs = lg || [];
-                
-                renderStats();
-                renderCurrent();
-                renderReports();
-                toast(`✅ Session saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
-            } catch(e) {
-                console.error(e);
-                toast('❌ Failed to save session', 'error');
-            }
-        }
-
-        function updateTimer() {
-            const e = Date.now() - sessionStart;
-            const h = Math.floor(e / 3600000);
-            const m = Math.floor((e % 3600000) / 60000);
-            const s = Math.floor((e % 60000) / 1000);
-            document.getElementById('timer').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        }
-
-        function updateSession() {
-            document.getElementById('s-calls').textContent = sessionData.calls;
-            document.getElementById('s-emails').textContent = sessionData.emails;
-            document.getElementById('s-meetings').textContent = sessionData.meetings;
-            document.getElementById('s-callbacks').textContent = sessionData.callbacks;
-        }
-
-        // Follow-ups
-        function renderFollowups() {
-            const today = new Date();
-            today.setHours(23,59,59,999);
-            
-            const fu = leads.filter(l => l.follow_up && new Date(l.follow_up) <= today)
-                .sort((a,b) => new Date(a.follow_up) - new Date(b.follow_up))
-                .slice(0, 8);
-            
-            document.getElementById('followups-count').textContent = fu.length;
-            const list = document.getElementById('followups-list');
-            
-            if (!fu.length) {
-                list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">No follow-ups today 🎉</div>';
-                return;
-            }
-
-            list.innerHTML = fu.map(l => {
-                const s = STAGES.find(x => x.id === l.stage) || STAGES[0];
-                const d = new Date(l.follow_up);
-                const od = d < new Date();
-                const t = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-                return `
-                    <div class="followup-item" onclick="jumpTo('${l.id}')">
-                        <div class="followup-time ${od ? 'overdue' : ''}">${od ? 'DUE' : t}</div>
-                        <div class="followup-info">
-                            <div class="followup-company">${l.company}</div>
-                            <div class="followup-stage">${s.icon} ${s.name}</div>
-                        </div>
-                        ${l.phone ? `<button class="followup-call" onclick="event.stopPropagation();window.open('tel:${l.phone}')">📞</button>` : ''}
-                    </div>`;
-            }).join('');
-        }
-
-        function jumpTo(id) {
-            const i = queue.indexOf(id);
-            if (i !== -1) {
-                currentIdx = i;
-            } else {
-                queue.unshift(id);
-                currentIdx = 0;
-            }
-            renderCurrent();
-            switchTab('dialer');
-        }
-
-        // Reports
-        function renderReports() {
-            const s = getStats();
-            
-            document.getElementById('report-calls').textContent = s.weeklyCalls;
-            document.getElementById('report-meetings').textContent = s.weeklyMeetings;
-            document.getElementById('report-rate').textContent = s.calls > 0 ? `${((s.meetings / s.calls) * 100).toFixed(1)}%` : '0%';
-
-            // Daily chart
-            const days = [];
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                const log = logs.find(l => l.date === dateStr);
-                days.push({
-                    date: d,
-                    calls: log?.calls || 0,
-                    label: d.toLocaleDateString('en-GB', {weekday:'short'})
-                });
-            }
-            
-            const maxCalls = Math.max(...days.map(d => d.calls), 1);
-            document.getElementById('calls-chart').innerHTML = days.map(d => 
-                `<div class="chart-bar" style="height:${(d.calls/maxCalls)*100}%" data-value="${d.calls}"></div>`
-            ).join('');
-            document.getElementById('chart-labels').innerHTML = days.map(d => 
-                `<div class="chart-label">${d.label}</div>`
-            ).join('');
-
-            // Outcomes
-            const outcomes = {};
-            activities.filter(a => a.type === 'call').forEach(a => {
-                outcomes[a.outcome] = (outcomes[a.outcome] || 0) + 1;
-            });
-            
-            document.getElementById('outcomes-grid').innerHTML = `
-                <div class="metric-item"><div class="metric-value" style="color:var(--text-muted)">${outcomes.no_answer || 0}</div><div class="metric-label">No Answer</div></div>
-                <div class="metric-item"><div class="metric-value" style="color:var(--warning)">${outcomes.voicemail || 0}</div><div class="metric-label">Voicemails</div></div>
-                <div class="metric-item"><div class="metric-value" style="color:var(--calls)">${outcomes.interested || 0}</div><div class="metric-label">Interested</div></div>
-                <div class="metric-item"><div class="metric-value" style="color:var(--success)">${outcomes.meeting || 0}</div><div class="metric-label">Meetings</div></div>
-            `;
-
-            // Funnel
-            const stageCounts = {};
-            leads.forEach(l => stageCounts[l.stage] = (stageCounts[l.stage] || 0) + 1);
-            const total = leads.length || 1;
-            
-            const funnelStages = [
-                {id:'prospecting', color:'var(--surface)'},
-                {id:'outreach', color:'var(--calls)'},
-                {id:'interested', color:'var(--warning)'},
-                {id:'meeting', color:'var(--emails)'},
-                {id:'proposal', color:'var(--purple)'},
-                {id:'won', color:'var(--success)'}
-            ];
-            
-            document.getElementById('funnel').innerHTML = funnelStages.map(fs => {
-                const stage = STAGES.find(s => s.id === fs.id);
-                const count = stageCounts[fs.id] || 0;
-                const pct = (count / total * 100).toFixed(0);
-                return `
-                    <div class="funnel-stage">
-                        <div class="funnel-label">${stage.icon} ${stage.name}</div>
-                        <div class="funnel-bar">
-                            <div class="funnel-fill" style="width:${pct}%;background:${fs.color}">
-                                <span>${count}</span>
-                            </div>
-                        </div>
-                        <div class="funnel-value">${pct}%</div>
-                    </div>`;
-            }).join('');
-        }
-
-        // Tabs
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-            document.getElementById(`tab-${tab}`).classList.add('active');
-        }
-
-        function switchScript(script) {
-            document.querySelectorAll('.script-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.script-content').forEach(c => c.style.display = 'none');
-            document.querySelector(`[onclick="switchScript('${script}')"]`).classList.add('active');
-            document.getElementById(`script-${script}`).style.display = 'block';
-        }
-
-        function toggleObjection(el) {
-            el.classList.toggle('open');
-        }
-
-        // Email Templates
-        function copyTemplate(id) {
-            const subject = document.getElementById(`${id}-subject`).value;
-            const body = document.getElementById(`${id}-body`).innerText;
-            
-            // Replace vars with current lead if available
-            let text = body;
-            if (currentLead) {
-                text = text.replace(/\[NAME\]/g, currentLead.contact || 'there');
-                text = text.replace(/\[COMPANY\]/g, currentLead.company || '');
-            }
-            
-            navigator.clipboard.writeText(`Subject: ${subject}\n\n${text}`);
-            toast('📋 Copied to clipboard!', 'info');
-        }
-
-        function openEmailClient(id) {
-            const subject = encodeURIComponent(document.getElementById(`${id}-subject`).value);
-            let body = document.getElementById(`${id}-body`).innerText;
-            
-            if (currentLead) {
-                body = body.replace(/\[NAME\]/g, currentLead.contact || 'there');
-                body = body.replace(/\[COMPANY\]/g, currentLead.company || '');
-            }
-            
-            const email = currentLead?.email || '';
-            window.open(`mailto:${email}?subject=${subject}&body=${encodeURIComponent(body)}`);
-        }
-
-        // Calendar
-        function openCalendarModal(lead) {
-            document.getElementById('cal-title').value = `Discovery Call - ${lead?.company || ''}`;
-            
+        function getTomorrow() {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('cal-date').value = tomorrow.toISOString().split('T')[0];
-            
-            document.getElementById('calendar-modal').classList.add('active');
+            return tomorrow.toISOString().split('T')[0];
         }
 
-        function closeCalendarModal() {
-            document.getElementById('calendar-modal').classList.remove('active');
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
-        function createCalendarEvent() {
-            const title = encodeURIComponent(document.getElementById('cal-title').value);
-            const date = document.getElementById('cal-date').value;
-            const time = document.getElementById('cal-time').value;
-            const duration = parseInt(document.getElementById('cal-duration').value) || 30;
-            const notes = encodeURIComponent(document.getElementById('cal-notes').value);
-            
-            const start = new Date(`${date}T${time}`);
-            const end = new Date(start.getTime() + duration * 60000);
-            
-            const formatDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-            
-            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatDate(start)}/${formatDate(end)}&details=${notes}`;
-            
-            window.open(url, '_blank');
-            closeCalendarModal();
-            toast('📅 Opening Google Calendar...', 'info');
+        function getLeadInitials(lead) {
+            if (!lead) return '?';
+            const name = lead.contactName || lead.company || 'Unknown';
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
         }
 
-        // Utils
-        function celebrate() {
-            const colors = ['#FF6B35','#3B82F6','#10B981','#F59E0B','#8B5CF6'];
-            const c = document.createElement('div');
-            c.className = 'celebration';
-            for (let i = 0; i < 50; i++) {
-                const cf = document.createElement('div');
-                cf.className = 'confetti';
-                cf.style.left = Math.random() * 100 + '%';
-                cf.style.background = colors[Math.floor(Math.random() * colors.length)];
-                cf.style.animationDelay = Math.random() * .5 + 's';
-                cf.style.borderRadius = Math.random() > .5 ? '50%' : '0';
-                c.appendChild(cf);
+        // ==========================================
+        // DATA PERSISTENCE
+        // ==========================================
+
+        function loadData() {
+            try {
+                const actionsData = localStorage.getItem(ACTIONS_KEY);
+                actions = actionsData ? JSON.parse(actionsData) : [];
+
+                const leadsData = localStorage.getItem(LEADS_KEY);
+                leads = leadsData ? JSON.parse(leadsData) : [];
+            } catch (e) {
+                console.error('Error loading data:', e);
+                actions = [];
+                leads = [];
             }
-            document.body.appendChild(c);
-            setTimeout(() => c.remove(), 3000);
         }
 
-        function toast(msg, type='success') {
-            const t = document.getElementById('toast');
-            t.innerHTML = msg;
-            t.className = 'toast show' + (type === 'error' ? ' error' : type === 'info' ? ' info' : '');
-            setTimeout(() => t.classList.remove('show'), 3000);
+        function saveActions() {
+            try {
+                localStorage.setItem(ACTIONS_KEY, JSON.stringify(actions));
+            } catch (e) {
+                console.error('Error saving actions:', e);
+            }
         }
 
-        // Modal close
-        document.getElementById('calendar-modal').addEventListener('click', e => {
-            if (e.target.id === 'calendar-modal') closeCalendarModal();
-        });
+        // ==========================================
+        // ACTIONS INTEGRATION
+        // ==========================================
+
+        function updateActionStats() {
+            const today = getToday();
+
+            // Today's planned actions
+            const todayPlanned = actions.filter(a => a.date === today && a.status === 'planned').length;
+            document.getElementById('todayActionsCount').textContent = todayPlanned;
+
+            // Overdue actions
+            const overdue = actions.filter(a => a.date < today && a.status === 'planned').length;
+            document.getElementById('overdueActionsCount').textContent = overdue;
+
+            // Show/hide overdue stat
+            const overdueStat = document.getElementById('overdueActionsStat');
+            if (overdue > 0) {
+                overdueStat.style.display = 'flex';
+                overdueStat.classList.add('has-overdue');
+            } else {
+                overdueStat.style.display = 'none';
+            }
+        }
+
+        function createAction(data) {
+            const action = {
+                id: generateId(),
+                leadId: data.leadId,
+                type: data.type || 'follow_up',
+                status: 'planned',
+                date: data.date || getToday(),
+                time: data.time || '',
+                notes: data.notes || '',
+                outcome: '',
+                createdAt: new Date().toISOString(),
+                completedAt: null
+            };
+
+            actions.push(action);
+            saveActions();
+            return action;
+        }
+
+        function markActionComplete(leadId, outcome) {
+            const today = getToday();
+            
+            // Find today's action for this lead
+            const actionIndex = actions.findIndex(a => 
+                a.leadId === leadId && 
+                a.date <= today && 
+                a.status === 'planned'
+            );
+
+            if (actionIndex !== -1) {
+                actions[actionIndex].status = 'completed';
+                actions[actionIndex].outcome = outcome;
+                actions[actionIndex].completedAt = new Date().toISOString();
+                saveActions();
+            }
+        }
+
+        function getFollowUpDate(option) {
+            const days = {
+                'tomorrow': 1,
+                '2days': 2,
+                '3days': 3,
+                'week': 7
+            };
+            const d = new Date();
+            d.setDate(d.getDate() + (days[option] || 1));
+            return d.toISOString().split('T')[0];
+        }
+
+        // ==========================================
+        // SESSION MANAGEMENT
+        // ==========================================
+
+        function startSession() {
+            sessionStartTime = new Date();
+            updateSessionTimer();
+            setInterval(updateSessionTimer, 1000);
+        }
+
+        function updateSessionTimer() {
+            if (!sessionStartTime) return;
+            const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
+            document.getElementById('sessionTime').textContent = formatTime(elapsed);
+        }
+
+        function startCallTimer() {
+            callStartTime = new Date();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((new Date() - callStartTime) / 1000);
+                document.getElementById('callTimer').textContent = formatTime(elapsed);
+            }, 1000);
+        }
+
+        function stopCallTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            document.getElementById('callTimer').textContent = '0:00';
+        }
+
+        // ==========================================
+        // OUTCOME LOGGING - WITH AUTO FOLLOW-UP
+        // ==========================================
+
+        function logOutcome(outcome) {
+            if (!currentLead) {
+                alert('No lead selected');
+                return;
+            }
+
+            sessionStats.calls++;
+            document.getElementById('callsToday').textContent = sessionStats.calls;
+
+            // Track connections and meetings
+            const connectionOutcomes = ['Meeting booked', 'Interested - send info', 'Callback requested'];
+            if (connectionOutcomes.includes(outcome)) {
+                sessionStats.connections++;
+                document.getElementById('connections').textContent = sessionStats.connections;
+            }
+
+            if (outcome === 'Meeting booked') {
+                sessionStats.meetings++;
+                document.getElementById('meetingsBooked').textContent = sessionStats.meetings;
+            }
+
+            // Mark action as complete
+            markActionComplete(currentLead.id, outcome);
+
+            // Add to activity feed
+            addActivity(outcome);
+
+            // Check if follow-up needed
+            const followUpOutcomes = ['Callback requested', 'Voicemail left', 'Gatekeeper - try again', 'Interested - send info'];
+            if (followUpOutcomes.includes(outcome)) {
+                pendingOutcome = outcome;
+                document.getElementById('followUpLeadName').textContent = currentLead.contactName || currentLead.company;
+                openModal('followUpModal');
+            } else {
+                // Move to next lead
+                nextLead();
+            }
+        }
+
+        function createFollowUp() {
+            if (!currentLead || !pendingOutcome) return;
+
+            const dateOption = document.getElementById('followUpDate').value;
+            const followUpDate = getFollowUpDate(dateOption);
+
+            createAction({
+                leadId: currentLead.id,
+                type: 'follow_up',
+                date: followUpDate,
+                notes: 'Follow-up from: ' + pendingOutcome
+            });
+
+            closeModal('followUpModal');
+            pendingOutcome = null;
+            nextLead();
+
+            // Update stats
+            updateActionStats();
+        }
+
+        function skipFollowUp() {
+            closeModal('followUpModal');
+            pendingOutcome = null;
+            nextLead();
+        }
+
+        function addActivity(outcome) {
+            const list = document.getElementById('activityList');
+            const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            
+            const iconClass = outcome.includes('Meeting') ? 'meeting' : 
+                             outcome.includes('Email') ? 'email' : 'call';
+            const icon = outcome.includes('Meeting') ? '🎉' : 
+                        outcome.includes('Email') ? '✉️' : '📞';
+
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="activity-icon ${iconClass}">${icon}</div>
+                <div class="activity-content">
+                    <div class="activity-text">${currentLead.contactName || currentLead.company}: ${outcome}</div>
+                    <div class="activity-time">${time}</div>
+                </div>
+            `;
+
+            list.insertBefore(item, list.firstChild);
+        }
+
+        // ==========================================
+        // LEAD NAVIGATION
+        // ==========================================
+
+        function loadCurrentLead() {
+            if (leads.length === 0) {
+                document.getElementById('currentLeadName').textContent = 'No leads available';
+                document.getElementById('currentLeadCompany').textContent = 'Import leads to get started';
+                return;
+            }
+
+            // Get leads that need calling (have actions today or are in queue)
+            const callableLeads = leads.filter(l => l.stage === 'New' || l.stage === 'Contacted');
+            
+            if (currentLeadIndex >= callableLeads.length) {
+                currentLeadIndex = 0;
+            }
+
+            currentLead = callableLeads[currentLeadIndex] || leads[0];
+            
+            if (currentLead) {
+                document.getElementById('currentLeadAvatar').textContent = getLeadInitials(currentLead);
+                document.getElementById('currentLeadName').textContent = currentLead.contactName || 'Unknown';
+                document.getElementById('currentLeadCompany').textContent = currentLead.company || '';
+                document.getElementById('currentLeadPhone').textContent = currentLead.phone || '-';
+                document.getElementById('currentLeadPhone').href = currentLead.phone ? `tel:${currentLead.phone}` : '#';
+                document.getElementById('currentLeadEmail').textContent = currentLead.email || '-';
+                document.getElementById('currentLeadDetails').style.display = 'block';
+
+                startCallTimer();
+            }
+        }
+
+        function nextLead() {
+            currentLeadIndex++;
+            loadCurrentLead();
+        }
+
+        function skipLead() {
+            // Mark current action as skipped if exists
+            if (currentLead) {
+                const today = getToday();
+                const actionIndex = actions.findIndex(a => 
+                    a.leadId === currentLead.id && 
+                    a.date <= today && 
+                    a.status === 'planned'
+                );
+
+                if (actionIndex !== -1) {
+                    actions[actionIndex].status = 'skipped';
+                    saveActions();
+                }
+            }
+
+            nextLead();
+        }
+
+        // ==========================================
+        // END SESSION - WITH CARRYOVER
+        // ==========================================
+
+        function endSession() {
+            const today = getToday();
+            const tomorrow = getTomorrow();
+
+            // Get today's action stats
+            const todayActions = actions.filter(a => a.date === today);
+            const completed = todayActions.filter(a => a.status === 'completed').length;
+            const skipped = todayActions.filter(a => a.status === 'skipped').length;
+
+            // Carry over remaining planned actions
+            let carried = 0;
+            actions.forEach(action => {
+                if (action.date <= today && action.status === 'planned') {
+                    action.date = tomorrow;
+                    action.notes = (action.notes ? action.notes + ' ' : '') + '[Carried from ' + today + ']';
+                    carried++;
+                }
+            });
+
+            saveActions();
+
+            // Count tomorrow's actions
+            const tomorrowCount = actions.filter(a => a.date === tomorrow && a.status === 'planned').length;
+
+            // Show recap
+            document.getElementById('recapCompleted').textContent = completed;
+            document.getElementById('recapSkipped').textContent = skipped;
+            document.getElementById('recapCarried').textContent = carried;
+            document.getElementById('recapTomorrowCount').textContent = tomorrowCount;
+
+            openModal('recapModal');
+        }
+
+        // ==========================================
+        // MODAL HELPERS
+        // ==========================================
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+
+        function init() {
+            loadData();
+            updateActionStats();
+            loadCurrentLead();
+            startSession();
+
+            // Event listeners
+            document.getElementById('nextLeadBtn').addEventListener('click', nextLead);
+            document.getElementById('endSessionBtn').addEventListener('click', endSession);
+
+            // Close modals on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            });
+
+            console.log('🚀 SummitFlow Dashboard initialized');
+            console.log(`📋 ${actions.length} actions loaded`);
+            console.log(`👥 ${leads.length} leads available`);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>

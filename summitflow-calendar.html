@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar | SummitFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #08090A;
+            --bg-card: #131416;
+            --bg-card-hover: #1a1c1f;
+            --bg-elevated: #1d1f23;
+            --border-subtle: #2a2d32;
+            --border-default: #3a3d42;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --green-primary: #10B981;
+            --green-secondary: #059669;
+            --green-muted: rgba(16, 185, 129, 0.15);
+            --red-primary: #EF4444;
+            --red-secondary: #DC2626;
+            --red-muted: rgba(239, 68, 68, 0.15);
+            --blue-primary: #3B82F6;
+            --blue-muted: rgba(59, 130, 246, 0.15);
+            --yellow-primary: #F59E0B;
+            --yellow-muted: rgba(245, 158, 11, 0.15);
+            --purple-primary: #8B5CF6;
+            --purple-muted: rgba(139, 92, 246, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .nav-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--green-muted);
+            color: var(--green-primary);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .header-date {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .view-btn {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .view-btn.active {
+            background: var(--green-primary);
+            color: white;
+        }
+
+        /* Add Action Button */
+        .btn-primary {
+            padding: 10px 20px;
+            background: var(--green-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--green-secondary);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-default);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-default);
+        }
+
+        .stat-card.overdue {
+            border-color: var(--red-primary);
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--red-muted) 100%);
+        }
+
+        .stat-card.overdue .stat-value {
+            color: var(--red-primary);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-subtext {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Today View */
+        .today-view {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .action-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .section-header:hover {
+            background: var(--bg-elevated);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .section-icon.overdue {
+            background: var(--red-muted);
+        }
+
+        .section-icon.planned {
+            background: var(--blue-muted);
+        }
+
+        .section-icon.completed {
+            background: var(--green-muted);
+        }
+
+        .section-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .section-count {
+            font-size: 14px;
+            color: var(--text-muted);
+            background: var(--bg-elevated);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .section-toggle {
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .section-header.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .action-list {
+            padding: 8px;
+        }
+
+        .action-list.collapsed {
+            display: none;
+        }
+
+        /* Action Item */
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .action-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .action-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-default);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .action-checkbox:hover {
+            border-color: var(--green-primary);
+            background: var(--green-muted);
+        }
+
+        .action-item.completed .action-checkbox {
+            background: var(--green-primary);
+            border-color: var(--green-primary);
+        }
+
+        .action-item.completed .action-checkbox::after {
+            content: '✓';
+            color: white;
+            font-weight: 600;
+        }
+
+        .action-type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .action-type-icon.call {
+            background: var(--blue-muted);
+        }
+
+        .action-type-icon.email {
+            background: var(--purple-muted);
+        }
+
+        .action-type-icon.follow_up {
+            background: var(--yellow-muted);
+        }
+
+        .action-type-icon.meeting {
+            background: var(--green-muted);
+        }
+
+        .action-type-icon.custom {
+            background: var(--bg-elevated);
+        }
+
+        .action-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .action-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-time {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .action-lead {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .action-overdue-badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            background: var(--red-muted);
+            color: var(--red-primary);
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .action-outcome {
+            font-size: 13px;
+            color: var(--green-primary);
+            margin-top: 4px;
+        }
+
+        .action-item.completed .action-title {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .action-item.completed .action-lead {
+            color: var(--text-muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .action-item:hover .action-buttons {
+            opacity: 1;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border-color: var(--border-default);
+        }
+
+        .action-btn.complete {
+            background: var(--green-muted);
+            color: var(--green-primary);
+            border-color: var(--green-primary);
+        }
+
+        .action-btn.complete:hover {
+            background: var(--green-primary);
+            color: white;
+        }
+
+        /* Week View */
+        .week-view {
+            display: none;
+        }
+
+        .week-view.active {
+            display: block;
+        }
+
+        .today-view.hidden {
+            display: none;
+        }
+
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        .week-day {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .week-day:hover {
+            border-color: var(--border-default);
+        }
+
+        .week-day.today {
+            border-color: var(--green-primary);
+            box-shadow: 0 0 20px var(--green-muted);
+        }
+
+        .week-day-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+
+        .week-day-name {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .week-day-date {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .week-day.today .week-day-date {
+            color: var(--green-primary);
+        }
+
+        .week-day-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .week-day-actions {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .week-action {
+            padding: 10px 12px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .week-action:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .week-action.call {
+            border-left-color: var(--blue-primary);
+        }
+
+        .week-action.email {
+            border-left-color: var(--purple-primary);
+        }
+
+        .week-action.follow_up {
+            border-left-color: var(--yellow-primary);
+        }
+
+        .week-action.meeting {
+            border-left-color: var(--green-primary);
+        }
+
+        .week-action.completed {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .week-action-time {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .week-action-title {
+            font-weight: 500;
+        }
+
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .week-nav-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .week-nav-btn:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .week-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 24px 24px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--green-primary);
+            box-shadow: 0 0 0 3px var(--green-muted);
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-actions {
+            padding: 0 24px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-danger {
+            padding: 10px 20px;
+            background: var(--red-muted);
+            color: var(--red-primary);
+            border: 1px solid var(--red-primary);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: var(--red-primary);
+            color: white;
+        }
+
+        /* Lead Context in Modal */
+        .lead-context {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .lead-context-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .lead-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+        }
+
+        .lead-info h4 {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .lead-info p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .lead-details {
+            display: grid;
+            gap: 8px;
+        }
+
+        .lead-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .lead-detail-icon {
+            color: var(--text-muted);
+            width: 20px;
+        }
+
+        .lead-detail-value {
+            color: var(--text-secondary);
+        }
+
+        .lead-detail-value a {
+            color: var(--green-primary);
+            text-decoration: none;
+        }
+
+        .lead-detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        /* Reschedule Dropdown */
+        .reschedule-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 180px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+        }
+
+        .reschedule-dropdown.active {
+            display: block;
+        }
+
+        .reschedule-option {
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .reschedule-option:hover {
+            background: var(--bg-elevated);
+        }
+
+        /* Session Recap Modal */
+        .recap-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .recap-stat {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+        }
+
+        .recap-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .recap-stat-value.completed {
+            color: var(--green-primary);
+        }
+
+        .recap-stat-value.skipped {
+            color: var(--yellow-primary);
+        }
+
+        .recap-stat-value.carried {
+            color: var(--blue-primary);
+        }
+
+        .recap-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .recap-tomorrow {
+            background: var(--green-muted);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .recap-tomorrow-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .recap-tomorrow-count {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--green-primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            max-width: 300px;
+            margin: 0 auto 20px;
+        }
+
+        /* Overdue pulse animation */
+        @keyframes pulse-overdue {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .action-item.overdue {
+            background: var(--red-muted);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .action-item.overdue .action-checkbox {
+            border-color: var(--red-primary);
+        }
+
+        .section-header.overdue {
+            background: linear-gradient(90deg, var(--red-muted) 0%, transparent 100%);
+        }
+
+        .overdue-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--red-primary);
+            border-radius: 50%;
+            animation: pulse-overdue 2s infinite;
+        }
+
+        /* Lead Search */
+        .lead-search-container {
+            position: relative;
+        }
+
+        .lead-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .lead-search-results.active {
+            display: block;
+        }
+
+        .lead-search-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .lead-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .lead-search-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .lead-search-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .lead-search-company {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .week-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-inner {
+                flex-direction: column;
+                height: auto;
+                padding: 12px 0;
+                gap: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .week-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .week-day {
+                min-height: 200px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                opacity: 1;
+                flex-direction: column;
+            }
+
+            .modal {
+                margin: 16px;
+                max-height: calc(100vh - 32px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .week-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recap-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="#" class="nav-brand">
+                <div class="nav-logo">S</div>
+                <span class="nav-title">SummitFlow</span>
+            </a>
+            <div class="nav-links">
+                <a href="summitflow-leads.html" class="nav-link">Leads Hub</a>
+                <a href="summitflow-pipeline.html" class="nav-link">Pipeline</a>
+                <a href="summitflow-dashboard.html" class="nav-link">Dashboard</a>
+                <a href="summitflow-calendar.html" class="nav-link active">Calendar</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>📅 Daily Actions</h1>
+                <p class="header-date" id="currentDate">Wednesday, January 8, 2026</p>
+            </div>
+            <div class="header-right">
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="today">Today</button>
+                    <button class="view-btn" data-view="week">Week</button>
+                </div>
+                <button class="btn-primary" id="addActionBtn">
+                    <span>+</span> Add Action
+                </button>
+                <button class="btn-secondary" id="endSessionBtn">End Session</button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card overdue" id="overdueCard" style="display: none;">
+                <div class="stat-label">⚠️ Overdue</div>
+                <div class="stat-value" id="overdueCount">0</div>
+                <div class="stat-subtext">Need attention</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📋 Today</div>
+                <div class="stat-value" id="todayCount">0</div>
+                <div class="stat-subtext">Planned actions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">✅ Completed</div>
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-subtext">Done today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📊 Rate</div>
+                <div class="stat-value" id="completionRate">0%</div>
+                <div class="stat-subtext">Completion rate</div>
+            </div>
+        </div>
+
+        <!-- Today View -->
+        <div class="today-view" id="todayView">
+            <!-- Overdue Section -->
+            <div class="action-section" id="overdueSection" style="display: none;">
+                <div class="section-header overdue" onclick="toggleSection('overdue')">
+                    <div class="section-title">
+                        <div class="section-icon overdue">🔴</div>
+                        <span class="section-name">Overdue</span>
+                        <span class="section-count" id="overdueSectionCount">0</span>
+                        <div class="overdue-indicator"></div>
+                    </div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="action-list" id="overdueList"></div>
+            </div>
+
+            <!-- Planned Section -->
+            <div class="action-section">
+                <div class="section-header" onclick="toggleSection('planned')">
+                    <div class="section-title">
+                        <div class="section-icon planned">⚪</div>
+                        <span class="section-name">Planned</span>
+                        <span class="section-count" id="plannedSectionCount">0</span>
+                    </div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="action-list" id="plannedList">
+                    <div class="empty-state" id="plannedEmpty">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">No actions planned</div>
+                        <div class="empty-state-text">Add your first action to start building momentum.</div>
+                        <button class="btn-primary" onclick="openAddModal()">+ Add Action</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Section -->
+            <div class="action-section">
+                <div class="section-header" onclick="toggleSection('completed')">
+                    <div class="section-title">
+                        <div class="section-icon completed">✅</div>
+                        <span class="section-name">Completed</span>
+                        <span class="section-count" id="completedSectionCount">0</span>
+                    </div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="action-list" id="completedList"></div>
+            </div>
+        </div>
+
+        <!-- Week View -->
+        <div class="week-view" id="weekView">
+            <div class="week-nav">
+                <button class="week-nav-btn" id="prevWeek">←</button>
+                <span class="week-label" id="weekLabel">Jan 6 - Jan 12, 2026</span>
+                <button class="week-nav-btn" id="nextWeek">→</button>
+                <button class="btn-secondary" id="todayWeekBtn" style="margin-left: 16px;">Today</button>
+            </div>
+            <div class="week-grid" id="weekGrid"></div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Action Modal -->
+    <div class="modal-overlay" id="actionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Action</h3>
+                <button class="modal-close" onclick="closeModal('actionModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Lead Context (shown when editing) -->
+                <div class="lead-context" id="leadContext" style="display: none;">
+                    <div class="lead-context-header">
+                        <div class="lead-avatar" id="leadAvatar">JD</div>
+                        <div class="lead-info">
+                            <h4 id="leadName">John Doe</h4>
+                            <p id="leadCompany">Chiro Leeds</p>
+                        </div>
+                    </div>
+                    <div class="lead-details">
+                        <div class="lead-detail">
+                            <span class="lead-detail-icon">📞</span>
+                            <span class="lead-detail-value" id="leadPhone">-</span>
+                        </div>
+                        <div class="lead-detail">
+                            <span class="lead-detail-icon">✉️</span>
+                            <span class="lead-detail-value" id="leadEmail">-</span>
+                        </div>
+                        <div class="lead-detail">
+                            <span class="lead-detail-icon">📍</span>
+                            <span class="lead-detail-value" id="leadStage">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="actionForm">
+                    <input type="hidden" id="actionId">
+                    
+                    <!-- Lead Selection (shown when adding) -->
+                    <div class="form-group" id="leadSelectGroup">
+                        <label class="form-label">Lead *</label>
+                        <div class="lead-search-container">
+                            <input type="text" class="form-input" id="leadSearch" placeholder="Search leads..." autocomplete="off">
+                            <input type="hidden" id="selectedLeadId">
+                            <div class="lead-search-results" id="leadSearchResults"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Type *</label>
+                            <select class="form-select" id="actionType" required>
+                                <option value="call">📞 Call</option>
+                                <option value="email">✉️ Email</option>
+                                <option value="follow_up">🔄 Follow-up</option>
+                                <option value="meeting">🤝 Meeting</option>
+                                <option value="custom">📝 Custom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="actionDate" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Time (optional)</label>
+                        <input type="time" class="form-input" id="actionTime">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-textarea" id="actionNotes" placeholder="Add any notes..."></textarea>
+                    </div>
+
+                    <!-- Outcome (shown when completing) -->
+                    <div class="form-group" id="outcomeGroup" style="display: none;">
+                        <label class="form-label">Outcome *</label>
+                        <select class="form-select" id="actionOutcome">
+                            <option value="">Select outcome...</option>
+                            <option value="No answer">No answer</option>
+                            <option value="Voicemail left">Voicemail left</option>
+                            <option value="Callback requested">Callback requested</option>
+                            <option value="Meeting booked">Meeting booked 🎉</option>
+                            <option value="Interested - send info">Interested - send info</option>
+                            <option value="Not interested">Not interested</option>
+                            <option value="Wrong number">Wrong number</option>
+                            <option value="Gatekeeper - try again">Gatekeeper - try again</option>
+                            <option value="custom">Custom...</option>
+                        </select>
+                        <input type="text" class="form-input" id="customOutcome" placeholder="Enter custom outcome..." style="display: none; margin-top: 8px;">
+                    </div>
+
+                    <!-- Follow-up Checkbox -->
+                    <div class="form-group" id="followUpGroup" style="display: none;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="createFollowUp">
+                            <span>Create follow-up action</span>
+                        </label>
+                        <div id="followUpOptions" style="display: none; margin-top: 12px; padding-left: 26px;">
+                            <select class="form-select" id="followUpDate" style="margin-bottom: 8px;">
+                                <option value="tomorrow">Tomorrow</option>
+                                <option value="2days">In 2 days</option>
+                                <option value="3days">In 3 days</option>
+                                <option value="week">Next week</option>
+                                <option value="custom">Custom date...</option>
+                            </select>
+                            <input type="date" class="form-input" id="followUpCustomDate" style="display: none;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-danger" id="deleteActionBtn" style="display: none;" onclick="deleteAction()">Delete</button>
+                <button class="btn-secondary" onclick="closeModal('actionModal')">Cancel</button>
+                <button class="btn-primary" id="saveActionBtn" onclick="saveAction()">Save Action</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Action Modal -->
+    <div class="modal-overlay" id="completeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Complete Action</h3>
+                <button class="modal-close" onclick="closeModal('completeModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="lead-context" id="completeLeadContext">
+                    <div class="lead-context-header">
+                        <div class="lead-avatar" id="completeLeadAvatar">JD</div>
+                        <div class="lead-info">
+                            <h4 id="completeLeadName">John Doe</h4>
+                            <p id="completeLeadCompany">Chiro Leeds</p>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="completeActionId">
+
+                <div class="form-group">
+                    <label class="form-label">What happened?</label>
+                    <select class="form-select" id="completeOutcome">
+                        <option value="">Select outcome...</option>
+                        <option value="No answer">No answer</option>
+                        <option value="Voicemail left">Voicemail left</option>
+                        <option value="Callback requested">Callback requested</option>
+                        <option value="Meeting booked">Meeting booked 🎉</option>
+                        <option value="Interested - send info">Interested - send info</option>
+                        <option value="Not interested">Not interested</option>
+                        <option value="Wrong number">Wrong number</option>
+                        <option value="Gatekeeper - try again">Gatekeeper - try again</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                    <input type="text" class="form-input" id="completeCustomOutcome" placeholder="Enter custom outcome..." style="display: none; margin-top: 8px;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="completeCreateFollowUp">
+                        <span>Schedule follow-up</span>
+                    </label>
+                    <div id="completeFollowUpOptions" style="display: none; margin-top: 12px; padding-left: 26px;">
+                        <select class="form-select" id="completeFollowUpDate">
+                            <option value="tomorrow">Tomorrow</option>
+                            <option value="2days">In 2 days</option>
+                            <option value="3days">In 3 days</option>
+                            <option value="week">Next week</option>
+                            <option value="custom">Custom date...</option>
+                        </select>
+                        <input type="date" class="form-input" id="completeFollowUpCustomDate" style="display: none; margin-top: 8px;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('completeModal')">Cancel</button>
+                <button class="btn-primary" onclick="completeAction()">✓ Mark Complete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Recap Modal -->
+    <div class="modal-overlay" id="recapModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🌙 Session Complete</h3>
+                <button class="modal-close" onclick="closeModal('recapModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="recap-stats">
+                    <div class="recap-stat">
+                        <div class="recap-stat-value completed" id="recapCompleted">0</div>
+                        <div class="recap-stat-label">Completed</div>
+                    </div>
+                    <div class="recap-stat">
+                        <div class="recap-stat-value skipped" id="recapSkipped">0</div>
+                        <div class="recap-stat-label">Skipped</div>
+                    </div>
+                    <div class="recap-stat">
+                        <div class="recap-stat-value carried" id="recapCarried">0</div>
+                        <div class="recap-stat-label">Carried Over</div>
+                    </div>
+                </div>
+                <div class="recap-tomorrow">
+                    <div class="recap-tomorrow-label">Tomorrow you have</div>
+                    <div class="recap-tomorrow-count"><span id="recapTomorrowCount">0</span> actions</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('recapModal')">Done</button>
+                <button class="btn-primary" onclick="viewTomorrow()">View Tomorrow →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // SUMMITFLOW ACTIONS SYSTEM - Core Logic
+        // ==========================================
+
+        // LocalStorage Keys
+        const ACTIONS_KEY = 'summitflow_v3_actions';
+        const LEADS_KEY = 'summitflow_v3_leads';
+        const CARRYOVER_KEY = 'summitflow_v3_last_carryover';
+
+        // State
+        let actions = [];
+        let leads = [];
+        let currentWeekStart = getWeekStart(new Date());
+        let currentView = 'today';
+        let editingActionId = null;
+
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+
+        function generateId() {
+            return 'action_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function getToday() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getTomorrow() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return tomorrow.toISOString().split('T')[0];
+        }
+
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-GB', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function formatShortDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-GB', { 
+                month: 'short', 
+                day: 'numeric'
+            });
+        }
+
+        function getDaysOverdue(dateStr) {
+            const actionDate = new Date(dateStr + 'T00:00:00');
+            const today = new Date(getToday() + 'T00:00:00');
+            const diffTime = today - actionDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        function getDefaultTime() {
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            now.setMinutes(0);
+            return now.toTimeString().slice(0, 5);
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                call: '📞',
+                email: '✉️',
+                follow_up: '🔄',
+                meeting: '🤝',
+                custom: '📝'
+            };
+            return icons[type] || '📝';
+        }
+
+        function getTypeLabel(type) {
+            const labels = {
+                call: 'Call',
+                email: 'Email',
+                follow_up: 'Follow-up',
+                meeting: 'Meeting',
+                custom: 'Custom'
+            };
+            return labels[type] || type;
+        }
+
+        // ==========================================
+        // DATA PERSISTENCE
+        // ==========================================
+
+        function loadData() {
+            try {
+                const actionsData = localStorage.getItem(ACTIONS_KEY);
+                actions = actionsData ? JSON.parse(actionsData) : [];
+                
+                const leadsData = localStorage.getItem(LEADS_KEY);
+                leads = leadsData ? JSON.parse(leadsData) : [];
+            } catch (e) {
+                console.error('Error loading data:', e);
+                actions = [];
+                leads = [];
+            }
+        }
+
+        function saveActions() {
+            try {
+                localStorage.setItem(ACTIONS_KEY, JSON.stringify(actions));
+            } catch (e) {
+                console.error('Error saving actions:', e);
+            }
+        }
+
+        function getLead(leadId) {
+            return leads.find(l => l.id === leadId) || null;
+        }
+
+        function getLeadInitials(lead) {
+            if (!lead) return '?';
+            const name = lead.contactName || lead.company || 'Unknown';
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        // ==========================================
+        // ACTIONS CRUD
+        // ==========================================
+
+        function createAction(data) {
+            const action = {
+                id: generateId(),
+                leadId: data.leadId,
+                type: data.type || 'call',
+                status: 'planned',
+                date: data.date || getToday(),
+                time: data.time || '',
+                notes: data.notes || '',
+                outcome: '',
+                createdAt: new Date().toISOString(),
+                completedAt: null
+            };
+
+            // Validate leadId exists
+            if (!getLead(action.leadId)) {
+                console.warn('Lead not found:', action.leadId);
+            }
+
+            // Check for duplicate
+            const duplicate = actions.find(a => 
+                a.leadId === action.leadId && 
+                a.type === action.type && 
+                a.date === action.date && 
+                a.status === 'planned'
+            );
+
+            if (duplicate) {
+                console.warn('Duplicate action detected');
+                return duplicate;
+            }
+
+            actions.push(action);
+            saveActions();
+            return action;
+        }
+
+        function updateAction(id, updates) {
+            const index = actions.findIndex(a => a.id === id);
+            if (index === -1) return null;
+
+            actions[index] = { ...actions[index], ...updates };
+            saveActions();
+            return actions[index];
+        }
+
+        function markComplete(id, outcome) {
+            return updateAction(id, {
+                status: 'completed',
+                outcome: outcome,
+                completedAt: new Date().toISOString()
+            });
+        }
+
+        function markSkipped(id) {
+            return updateAction(id, {
+                status: 'skipped',
+                completedAt: new Date().toISOString()
+            });
+        }
+
+        function deleteActionById(id) {
+            const index = actions.findIndex(a => a.id === id);
+            if (index === -1) return false;
+
+            actions.splice(index, 1);
+            saveActions();
+            return true;
+        }
+
+        // ==========================================
+        // CARRYOVER LOGIC
+        // ==========================================
+
+        function runCarryover() {
+            const today = getToday();
+            const lastCarryover = localStorage.getItem(CARRYOVER_KEY);
+
+            // Prevent duplicate runs
+            if (lastCarryover === today) {
+                console.log('Carryover already run today');
+                return { carried: 0 };
+            }
+
+            const tomorrow = getTomorrow();
+            let carriedCount = 0;
+
+            actions.forEach(action => {
+                if (action.date < today && action.status === 'planned') {
+                    // This is an overdue action - we'll show it in overdue section
+                    // Don't auto-move it, let user decide
+                }
+            });
+
+            localStorage.setItem(CARRYOVER_KEY, today);
+            return { carried: carriedCount };
+        }
+
+        function endSession() {
+            const today = getToday();
+            const tomorrow = getTomorrow();
+            
+            // Get today's actions
+            const todayActions = actions.filter(a => a.date === today);
+            const completed = todayActions.filter(a => a.status === 'completed').length;
+            const skipped = todayActions.filter(a => a.status === 'skipped').length;
+            
+            // Carry over remaining planned actions
+            let carried = 0;
+            actions.forEach(action => {
+                if (action.date === today && action.status === 'planned') {
+                    action.date = tomorrow;
+                    action.notes = (action.notes ? action.notes + ' ' : '') + '[Carried from ' + today + ']';
+                    carried++;
+                }
+            });
+
+            saveActions();
+
+            // Count tomorrow's actions
+            const tomorrowCount = actions.filter(a => a.date === tomorrow && a.status === 'planned').length;
+
+            // Show recap
+            showRecap(completed, skipped, carried, tomorrowCount);
+        }
+
+        function showRecap(completed, skipped, carried, tomorrowCount) {
+            document.getElementById('recapCompleted').textContent = completed;
+            document.getElementById('recapSkipped').textContent = skipped;
+            document.getElementById('recapCarried').textContent = carried;
+            document.getElementById('recapTomorrowCount').textContent = tomorrowCount;
+            openModal('recapModal');
+        }
+
+        // ==========================================
+        // RENDER FUNCTIONS
+        // ==========================================
+
+        function render() {
+            updateStats();
+            updateCurrentDate();
+
+            if (currentView === 'today') {
+                renderTodayView();
+            } else {
+                renderWeekView();
+            }
+        }
+
+        function updateCurrentDate() {
+            const today = new Date();
+            document.getElementById('currentDate').textContent = formatDate(getToday());
+        }
+
+        function updateStats() {
+            const today = getToday();
+            
+            // Overdue (before today, still planned)
+            const overdue = actions.filter(a => a.date < today && a.status === 'planned');
+            const overdueCount = overdue.length;
+            
+            // Today's planned
+            const todayPlanned = actions.filter(a => a.date === today && a.status === 'planned').length;
+            
+            // Today's completed
+            const todayCompleted = actions.filter(a => a.date === today && a.status === 'completed').length;
+            
+            // Completion rate
+            const todayTotal = todayPlanned + todayCompleted;
+            const rate = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
+
+            document.getElementById('overdueCount').textContent = overdueCount;
+            document.getElementById('todayCount').textContent = todayPlanned;
+            document.getElementById('completedCount').textContent = todayCompleted;
+            document.getElementById('completionRate').textContent = rate + '%';
+
+            // Show/hide overdue card
+            const overdueCard = document.getElementById('overdueCard');
+            overdueCard.style.display = overdueCount > 0 ? 'block' : 'none';
+        }
+
+        function renderTodayView() {
+            const today = getToday();
+            
+            // Get actions by status
+            const overdue = actions.filter(a => a.date < today && a.status === 'planned')
+                .sort((a, b) => a.date.localeCompare(b.date));
+            
+            const planned = actions.filter(a => a.date === today && a.status === 'planned')
+                .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+            
+            const completed = actions.filter(a => a.date === today && a.status === 'completed')
+                .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+            // Render overdue section
+            const overdueSection = document.getElementById('overdueSection');
+            const overdueList = document.getElementById('overdueList');
+            if (overdue.length > 0) {
+                overdueSection.style.display = 'block';
+                document.getElementById('overdueSectionCount').textContent = overdue.length;
+                overdueList.innerHTML = overdue.map(a => renderActionItem(a, true)).join('');
+            } else {
+                overdueSection.style.display = 'none';
+            }
+
+            // Render planned section
+            const plannedList = document.getElementById('plannedList');
+            const plannedEmpty = document.getElementById('plannedEmpty');
+            document.getElementById('plannedSectionCount').textContent = planned.length;
+            
+            if (planned.length > 0) {
+                plannedList.innerHTML = planned.map(a => renderActionItem(a)).join('');
+            } else {
+                plannedList.innerHTML = '';
+                plannedList.appendChild(plannedEmpty.cloneNode(true));
+            }
+
+            // Render completed section
+            const completedList = document.getElementById('completedList');
+            document.getElementById('completedSectionCount').textContent = completed.length;
+            
+            if (completed.length > 0) {
+                completedList.innerHTML = completed.map(a => renderActionItem(a)).join('');
+            } else {
+                completedList.innerHTML = '<div class="empty-state"><div class="empty-state-text">No completed actions yet today. Get started!</div></div>';
+            }
+        }
+
+        function renderActionItem(action, isOverdue = false) {
+            const lead = getLead(action.leadId);
+            const leadName = lead ? (lead.contactName || lead.company || 'Unknown') : 'Unknown Lead';
+            const company = lead ? lead.company : '';
+            const daysOverdue = isOverdue ? getDaysOverdue(action.date) : 0;
+
+            const statusClass = action.status === 'completed' ? 'completed' : (isOverdue ? 'overdue' : '');
+            
+            return `
+                <div class="action-item ${statusClass}" data-id="${action.id}" onclick="openActionDetails('${action.id}')">
+                    <div class="action-checkbox" onclick="event.stopPropagation(); quickComplete('${action.id}')"></div>
+                    <div class="action-type-icon ${action.type}">${getTypeIcon(action.type)}</div>
+                    <div class="action-content">
+                        <div class="action-title">
+                            ${action.time ? `<span class="action-time">${action.time}</span>` : ''}
+                            ${getTypeLabel(action.type)} ${leadName}
+                            ${isOverdue ? `<span class="action-overdue-badge">${daysOverdue}d overdue</span>` : ''}
+                        </div>
+                        <div class="action-lead">${company}</div>
+                        ${action.outcome ? `<div class="action-outcome">→ ${action.outcome}</div>` : ''}
+                    </div>
+                    <div class="action-buttons">
+                        ${action.status !== 'completed' ? `
+                            <button class="action-btn complete" onclick="event.stopPropagation(); openCompleteModal('${action.id}')">Complete</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); openReschedule('${action.id}', event)">Reschedule</button>
+                        ` : ''}
+                        <button class="action-btn" onclick="event.stopPropagation(); openEditModal('${action.id}')">Edit</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderWeekView() {
+            const weekGrid = document.getElementById('weekGrid');
+            const weekLabel = document.getElementById('weekLabel');
+            
+            // Update week label
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            weekLabel.textContent = formatShortDate(currentWeekStart.toISOString().split('T')[0]) + ' - ' + 
+                                   formatShortDate(weekEnd.toISOString().split('T')[0]) + ', ' + weekEnd.getFullYear();
+
+            // Generate 7 days
+            let html = '';
+            const today = getToday();
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
+                const isToday = dateStr === today;
+
+                const dayActions = actions.filter(a => a.date === dateStr)
+                    .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+
+                const plannedCount = dayActions.filter(a => a.status === 'planned').length;
+                const completedCount = dayActions.filter(a => a.status === 'completed').length;
+
+                html += `
+                    <div class="week-day ${isToday ? 'today' : ''}">
+                        <div class="week-day-header">
+                            <div class="week-day-name">${dayNames[i]}</div>
+                            <div class="week-day-date">${date.getDate()}</div>
+                            <div class="week-day-count">${plannedCount} planned · ${completedCount} done</div>
+                        </div>
+                        <div class="week-day-actions">
+                            ${dayActions.slice(0, 8).map(a => {
+                                const lead = getLead(a.leadId);
+                                const leadName = lead ? (lead.contactName || lead.company || '').split(' ')[0] : '';
+                                return `
+                                    <div class="week-action ${a.type} ${a.status}" onclick="openActionDetails('${a.id}')">
+                                        ${a.time ? `<div class="week-action-time">${a.time}</div>` : ''}
+                                        <div class="week-action-title">${getTypeIcon(a.type)} ${leadName}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                            ${dayActions.length > 8 ? `<div class="week-action">+${dayActions.length - 8} more</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            weekGrid.innerHTML = html;
+        }
+
+        // ==========================================
+        // MODAL FUNCTIONS
+        // ==========================================
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            if (modalId === 'actionModal') {
+                resetActionForm();
+            }
+        }
+
+        function resetActionForm() {
+            document.getElementById('actionForm').reset();
+            document.getElementById('actionId').value = '';
+            document.getElementById('selectedLeadId').value = '';
+            document.getElementById('leadSearch').value = '';
+            document.getElementById('leadContext').style.display = 'none';
+            document.getElementById('leadSelectGroup').style.display = 'block';
+            document.getElementById('outcomeGroup').style.display = 'none';
+            document.getElementById('followUpGroup').style.display = 'none';
+            document.getElementById('deleteActionBtn').style.display = 'none';
+            document.getElementById('modalTitle').textContent = 'Add Action';
+            document.getElementById('saveActionBtn').textContent = 'Save Action';
+            editingActionId = null;
+        }
+
+        function openAddModal() {
+            resetActionForm();
+            document.getElementById('actionDate').value = getToday();
+            document.getElementById('actionTime').value = getDefaultTime();
+            openModal('actionModal');
+        }
+
+        function openEditModal(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
+
+            editingActionId = actionId;
+            const lead = getLead(action.leadId);
+
+            document.getElementById('modalTitle').textContent = 'Edit Action';
+            document.getElementById('saveActionBtn').textContent = 'Save Changes';
+            document.getElementById('actionId').value = actionId;
+            document.getElementById('selectedLeadId').value = action.leadId;
+            document.getElementById('actionType').value = action.type;
+            document.getElementById('actionDate').value = action.date;
+            document.getElementById('actionTime').value = action.time || '';
+            document.getElementById('actionNotes').value = action.notes || '';
+
+            // Show lead context instead of search
+            document.getElementById('leadSelectGroup').style.display = 'none';
+            document.getElementById('leadContext').style.display = 'block';
+            document.getElementById('deleteActionBtn').style.display = 'block';
+
+            if (lead) {
+                document.getElementById('leadAvatar').textContent = getLeadInitials(lead);
+                document.getElementById('leadName').textContent = lead.contactName || lead.company || 'Unknown';
+                document.getElementById('leadCompany').textContent = lead.company || '';
+                document.getElementById('leadPhone').textContent = lead.phone || '-';
+                document.getElementById('leadEmail').textContent = lead.email || '-';
+                document.getElementById('leadStage').textContent = lead.stage || 'New';
+            }
+
+            openModal('actionModal');
+        }
+
+        function openCompleteModal(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
+
+            const lead = getLead(action.leadId);
+
+            document.getElementById('completeActionId').value = actionId;
+            document.getElementById('completeOutcome').value = '';
+            document.getElementById('completeCustomOutcome').value = '';
+            document.getElementById('completeCustomOutcome').style.display = 'none';
+            document.getElementById('completeCreateFollowUp').checked = false;
+            document.getElementById('completeFollowUpOptions').style.display = 'none';
+
+            if (lead) {
+                document.getElementById('completeLeadAvatar').textContent = getLeadInitials(lead);
+                document.getElementById('completeLeadName').textContent = lead.contactName || lead.company || 'Unknown';
+                document.getElementById('completeLeadCompany').textContent = lead.company || '';
+            }
+
+            openModal('completeModal');
+        }
+
+        function openActionDetails(actionId) {
+            openEditModal(actionId);
+        }
+
+        // ==========================================
+        // ACTION HANDLERS
+        // ==========================================
+
+        function saveAction() {
+            const leadId = document.getElementById('selectedLeadId').value;
+            const type = document.getElementById('actionType').value;
+            const date = document.getElementById('actionDate').value;
+            const time = document.getElementById('actionTime').value;
+            const notes = document.getElementById('actionNotes').value;
+
+            if (!leadId && !editingActionId) {
+                alert('Please select a lead');
+                return;
+            }
+
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+
+            if (editingActionId) {
+                updateAction(editingActionId, { type, date, time, notes });
+            } else {
+                createAction({ leadId, type, date, time, notes });
+            }
+
+            closeModal('actionModal');
+            render();
+        }
+
+        function completeAction() {
+            const actionId = document.getElementById('completeActionId').value;
+            let outcome = document.getElementById('completeOutcome').value;
+            
+            if (outcome === 'custom') {
+                outcome = document.getElementById('completeCustomOutcome').value;
+            }
+
+            if (!outcome) {
+                alert('Please select an outcome');
+                return;
+            }
+
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
+
+            // Mark as complete
+            markComplete(actionId, outcome);
+
+            // Create follow-up if requested
+            if (document.getElementById('completeCreateFollowUp').checked) {
+                const followUpDateSelect = document.getElementById('completeFollowUpDate').value;
+                let followUpDate;
+
+                if (followUpDateSelect === 'custom') {
+                    followUpDate = document.getElementById('completeFollowUpCustomDate').value;
+                } else {
+                    const days = {
+                        'tomorrow': 1,
+                        '2days': 2,
+                        '3days': 3,
+                        'week': 7
+                    };
+                    const d = new Date();
+                    d.setDate(d.getDate() + (days[followUpDateSelect] || 1));
+                    followUpDate = d.toISOString().split('T')[0];
+                }
+
+                createAction({
+                    leadId: action.leadId,
+                    type: 'follow_up',
+                    date: followUpDate,
+                    notes: 'Follow-up from: ' + outcome
+                });
+            }
+
+            // Auto-create follow-up for certain outcomes
+            const autoFollowUpOutcomes = ['Callback requested', 'Voicemail left', 'Gatekeeper - try again'];
+            if (autoFollowUpOutcomes.includes(outcome) && !document.getElementById('completeCreateFollowUp').checked) {
+                const tomorrow = getTomorrow();
+                createAction({
+                    leadId: action.leadId,
+                    type: 'follow_up',
+                    date: tomorrow,
+                    notes: 'Auto follow-up from: ' + outcome
+                });
+            }
+
+            closeModal('completeModal');
+            render();
+        }
+
+        function quickComplete(actionId) {
+            openCompleteModal(actionId);
+        }
+
+        function deleteAction() {
+            if (!editingActionId) return;
+            
+            if (confirm('Are you sure you want to delete this action?')) {
+                deleteActionById(editingActionId);
+                closeModal('actionModal');
+                render();
+            }
+        }
+
+        function skipAction(actionId) {
+            markSkipped(actionId);
+            render();
+        }
+
+        function openReschedule(actionId, event) {
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
+
+            const options = [
+                { label: 'Today', value: getToday() },
+                { label: 'Tomorrow', value: getTomorrow() },
+                { label: 'In 2 days', value: addDays(2) },
+                { label: 'Next week', value: addDays(7) }
+            ];
+
+            // Simple reschedule - just use tomorrow for now
+            // In a full implementation, you'd show a dropdown
+            const newDate = prompt('Reschedule to (YYYY-MM-DD):', getTomorrow());
+            if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+                updateAction(actionId, { date: newDate });
+                render();
+            }
+        }
+
+        function addDays(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        // ==========================================
+        // LEAD SEARCH
+        // ==========================================
+
+        function setupLeadSearch() {
+            const searchInput = document.getElementById('leadSearch');
+            const resultsDiv = document.getElementById('leadSearchResults');
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    resultsDiv.classList.remove('active');
+                    return;
+                }
+
+                const matches = leads.filter(l => {
+                    const searchStr = `${l.company || ''} ${l.contactName || ''} ${l.email || ''}`.toLowerCase();
+                    return searchStr.includes(query);
+                }).slice(0, 10);
+
+                if (matches.length > 0) {
+                    resultsDiv.innerHTML = matches.map(l => `
+                        <div class="lead-search-item" onclick="selectLead('${l.id}')">
+                            <div class="lead-search-name">${l.contactName || 'Unknown'}</div>
+                            <div class="lead-search-company">${l.company || ''}</div>
+                        </div>
+                    `).join('');
+                    resultsDiv.classList.add('active');
+                } else {
+                    resultsDiv.innerHTML = '<div class="lead-search-item">No leads found</div>';
+                    resultsDiv.classList.add('active');
+                }
+            });
+
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => resultsDiv.classList.remove('active'), 200);
+            });
+        }
+
+        function selectLead(leadId) {
+            const lead = getLead(leadId);
+            if (!lead) return;
+
+            document.getElementById('selectedLeadId').value = leadId;
+            document.getElementById('leadSearch').value = lead.contactName || lead.company || 'Unknown';
+            document.getElementById('leadSearchResults').classList.remove('active');
+        }
+
+        // ==========================================
+        // VIEW TOGGLE
+        // ==========================================
+
+        function setupViewToggle() {
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const view = this.dataset.view;
+                    
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    currentView = view;
+                    
+                    if (view === 'today') {
+                        document.getElementById('todayView').classList.remove('hidden');
+                        document.getElementById('weekView').classList.remove('active');
+                    } else {
+                        document.getElementById('todayView').classList.add('hidden');
+                        document.getElementById('weekView').classList.add('active');
+                    }
+
+                    render();
+                });
+            });
+        }
+
+        function setupWeekNav() {
+            document.getElementById('prevWeek').addEventListener('click', () => {
+                currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+                renderWeekView();
+            });
+
+            document.getElementById('nextWeek').addEventListener('click', () => {
+                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+                renderWeekView();
+            });
+
+            document.getElementById('todayWeekBtn').addEventListener('click', () => {
+                currentWeekStart = getWeekStart(new Date());
+                renderWeekView();
+            });
+        }
+
+        // ==========================================
+        // SECTION COLLAPSE
+        // ==========================================
+
+        function toggleSection(section) {
+            const sectionEl = document.querySelector(`#${section}Section .section-header, .action-section:has(#${section}List) .section-header`);
+            const listEl = document.getElementById(`${section}List`);
+            
+            if (sectionEl && listEl) {
+                sectionEl.classList.toggle('collapsed');
+                listEl.classList.toggle('collapsed');
+            }
+        }
+
+        // ==========================================
+        // OUTCOME SELECT HANDLER
+        // ==========================================
+
+        function setupOutcomeSelects() {
+            document.getElementById('completeOutcome').addEventListener('change', function() {
+                const customInput = document.getElementById('completeCustomOutcome');
+                customInput.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+
+            document.getElementById('completeCreateFollowUp').addEventListener('change', function() {
+                document.getElementById('completeFollowUpOptions').style.display = this.checked ? 'block' : 'none';
+            });
+
+            document.getElementById('completeFollowUpDate').addEventListener('change', function() {
+                const customDate = document.getElementById('completeFollowUpCustomDate');
+                customDate.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        // ==========================================
+        // VIEW TOMORROW
+        // ==========================================
+
+        function viewTomorrow() {
+            // Switch to week view and navigate to show tomorrow
+            currentView = 'week';
+            currentWeekStart = getWeekStart(new Date(getTomorrow() + 'T00:00:00'));
+            
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.view-btn[data-view="week"]').classList.add('active');
+            
+            document.getElementById('todayView').classList.add('hidden');
+            document.getElementById('weekView').classList.add('active');
+            
+            closeModal('recapModal');
+            render();
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+
+        function init() {
+            loadData();
+            runCarryover();
+            render();
+            setupLeadSearch();
+            setupViewToggle();
+            setupWeekNav();
+            setupOutcomeSelects();
+
+            // Event listeners
+            document.getElementById('addActionBtn').addEventListener('click', openAddModal);
+            document.getElementById('endSessionBtn').addEventListener('click', endSession);
+
+            // Close modals on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+                }
+                if (e.key === 'n' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+                    openAddModal();
+                }
+            });
+
+            console.log('🚀 SummitFlow Calendar initialized');
+            console.log(`📋 ${actions.length} actions loaded`);
+            console.log(`👥 ${leads.length} leads available`);
+        }
+
+        // Start
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
