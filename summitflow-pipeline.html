@@ -1,1140 +1,348 @@
-<!--
-=================================================================
-SUMMITFLOW PIPELINE - WITH ACTIONS INTEGRATION
-=================================================================
-This shows how to integrate actions into your Pipeline view.
-
-Key features:
-1. Lead detail panel shows upcoming actions
-2. Quick "Add Action" button per lead
-3. Action badges on lead cards
-=================================================================
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pipeline | SummitFlow</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>SummitFlow | Pipeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-primary: #08090A;
-            --bg-card: #131416;
-            --bg-card-hover: #1a1c1f;
-            --bg-elevated: #1d1f23;
-            --border-subtle: #2a2d32;
-            --border-default: #3a3d42;
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --green-primary: #10B981;
-            --green-secondary: #059669;
-            --green-muted: rgba(16, 185, 129, 0.15);
-            --red-primary: #EF4444;
-            --red-muted: rgba(239, 68, 68, 0.15);
-            --blue-primary: #3B82F6;
-            --blue-muted: rgba(59, 130, 246, 0.15);
-            --yellow-primary: #F59E0B;
-            --yellow-muted: rgba(245, 158, 11, 0.15);
-            --purple-primary: #8B5CF6;
-            --purple-muted: rgba(139, 92, 246, 0.15);
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.5;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-        }
-
-        /* Navigation */
-        .nav {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-inner {
-            max-width: 1800px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px;
-        }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .nav-logo {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .nav-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 8px;
-        }
-
-        .nav-link {
-            padding: 8px 16px;
-            border-radius: 8px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-        }
-
-        .nav-link.active {
-            background: var(--green-muted);
-            color: var(--green-primary);
-        }
-
-        /* Main Content */
-        .main {
-            max-width: 1800px;
-            margin: 0 auto;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 24px;
-            min-height: calc(100vh - 64px);
-        }
-
-        @media (max-width: 1200px) {
-            .main {
-                grid-template-columns: 1fr;
-            }
-            .detail-panel {
-                display: none;
-            }
-        }
-
-        /* Pipeline Board */
-        .pipeline-board {
-            display: flex;
-            gap: 16px;
-            overflow-x: auto;
-            padding-bottom: 16px;
-        }
-
-        .pipeline-column {
-            min-width: 280px;
-            max-width: 280px;
-            flex-shrink: 0;
-        }
-
-        .column-header {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px 12px 0 0;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .column-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .column-icon {
-            font-size: 16px;
-        }
-
-        .column-name {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .column-count {
-            background: var(--bg-elevated);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .column-body {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-top: none;
-            border-radius: 0 0 12px 12px;
-            padding: 8px;
-            min-height: 400px;
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        /* Lead Card */
-        .lead-card {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .lead-card:hover {
-            border-color: var(--green-primary);
-            transform: translateY(-2px);
-        }
-
-        .lead-card.selected {
-            border-color: var(--green-primary);
-            box-shadow: 0 0 0 2px var(--green-muted);
-        }
-
-        .lead-card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .lead-avatar {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .lead-card-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .lead-card-name {
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .lead-card-company {
-            font-size: 12px;
-            color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* ================================================
-           ACTION BADGE ON LEAD CARDS
-           ================================================ */
-        .lead-card-footer {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .lead-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .lead-badge.action {
-            background: var(--blue-muted);
-            color: var(--blue-primary);
-        }
-
-        .lead-badge.overdue {
-            background: var(--red-muted);
-            color: var(--red-primary);
-        }
-
-        .lead-badge.meeting {
-            background: var(--green-muted);
-            color: var(--green-primary);
-        }
-
-        /* Detail Panel */
-        .detail-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            overflow: hidden;
-            position: sticky;
-            top: 88px;
-            max-height: calc(100vh - 112px);
-            overflow-y: auto;
-        }
-
-        .detail-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .detail-lead-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .detail-avatar {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 20px;
-            color: white;
-        }
-
-        .detail-info h2 {
-            font-size: 18px;
-            margin-bottom: 2px;
-        }
-
-        .detail-info p {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .detail-body {
-            padding: 20px;
-        }
-
-        .detail-section {
-            margin-bottom: 24px;
-        }
-
-        .detail-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .detail-section-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .detail-fields {
-            display: grid;
-            gap: 12px;
-        }
-
-        .detail-field {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .detail-field-icon {
-            color: var(--text-muted);
-            width: 20px;
-            text-align: center;
-        }
-
-        .detail-field-value {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .detail-field-value a {
-            color: var(--green-primary);
-            text-decoration: none;
-        }
-
-        .detail-field-value a:hover {
-            text-decoration: underline;
-        }
-
-        /* ================================================
-           ACTIONS SECTION IN DETAIL PANEL
-           ================================================ */
-        .actions-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .action-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: var(--bg-elevated);
-            border-radius: 10px;
-            border: 1px solid var(--border-subtle);
-        }
-
-        .action-item.overdue {
-            border-color: var(--red-primary);
-            background: var(--red-muted);
-        }
-
-        .action-type-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .action-type-icon.call {
-            background: var(--blue-muted);
-        }
-
-        .action-type-icon.email {
-            background: var(--purple-muted);
-        }
-
-        .action-type-icon.follow_up {
-            background: var(--yellow-muted);
-        }
-
-        .action-type-icon.meeting {
-            background: var(--green-muted);
-        }
-
-        .action-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .action-title {
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .action-date {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .action-date.overdue {
-            color: var(--red-primary);
-        }
-
-        .action-complete-btn {
-            width: 28px;
-            height: 28px;
-            border: 2px solid var(--border-default);
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            color: transparent;
-        }
-
-        .action-complete-btn:hover {
-            border-color: var(--green-primary);
-            background: var(--green-muted);
-            color: var(--green-primary);
-        }
-
-        .no-actions {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-primary {
-            background: var(--green-primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--green-secondary);
-        }
-
-        .btn-secondary {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--border-default);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-secondary);
-        }
-
-        .btn-ghost:hover {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-        }
-
-        /* Quick Action Bar */
-        .quick-action-bar {
-            display: flex;
-            gap: 8px;
-            padding-top: 12px;
-            margin-top: 12px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        /* Empty State */
-        .empty-detail {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 300px;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 40px;
-        }
-
-        .empty-detail-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-detail-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 420px;
-            transform: scale(0.95);
-            transition: transform 0.2s;
-        }
-
-        .modal-overlay.active .modal {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            padding: 20px 20px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: var(--bg-elevated);
-            color: var(--text-secondary);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-actions {
-            padding: 0 20px 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
-        .form-input,
-        .form-select {
-            width: 100%;
-            padding: 10px 14px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-
-        .form-input:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--green-primary);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        *{margin:0;padding:0;box-sizing:border-box}:root{--bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;--border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);--text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;--calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);--emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);--success:#10B981;--success-glow:rgba(16,185,129,0.25);--warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);--danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);--purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);--radius:16px;--radius-sm:10px}body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:auto}.loading{position:fixed;inset:0;background:var(--bg-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s}.loading.hidden{opacity:0;pointer-events:none}.spinner{width:48px;height:48px;border:3px solid var(--surface);border-top-color:var(--calls);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem}@keyframes spin{to{transform:rotate(360deg)}}.nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}.nav-left{display:flex;align-items:center;gap:2rem}.logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}.nav-tabs{display:flex;gap:.5rem}.nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}.nav-tab:hover{background:var(--surface);color:var(--text)}.nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}.nav-right{display:flex;align-items:center;gap:.75rem}.sync{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted)}.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--success)}.sync-dot.syncing{background:var(--warning);animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.5}}.btn{padding:.75rem 1.5rem;font-size:.875rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s;display:flex;align-items:center;gap:.5rem}.btn:hover{border-color:var(--border-hover);background:var(--bg-elevated)}.btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;border:none}.btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}.main{padding-top:90px;padding-bottom:2rem;min-height:100vh}.stats{display:flex;gap:1rem;padding:1rem 2rem;background:var(--bg-card);border-bottom:1px solid var(--border);margin-bottom:1.5rem}.stat{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;background:var(--surface);border-radius:var(--radius-sm)}.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center}.stat-value{font-size:1.25rem;font-weight:700;font-family:'JetBrains Mono',monospace}.stat-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}.header{padding:0 2rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center}.title{font-size:1.75rem;font-weight:700}.search{background:var(--surface);border:1px solid var(--border);padding:.75rem 1rem;border-radius:50px;color:var(--text);font-family:inherit;font-size:.875rem;width:250px}.search:focus{outline:none;border-color:var(--calls)}.board{display:flex;gap:1rem;padding:0 2rem;overflow-x:auto;min-height:calc(100vh - 220px)}.column{flex:0 0 300px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;max-height:calc(100vh - 220px)}.col-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.col-title{display:flex;align-items:center;gap:.75rem;font-weight:600;font-size:.9rem}.col-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;background:var(--surface)}.col-count{background:var(--surface);padding:.25rem .625rem;border-radius:50px;font-size:.75rem;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text-secondary)}.col-body{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.75rem}.col-body::-webkit-scrollbar{width:6px}.col-body::-webkit-scrollbar-thumb{background:var(--surface);border-radius:3px}.card{background:var(--bg-elevated);border:2px solid var(--border);border-radius:var(--radius-sm);padding:1rem;cursor:grab;transition:all .2s}.card:hover{border-color:var(--border-hover);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3)}.card.dragging{opacity:.5}.card.rotting-warning{border-color:var(--warning)}.card.rotting-danger{border-color:var(--danger);animation:rot 2s infinite}@keyframes rot{50%{box-shadow:0 0 15px var(--danger-glow)}}.card-header{display:flex;justify-content:space-between;margin-bottom:.75rem}.card-company{font-weight:600;font-size:.95rem;flex:1}.card-menu{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:.25rem;border-radius:4px}.card-menu:hover{color:var(--text);background:var(--surface)}.card-contact{font-size:.8rem;color:var(--text-secondary);margin-bottom:.75rem}.card-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}.tag{font-size:.7rem;padding:.25rem .5rem;background:var(--surface);border-radius:4px;color:var(--text-secondary)}.tag.activities{color:var(--emails)}.tag.callback{color:var(--warning);background:var(--warning-glow)}.tag.overdue{color:var(--danger);background:var(--danger-glow)}.tag.actions{color:var(--emails);background:var(--emails-glow)}.tag.actions-overdue{color:var(--danger);background:var(--danger-glow);animation:tagPulse 2s infinite}@keyframes tagPulse{50%{opacity:.7}}.card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;border-top:1px solid var(--border)}.card-time{font-size:.7rem;color:var(--text-muted)}.card-actions{display:flex;gap:.5rem}.action-btn{background:var(--surface);border:none;color:var(--text-secondary);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s}.action-btn:hover{background:var(--calls-glow);color:var(--calls)}.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;color:var(--text-muted);border:2px dashed var(--border);border-radius:var(--radius-sm);min-height:120px}.empty-icon{font-size:2rem;margin-bottom:.5rem;opacity:.5}.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:all .3s}.modal-overlay.active{opacity:1;visibility:visible}.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:700px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(.95);transition:transform .3s}.modal-overlay.active .modal{transform:scale(1)}.modal-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.modal-title{font-size:1.25rem;font-weight:700}.modal-close{background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer}.modal-body{padding:1.5rem;overflow-y:auto;flex:1}.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.form-group{display:flex;flex-direction:column;gap:.375rem}.form-group.full{grid-column:1/-1}.form-label{font-size:.75rem;color:var(--text-muted);font-weight:500}.form-input,.form-select,.form-textarea{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem;color:var(--text);font-family:inherit;font-size:.9rem}.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--calls)}.form-textarea{resize:vertical;min-height:80px}.section-title{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}.info-item{background:var(--surface);padding:.875rem;border-radius:var(--radius-sm)}.info-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:.25rem}.info-value{font-size:.9rem;font-weight:500}.info-value a{color:var(--emails);text-decoration:none}.stage-selector{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem}.stage-btn{padding:.5rem 1rem;background:var(--surface);border:2px solid transparent;border-radius:50px;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit;color:var(--text-secondary)}.stage-btn:hover{border-color:var(--border-hover);color:var(--text)}.stage-btn.active{border-color:var(--calls);background:var(--calls-glow);color:var(--calls)}.timeline{position:relative;margin-top:1rem}.timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:var(--border)}.timeline-item{position:relative;padding-left:40px;padding-bottom:1.25rem}.timeline-icon{position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;background:var(--bg-card);border:2px solid var(--border)}.timeline-icon.call{border-color:var(--calls);color:var(--calls)}.timeline-icon.email{border-color:var(--emails);color:var(--emails)}.timeline-icon.meeting{border-color:var(--success);color:var(--success)}.timeline-icon.note{border-color:var(--purple);color:var(--purple)}.timeline-content{background:var(--surface);padding:.875rem;border-radius:var(--radius-sm)}.timeline-header{display:flex;justify-content:space-between;margin-bottom:.5rem}.timeline-type{font-weight:600;font-size:.85rem}.timeline-time{font-size:.7rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}.timeline-outcome{display:inline-block;padding:.2rem .5rem;background:var(--bg-card);border-radius:4px;font-size:.7rem;font-weight:500;margin-bottom:.5rem}.timeline-outcome.positive{color:var(--success)}.timeline-outcome.negative{color:var(--danger)}.timeline-outcome.neutral{color:var(--warning)}.timeline-notes{font-size:.85rem;color:var(--text-secondary)}.activity-form{background:var(--surface);padding:1rem;border-radius:var(--radius-sm)}.actions-panel{background:var(--surface);padding:1rem;border-radius:var(--radius-sm);margin-bottom:1rem}.actions-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}.actions-panel-title{font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.5rem}.actions-list{display:flex;flex-direction:column;gap:.5rem}.action-item{display:flex;align-items:center;gap:.75rem;padding:.625rem;background:var(--bg-card);border-radius:6px;font-size:.85rem}.action-item.overdue{border-left:3px solid var(--danger)}.action-item-icon{font-size:1rem}.action-item-info{flex:1}.action-item-date{font-size:.7rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}.action-item-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:all .2s}.action-item-check:hover{border-color:var(--success);color:var(--success)}.csv-dropzone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s}.csv-dropzone:hover,.csv-dropzone.dragover{border-color:var(--calls);background:var(--calls-glow)}.csv-icon{font-size:3rem;margin-bottom:1rem}.csv-text{font-size:1rem;font-weight:600;margin-bottom:.5rem}.csv-hint{font-size:.85rem;color:var(--text-muted)}.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.toast.error{border-color:var(--danger)}#csv-input{display:none}
     </style>
 </head>
 <body>
-    <!-- Navigation -->
+    <div class="loading" id="loading"><div class="spinner"></div><div style="color:var(--text-secondary)">Connecting...</div></div>
+    
     <nav class="nav">
-        <div class="nav-inner">
-            <a href="#" class="nav-brand">
-                <div class="nav-logo">S</div>
-                <span class="nav-title">SummitFlow</span>
-            </a>
-            <div class="nav-links">
-                <a href="summitflow-leads.html" class="nav-link">Leads Hub</a>
-                <a href="summitflow-pipeline.html" class="nav-link active">Pipeline</a>
-                <a href="summitflow-dashboard.html" class="nav-link">Dashboard</a>
-                <a href="summitflow-calendar.html" class="nav-link">Calendar</a>
+        <div class="nav-left">
+            <a href="#" class="logo"><div class="logo-icon">⚡</div>SummitFlow</a>
+            <div class="nav-tabs">
+                <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
+                <span class="nav-tab active">Pipeline</span>
+                <a href="summitflow-dashboard.html" class="nav-tab">Dashboard</a>
             </div>
+        </div>
+        <div class="nav-right">
+            <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">Connected</span></div>
+            <button class="btn" onclick="openImportModal()">📤 Import</button>
+            <button class="btn primary" onclick="openAddModal()">+ Add Lead</button>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="main">
-        <!-- Pipeline Board -->
-        <div class="pipeline-board" id="pipelineBoard">
-            <!-- Columns will be rendered by JS -->
+        <div class="stats">
+            <div class="stat"><div class="stat-icon" style="background:var(--surface);border:1px solid var(--border)">📊</div><div><div class="stat-value" id="total">0</div><div class="stat-label">Total</div></div></div>
+            <div class="stat"><div class="stat-icon" style="background:var(--calls-glow)">🔥</div><div><div class="stat-value" id="hot">0</div><div class="stat-label">Hot</div></div></div>
+            <div class="stat"><div class="stat-icon" style="background:var(--emails-glow)">📅</div><div><div class="stat-value" id="meetings">0</div><div class="stat-label">Meetings</div></div></div>
+            <div class="stat"><div class="stat-icon" style="background:var(--success-glow)">🏆</div><div><div class="stat-value" id="won">0</div><div class="stat-label">Won</div></div></div>
+            <div class="stat"><div class="stat-icon" style="background:var(--purple-glow)">📈</div><div><div class="stat-value" id="rate">0%</div><div class="stat-label">Win Rate</div></div></div>
         </div>
-
-        <!-- Detail Panel -->
-        <div class="detail-panel" id="detailPanel">
-            <div class="empty-detail" id="emptyDetail">
-                <div class="empty-detail-icon">👈</div>
-                <div class="empty-detail-title">Select a lead</div>
-                <p>Click on a lead card to view details and actions</p>
-            </div>
-
-            <div id="leadDetail" style="display: none;">
-                <div class="detail-header">
-                    <div class="detail-lead-header">
-                        <div class="detail-avatar" id="detailAvatar">JD</div>
-                        <div class="detail-info">
-                            <h2 id="detailName">John Doe</h2>
-                            <p id="detailCompany">Chiro Leeds</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-body">
-                    <!-- Contact Info -->
-                    <div class="detail-section">
-                        <div class="detail-section-title">Contact</div>
-                        <div class="detail-fields">
-                            <div class="detail-field">
-                                <span class="detail-field-icon">📞</span>
-                                <span class="detail-field-value"><a href="#" id="detailPhone">-</a></span>
-                            </div>
-                            <div class="detail-field">
-                                <span class="detail-field-icon">✉️</span>
-                                <span class="detail-field-value" id="detailEmail">-</span>
-                            </div>
-                            <div class="detail-field">
-                                <span class="detail-field-icon">🌐</span>
-                                <span class="detail-field-value"><a href="#" id="detailWebsite" target="_blank">-</a></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================================================
-                         ACTIONS SECTION - KEY INTEGRATION
-                         ================================================ -->
-                    <div class="detail-section">
-                        <div class="detail-section-title">
-                            <span>📋 Upcoming Actions</span>
-                            <button class="btn btn-sm btn-ghost" onclick="openAddActionModal()">+ Add</button>
-                        </div>
-                        <div class="actions-list" id="leadActionsList">
-                            <div class="no-actions">No actions scheduled</div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="quick-action-bar">
-                        <button class="btn btn-primary" onclick="openAddActionModal()">
-                            📞 Schedule Call
-                        </button>
-                        <button class="btn btn-secondary" onclick="moveToNextStage()">
-                            Move Stage →
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="header"><h1 class="title">Sales Pipeline</h1><input type="text" class="search" placeholder="Search leads..." id="search" oninput="filter()"></div>
+        <div class="board" id="board"></div>
     </main>
 
-    <!-- Add Action Modal -->
-    <div class="modal-overlay" id="addActionModal">
+    <!-- Lead Modal -->
+    <div class="modal-overlay" id="lead-modal">
         <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Add Action</h3>
-                <button class="modal-close" onclick="closeModal()">×</button>
-            </div>
+            <div class="modal-header"><div class="modal-title" id="modal-title">Lead Details</div><button class="modal-close" onclick="closeModal('lead-modal')">×</button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Type</label>
-                    <select class="form-select" id="newActionType">
-                        <option value="call">📞 Call</option>
-                        <option value="email">✉️ Email</option>
-                        <option value="follow_up">🔄 Follow-up</option>
-                        <option value="meeting">🤝 Meeting</option>
-                    </select>
+                <div class="section-title">Stage</div>
+                <div class="stage-selector" id="stage-selector"></div>
+                <div class="section-title">Contact Info</div>
+                <div class="info-grid" id="contact-info"></div>
+                <div class="actions-panel" id="lead-actions-panel">
+                    <div class="actions-panel-header"><div class="actions-panel-title">📋 Upcoming Actions</div><button class="btn" style="padding:.375rem .75rem;font-size:.75rem" onclick="openAddActionForLead()">+ Add</button></div>
+                    <div class="actions-list" id="lead-actions-list"></div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" class="form-input" id="newActionDate">
+                <div class="section-title">Notes</div>
+                <textarea class="form-textarea" id="lead-notes" placeholder="Add notes..." onblur="saveNotes()"></textarea>
+                <div class="section-title" style="margin-top:1.5rem">Activity <span id="act-count" style="color:var(--text-muted);font-weight:normal"></span></div>
+                <div class="activity-form">
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="act-type"><option value="call">📞 Call</option><option value="email">📧 Email</option><option value="meeting">🤝 Meeting</option><option value="note">📝 Note</option></select></div>
+                        <div class="form-group"><label class="form-label">Outcome</label><select class="form-select" id="act-outcome"><option value="">Select...</option><option value="no_answer">No Answer</option><option value="voicemail">Voicemail</option><option value="gatekeeper">Gatekeeper</option><option value="callback">Callback</option><option value="interested">Interested! 🔥</option><option value="not_interested">Not Interested</option><option value="meeting_booked">Meeting Booked! 🎉</option></select></div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Time (optional)</label>
-                        <input type="time" class="form-input" id="newActionTime">
-                    </div>
+                    <div class="form-group" style="margin-top:.75rem"><textarea class="form-textarea" id="act-notes" placeholder="Notes..." style="min-height:60px"></textarea></div>
+                    <button class="btn primary" style="width:100%;margin-top:.75rem" onclick="addActivity()">Log Activity</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <input type="text" class="form-input" id="newActionNotes" placeholder="Add notes...">
-                </div>
+                <div class="timeline" id="timeline"></div>
             </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveNewAction()">Save Action</button>
+            <div class="modal-footer"><button class="btn" style="color:var(--danger)" onclick="deleteLead()">🗑️ Delete</button></div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="import-modal">
+        <div class="modal" style="max-width:500px">
+            <div class="modal-header"><div class="modal-title">📤 Import Leads</div><button class="modal-close" onclick="closeModal('import-modal')">×</button></div>
+            <div class="modal-body">
+                <div class="csv-dropzone" id="dropzone" onclick="document.getElementById('csv-input').click()"><div class="csv-icon">📄</div><div class="csv-text">Drop CSV file here</div><div class="csv-hint">or click to browse</div></div>
+                <input type="file" id="csv-input" accept=".csv" onchange="handleCSV(event)">
             </div>
         </div>
     </div>
 
+    <!-- Add Lead Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal" style="max-width:500px">
+            <div class="modal-header"><div class="modal-title">+ Add Lead</div><button class="modal-close" onclick="closeModal('add-modal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full"><label class="form-label">Company *</label><input type="text" class="form-input" id="new-company" placeholder="Company name"></div>
+                    <div class="form-group"><label class="form-label">Contact Name</label><input type="text" class="form-input" id="new-contact" placeholder="John Smith"></div>
+                    <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="new-phone" placeholder="0113 123 4567"></div>
+                    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="new-email" placeholder="john@company.com"></div>
+                    <div class="form-group"><label class="form-label">Website</label><input type="url" class="form-input" id="new-website" placeholder="www.company.com"></div>
+                    <div class="form-group full"><label class="form-label">Address</label><input type="text" class="form-input" id="new-address" placeholder="123 High Street, Leeds"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('add-modal')">Cancel</button><button class="btn primary" onclick="saveLead()">Add Lead</button></div>
+        </div>
+    </div>
+
+    <!-- Add Action Modal -->
+    <div class="modal-overlay" id="action-modal">
+        <div class="modal" style="max-width:400px">
+            <div class="modal-header"><div class="modal-title">📋 Add Action</div><button class="modal-close" onclick="closeModal('action-modal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="new-action-type"><option value="call">📞 Call</option><option value="email">📧 Email</option><option value="follow_up">🔄 Follow-up</option><option value="meeting">🤝 Meeting</option></select></div>
+                <div class="form-grid"><div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="new-action-date"></div><div class="form-group"><label class="form-label">Time</label><input type="time" class="form-input" id="new-action-time"></div></div>
+                <div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-input" id="new-action-notes" placeholder="Optional..."></div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('action-modal')">Cancel</button><button class="btn primary" onclick="saveActionForLead()">Add</button></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
     <script>
-        // ==========================================
-        // SUMMITFLOW PIPELINE - WITH ACTIONS
-        // ==========================================
+        const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeG1lb2V1Z3ltbGdhZGFqd21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NTcxNjEsImV4cCI6MjA4MzAzMzE2MX0.ciWAoTstogM4MWrK73q9VasVWECa9kucCoHlgkyHLIw';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const ACTIONS_KEY = 'summitflow_v3_actions';
-        const LEADS_KEY = 'summitflow_v3_leads';
+        const STAGES = [{id:'prospecting',name:'Prospecting',icon:'🎯',rot:3},{id:'outreach',name:'Outreach',icon:'📤',rot:3},{id:'interested',name:'Interested',icon:'🔥',rot:5},{id:'meeting',name:'Meeting',icon:'📅',rot:null},{id:'proposal',name:'Proposal',icon:'📋',rot:7},{id:'negotiation',name:'Negotiation',icon:'🤝',rot:14},{id:'won',name:'Won',icon:'🏆',rot:null},{id:'lost',name:'Lost',icon:'❌',rot:null}];
+        const ACTION_TYPES = {call:'📞',email:'📧',follow_up:'🔄',meeting:'🤝'};
 
-        // Pipeline stages
-        const STAGES = [
-            { id: 'new', name: 'New', icon: '🆕' },
-            { id: 'contacted', name: 'Contacted', icon: '📞' },
-            { id: 'interested', name: 'Interested', icon: '✨' },
-            { id: 'meeting', name: 'Meeting Set', icon: '📅' },
-            { id: 'proposal', name: 'Proposal', icon: '📄' },
-            { id: 'negotiation', name: 'Negotiation', icon: '🤝' },
-            { id: 'won', name: 'Won', icon: '🎉' },
-            { id: 'lost', name: 'Lost', icon: '❌' }
-        ];
+        let leads=[], activities={}, actions=[], currentId=null, dragId=null, query='';
 
-        let leads = [];
-        let actions = [];
-        let selectedLeadId = null;
+        document.addEventListener('DOMContentLoaded', load);
 
-        // ==========================================
-        // DATA
-        // ==========================================
-
-        function loadData() {
+        async function load() {
             try {
-                const leadsData = localStorage.getItem(LEADS_KEY);
-                leads = leadsData ? JSON.parse(leadsData) : getSampleLeads();
-
-                const actionsData = localStorage.getItem(ACTIONS_KEY);
-                actions = actionsData ? JSON.parse(actionsData) : [];
-            } catch (e) {
-                console.error('Error loading data:', e);
-                leads = getSampleLeads();
-                actions = [];
-            }
-
-            // Save sample leads if none exist
-            if (leads.length === 0) {
-                leads = getSampleLeads();
-                localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
-            }
+                sync('syncing','Loading...');
+                const {data:ld,error:e1} = await db.from('leads').select('*').order('created_at',{ascending:false});
+                if(e1) throw e1;
+                leads = ld||[];
+                const {data:acts,error:e2} = await db.from('activities').select('*').order('created_at',{ascending:false});
+                if(e2) throw e2;
+                activities={};
+                (acts||[]).forEach(a=>{if(!activities[a.lead_id])activities[a.lead_id]=[];activities[a.lead_id].push(a);});
+                leads.forEach(l=>l.activities=activities[l.id]||[]);
+                const {data:actns, error:e3} = await db.from('actions').select('*').order('date',{ascending:true});
+                if (!e3) actions = actns || [];
+                render();stats();hide();sync('ok','Connected');
+            } catch(e) {console.error(e);sync('error','Error');toast('❌ Connection failed','error');hide();}
         }
 
-        function getSampleLeads() {
-            return [
-                { id: 'lead_1', company: 'Leeds Chiropractic Centre', contactName: 'Dr. Sarah Mitchell', phone: '0113 245 6789', email: 'sarah@leedschiro.co.uk', website: 'leedschiro.co.uk', stage: 'new' },
-                { id: 'lead_2', company: 'Headingley Physio', contactName: 'James Wilson', phone: '0113 275 1234', email: 'james@headingleyphysio.co.uk', website: 'headingleyphysio.co.uk', stage: 'new' },
-                { id: 'lead_3', company: 'Chapel Allerton Wellness', contactName: 'Emma Thompson', phone: '0113 237 8901', email: 'emma@cawellness.co.uk', website: 'cawellness.co.uk', stage: 'contacted' },
-                { id: 'lead_4', company: 'Roundhay Sports Therapy', contactName: 'Mike Chen', phone: '0113 266 4567', email: 'mike@roundhaysports.co.uk', website: 'roundhaysports.co.uk', stage: 'interested' },
-                { id: 'lead_5', company: 'Horsforth Health Clinic', contactName: 'Dr. Lisa Park', phone: '0113 259 3456', email: 'lisa@horsforthhealth.co.uk', website: 'horsforthhealth.co.uk', stage: 'new' }
-            ];
-        }
-
-        function saveLeads() {
-            localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
-        }
-
-        function saveActions() {
-            localStorage.setItem(ACTIONS_KEY, JSON.stringify(actions));
-        }
-
-        // ==========================================
-        // RENDER
-        // ==========================================
+        function hide(){document.getElementById('loading').classList.add('hidden')}
+        function sync(s,t){const d=document.getElementById('sync-dot'),x=document.getElementById('sync-text');d.className='sync-dot';if(s==='syncing')d.classList.add('syncing');if(s==='error')d.style.background='var(--danger)';x.textContent=t;}
+        function getToday(){return new Date().toISOString().split('T')[0];}
+        function getLeadActions(leadId){return actions.filter(a => a.lead_id === leadId && a.status === 'planned');}
+        function getOverdueActions(leadId){const today = getToday();return actions.filter(a => a.lead_id === leadId && a.status === 'planned' && a.date < today);}
 
         function render() {
-            renderPipeline();
-            if (selectedLeadId) {
-                renderDetail(selectedLeadId);
-            }
-        }
-
-        function renderPipeline() {
-            const board = document.getElementById('pipelineBoard');
-            const today = getToday();
-
-            board.innerHTML = STAGES.map(stage => {
-                const stageLeads = leads.filter(l => (l.stage || 'new').toLowerCase() === stage.id);
-                
-                return `
-                    <div class="pipeline-column" data-stage="${stage.id}">
-                        <div class="column-header">
-                            <div class="column-title">
-                                <span class="column-icon">${stage.icon}</span>
-                                <span class="column-name">${stage.name}</span>
-                            </div>
-                            <span class="column-count">${stageLeads.length}</span>
-                        </div>
-                        <div class="column-body">
-                            ${stageLeads.map(lead => renderLeadCard(lead, today)).join('')}
-                        </div>
-                    </div>
-                `;
+            const b=document.getElementById('board');
+            const fl = query ? leads.filter(l=>l.company.toLowerCase().includes(query)||l.contact?.toLowerCase().includes(query)||l.email?.toLowerCase().includes(query)||l.phone?.includes(query)) : leads;
+            b.innerHTML = STAGES.map(s=>{
+                const sl=fl.filter(l=>l.stage===s.id);
+                return `<div class="column" data-stage="${s.id}"><div class="col-header"><div class="col-title"><div class="col-icon">${s.icon}</div>${s.name}</div><div class="col-count">${sl.length}</div></div><div class="col-body" data-stage="${s.id}">${sl.length===0?`<div class="empty"><div class="empty-icon">${s.icon}</div><div>No leads</div></div>`:sl.map(l=>card(l,s)).join('')}</div></div>`;
             }).join('');
+            setupDrag();
         }
 
-        function renderLeadCard(lead, today) {
-            const leadActions = actions.filter(a => a.leadId === lead.id && a.status === 'planned');
-            const overdueActions = leadActions.filter(a => a.date < today);
-            const upcomingActions = leadActions.filter(a => a.date >= today);
-            const initials = getInitials(lead);
-
-            let badges = '';
-            if (overdueActions.length > 0) {
-                badges += `<span class="lead-badge overdue">⚠️ ${overdueActions.length} overdue</span>`;
-            }
-            if (upcomingActions.length > 0) {
-                badges += `<span class="lead-badge action">📋 ${upcomingActions.length} planned</span>`;
-            }
-
-            return `
-                <div class="lead-card ${selectedLeadId === lead.id ? 'selected' : ''}" 
-                     onclick="selectLead('${lead.id}')" 
-                     data-lead="${lead.id}">
-                    <div class="lead-card-header">
-                        <div class="lead-avatar">${initials}</div>
-                        <div class="lead-card-info">
-                            <div class="lead-card-name">${lead.contactName || 'Unknown'}</div>
-                            <div class="lead-card-company">${lead.company || ''}</div>
-                        </div>
-                    </div>
-                    ${badges ? `<div class="lead-card-footer">${badges}</div>` : ''}
+        function card(l,s) {
+            const rot = getRot(l,s), acts = l.activities?.length||0;
+            const cb = l.follow_up && new Date(l.follow_up)>new Date();
+            const od = l.follow_up && new Date(l.follow_up)<new Date();
+            const leadActions = getLeadActions(l.id), overdueActions = getOverdueActions(l.id);
+            const hasActions = leadActions.length > 0, hasOverdue = overdueActions.length > 0;
+            return `<div class="card ${rot}" data-id="${l.id}" draggable="true">
+                <div class="card-header"><div class="card-company">${l.company}</div><button class="card-menu" onclick="openLead('${l.id}')">⋯</button></div>
+                ${l.contact?`<div class="card-contact">${l.contact}</div>`:''}
+                <div class="card-meta">
+                    ${acts?`<span class="tag activities">📊 ${acts}</span>`:''}
+                    ${hasOverdue?`<span class="tag actions-overdue">⚠️ ${overdueActions.length} overdue</span>`:''}
+                    ${hasActions && !hasOverdue?`<span class="tag actions">📋 ${leadActions.length}</span>`:''}
+                    ${cb?`<span class="tag callback">⏰ ${fmtFU(l.follow_up)}</span>`:''}
+                    ${od && !hasOverdue?`<span class="tag overdue">⚠️ Overdue</span>`:''}
                 </div>
-            `;
-        }
-
-        function renderDetail(leadId) {
-            const lead = leads.find(l => l.id === leadId);
-            if (!lead) return;
-
-            document.getElementById('emptyDetail').style.display = 'none';
-            document.getElementById('leadDetail').style.display = 'block';
-
-            document.getElementById('detailAvatar').textContent = getInitials(lead);
-            document.getElementById('detailName').textContent = lead.contactName || 'Unknown';
-            document.getElementById('detailCompany').textContent = lead.company || '';
-            
-            document.getElementById('detailPhone').textContent = lead.phone || '-';
-            document.getElementById('detailPhone').href = lead.phone ? `tel:${lead.phone}` : '#';
-            document.getElementById('detailEmail').textContent = lead.email || '-';
-            document.getElementById('detailWebsite').textContent = lead.website || '-';
-            document.getElementById('detailWebsite').href = lead.website ? `https://${lead.website}` : '#';
-
-            // Render actions for this lead
-            renderLeadActions(leadId);
-        }
-
-        function renderLeadActions(leadId) {
-            const today = getToday();
-            const leadActions = actions.filter(a => a.leadId === leadId && a.status === 'planned')
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            const list = document.getElementById('leadActionsList');
-
-            if (leadActions.length === 0) {
-                list.innerHTML = '<div class="no-actions">No actions scheduled</div>';
-                return;
-            }
-
-            list.innerHTML = leadActions.map(action => {
-                const isOverdue = action.date < today;
-                const dateLabel = formatActionDate(action.date, today);
-
-                return `
-                    <div class="action-item ${isOverdue ? 'overdue' : ''}">
-                        <div class="action-type-icon ${action.type}">${getTypeIcon(action.type)}</div>
-                        <div class="action-content">
-                            <div class="action-title">${getTypeLabel(action.type)}</div>
-                            <div class="action-date ${isOverdue ? 'overdue' : ''}">${dateLabel}${action.time ? ' at ' + action.time : ''}</div>
-                        </div>
-                        <button class="action-complete-btn" onclick="event.stopPropagation(); completeAction('${action.id}')" title="Mark complete">✓</button>
+                <div class="card-footer">
+                    <span class="card-time">${fmtTime(l.last_activity_at||l.created_at)}</span>
+                    <div class="card-actions">
+                        ${l.phone?`<button class="action-btn" onclick="event.stopPropagation();window.open('tel:${l.phone}');openLead('${l.id}')">📞</button>`:''}
+                        ${l.email?`<button class="action-btn" onclick="event.stopPropagation();window.open('mailto:${l.email}');openLead('${l.id}')">📧</button>`:''}
                     </div>
-                `;
+                </div>
+            </div>`;
+        }
+
+        function getRot(l,s){if(!s.rot)return'';const d=Math.floor((Date.now()-new Date(l.last_activity_at||l.created_at))/(1000*60*60*24));if(d>=s.rot*2)return'rotting-danger';if(d>=s.rot)return'rotting-warning';return'';}
+        function fmtTime(d){if(!d)return'Never';const dt=new Date(d),now=new Date(),diff=Math.floor((now-dt)/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<7)return diff+'d ago';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+        function fmtFU(d){const dt=new Date(d),diff=Math.floor((dt-new Date())/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Tomorrow';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+        function stats(){const t=leads.length,h=leads.filter(l=>l.stage==='interested').length,m=leads.filter(l=>l.stage==='meeting').length,w=leads.filter(l=>l.stage==='won').length;document.getElementById('total').textContent=t;document.getElementById('hot').textContent=h;document.getElementById('meetings').textContent=m;document.getElementById('won').textContent=w;document.getElementById('rate').textContent=t?Math.round(w/t*100)+'%':'0%';}
+        function filter(){query=document.getElementById('search').value.toLowerCase();render();}
+
+        function setupDrag() {
+            document.querySelectorAll('.card').forEach(c=>{
+                c.addEventListener('dragstart',e=>{dragId=e.target.dataset.id;e.target.classList.add('dragging');});
+                c.addEventListener('dragend',e=>{e.target.classList.remove('dragging');dragId=null;});
+            });
+            document.querySelectorAll('.col-body').forEach(c=>{
+                c.addEventListener('dragover',e=>{e.preventDefault();c.style.background='var(--calls-glow)';});
+                c.addEventListener('dragleave',e=>{c.style.background='';});
+                c.addEventListener('drop',async e=>{e.preventDefault();c.style.background='';if(!dragId)return;const ns=c.dataset.stage,l=leads.find(x=>x.id===dragId);if(!l||l.stage===ns)return;const os=l.stage;sync('syncing','Saving...');try{await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).eq('id',dragId);await db.from('activities').insert({lead_id:dragId,type:'note',outcome:'moved',notes:`Moved from ${getSN(os)} to ${getSN(ns)}`});l.stage=ns;l.last_activity_at=new Date().toISOString();render();stats();sync('ok','Saved');toast(`✅ Moved to ${getSN(ns)}`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}});
+            });
+        }
+
+        function getSN(id){return STAGES.find(s=>s.id===id)?.name||id;}
+
+        async function openLead(id) {
+            currentId=id;const l=leads.find(x=>x.id===id);if(!l)return;
+            document.getElementById('modal-title').textContent=l.company;
+            document.getElementById('stage-selector').innerHTML=STAGES.map(s=>`<button class="stage-btn ${l.stage===s.id?'active':''}" onclick="changeStage('${s.id}')">${s.icon} ${s.name}</button>`).join('');
+            document.getElementById('contact-info').innerHTML=`<div class="info-item"><div class="info-label">Company</div><div class="info-value">${l.company}</div></div><div class="info-item"><div class="info-label">Contact</div><div class="info-value">${l.contact||'—'}</div></div><div class="info-item"><div class="info-label">Phone</div><div class="info-value">${l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'—'}</div></div><div class="info-item"><div class="info-label">Email</div><div class="info-value">${l.email?`<a href="mailto:${l.email}">${l.email}</a>`:'—'}</div></div>`;
+            document.getElementById('lead-notes').value=l.notes||'';
+            renderLeadActions(l);renderTimeline(l);
+            document.getElementById('lead-modal').classList.add('active');
+        }
+
+        function renderLeadActions(l) {
+            const leadActions = actions.filter(a => a.lead_id === l.id && a.status === 'planned').sort((a,b) => a.date.localeCompare(b.date));
+            const today = getToday(), list = document.getElementById('lead-actions-list');
+            if (leadActions.length === 0) {list.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:.8rem;padding:.5rem">No scheduled actions</div>';return;}
+            list.innerHTML = leadActions.map(a => {
+                const isOverdue = a.date < today;
+                return `<div class="action-item ${isOverdue ? 'overdue' : ''}"><span class="action-item-icon">${ACTION_TYPES[a.type] || '📋'}</span><div class="action-item-info"><div>${a.type.replace('_', ' ')}${a.notes ? ` - ${a.notes}` : ''}</div><div class="action-item-date">${a.date}${a.time ? ' ' + a.time : ''}</div></div><button class="action-item-check" onclick="completeLeadAction('${a.id}')" title="Complete">✓</button></div>`;
             }).join('');
         }
 
-        // ==========================================
-        // ACTIONS
-        // ==========================================
-
-        function selectLead(leadId) {
-            selectedLeadId = leadId;
-            render();
+        async function completeLeadAction(actionId) {
+            try {
+                await db.from('actions').update({status:'completed',completed_at:new Date().toISOString()}).eq('id', actionId);
+                const action = actions.find(a => a.id === actionId);if (action) action.status = 'completed';
+                const l = leads.find(x => x.id === currentId);if (l) renderLeadActions(l);
+                render();toast('✅ Action completed');
+            } catch(e) {console.error(e);toast('❌ Failed', 'error');}
         }
 
-        function openAddActionModal() {
-            if (!selectedLeadId) {
-                alert('Please select a lead first');
-                return;
-            }
-
-            document.getElementById('newActionType').value = 'call';
-            document.getElementById('newActionDate').value = getToday();
-            document.getElementById('newActionTime').value = '';
-            document.getElementById('newActionNotes').value = '';
-
-            document.getElementById('addActionModal').classList.add('active');
+        function openAddActionForLead() {
+            document.getElementById('new-action-date').value = getToday();
+            document.getElementById('new-action-time').value = '';
+            document.getElementById('new-action-notes').value = '';
+            document.getElementById('new-action-type').value = 'call';
+            document.getElementById('action-modal').classList.add('active');
         }
 
-        function closeModal() {
-            document.getElementById('addActionModal').classList.remove('active');
+        async function saveActionForLead() {
+            if (!currentId) return;
+            const data = {lead_id:currentId,type:document.getElementById('new-action-type').value,date:document.getElementById('new-action-date').value,time:document.getElementById('new-action-time').value||null,notes:document.getElementById('new-action-notes').value||null,status:'planned'};
+            if (!data.date) {toast('❌ Date required', 'error');return;}
+            try {
+                const {data: newAction, error} = await db.from('actions').insert(data).select().single();
+                if (error) throw error;
+                actions.push(newAction);closeModal('action-modal');
+                const l = leads.find(x => x.id === currentId);if (l) renderLeadActions(l);
+                render();toast('✅ Action added');
+            } catch(e) {console.error(e);toast('❌ Failed', 'error');}
         }
 
-        function saveNewAction() {
-            if (!selectedLeadId) return;
-
-            const action = {
-                id: 'action_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                leadId: selectedLeadId,
-                type: document.getElementById('newActionType').value,
-                status: 'planned',
-                date: document.getElementById('newActionDate').value,
-                time: document.getElementById('newActionTime').value,
-                notes: document.getElementById('newActionNotes').value,
-                outcome: '',
-                createdAt: new Date().toISOString(),
-                completedAt: null
-            };
-
-            actions.push(action);
-            saveActions();
-            closeModal();
-            render();
+        function renderTimeline(l) {
+            const acts=l.activities||[];
+            document.getElementById('act-count').textContent=acts.length+' activities';
+            if(!acts.length){document.getElementById('timeline').innerHTML='<div style="text-align:center;color:var(--text-muted);padding:2rem">No activities yet</div>';return;}
+            document.getElementById('timeline').innerHTML=acts.map(a=>`<div class="timeline-item"><div class="timeline-icon ${a.type}">${{call:'📞',email:'📧',meeting:'🤝',note:'📝'}[a.type]||'📋'}</div><div class="timeline-content"><div class="timeline-header"><span class="timeline-type">${{call:'Call',email:'Email',meeting:'Meeting',note:'Note'}[a.type]||a.type}</span><span class="timeline-time">${new Date(a.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></div>${a.outcome?`<span class="timeline-outcome ${['interested','meeting_booked','replied'].includes(a.outcome)?'positive':a.outcome==='not_interested'?'negative':'neutral'}">${fmtOutcome(a.outcome)}</span>`:''}${a.notes?`<div class="timeline-notes">${a.notes}</div>`:''}</div></div>`).join('');
         }
 
-        function completeAction(actionId) {
-            const index = actions.findIndex(a => a.id === actionId);
-            if (index !== -1) {
-                actions[index].status = 'completed';
-                actions[index].completedAt = new Date().toISOString();
-                saveActions();
-                render();
-            }
+        function fmtOutcome(o){return{no_answer:'No Answer',voicemail:'Voicemail',gatekeeper:'Gatekeeper',callback:'Callback',interested:'Interested! 🔥',not_interested:'Not Interested',meeting_booked:'Meeting Booked! 🎉',moved:'Stage Changed'}[o]||o;}
+
+        async function changeStage(ns) {
+            const l=leads.find(x=>x.id===currentId);if(!l||l.stage===ns)return;const os=l.stage;sync('syncing','Saving...');
+            try {
+                await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).eq('id',currentId);
+                const {data:act}=await db.from('activities').insert({lead_id:currentId,type:'note',outcome:'moved',notes:`Moved from ${getSN(os)} to ${getSN(ns)}`}).select().single();
+                l.stage=ns;l.last_activity_at=new Date().toISOString();
+                if(!l.activities)l.activities=[];l.activities.unshift(act);
+                document.querySelectorAll('.stage-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(getSN(ns))));
+                renderTimeline(l);render();stats();sync('ok','Saved');toast(`✅ Moved to ${getSN(ns)}`);
+            } catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
-        function moveToNextStage() {
-            if (!selectedLeadId) return;
-
-            const lead = leads.find(l => l.id === selectedLeadId);
-            if (!lead) return;
-
-            const currentIndex = STAGES.findIndex(s => s.id === (lead.stage || 'new').toLowerCase());
-            if (currentIndex < STAGES.length - 1) {
-                lead.stage = STAGES[currentIndex + 1].id;
-                saveLeads();
-                render();
-            }
+        async function addActivity() {
+            const l=leads.find(x=>x.id===currentId);if(!l)return;
+            const type=document.getElementById('act-type').value,outcome=document.getElementById('act-outcome').value,notes=document.getElementById('act-notes').value;
+            sync('syncing','Saving...');
+            try {
+                const {data:act}=await db.from('activities').insert({lead_id:currentId,type,outcome,notes}).select().single();
+                let upd={last_activity_at:new Date().toISOString()};
+                if(outcome==='meeting_booked'&&!['meeting','proposal','negotiation','won'].includes(l.stage))upd.stage='meeting';
+                else if(outcome==='interested'&&l.stage==='outreach')upd.stage='interested';
+                await db.from('leads').update(upd).eq('id',currentId);
+                if(!l.activities)l.activities=[];l.activities.unshift(act);
+                l.last_activity_at=upd.last_activity_at;if(upd.stage)l.stage=upd.stage;
+                document.getElementById('act-outcome').value='';document.getElementById('act-notes').value='';
+                renderTimeline(l);render();stats();sync('ok','Saved');toast(outcome==='meeting_booked'?'🎉 Meeting booked!':'✅ Logged');
+            } catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
-        // ==========================================
-        // UTILITIES
-        // ==========================================
-
-        function getInitials(lead) {
-            const name = lead.contactName || lead.company || 'Unknown';
-            return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        async function saveNotes() {
+            const l=leads.find(x=>x.id===currentId);if(!l)return;const notes=document.getElementById('lead-notes').value;sync('syncing','Saving...');
+            try {await db.from('leads').update({notes}).eq('id',currentId);l.notes=notes;sync('ok','Saved');toast('✅ Notes saved');} 
+            catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
-        function getToday() {
-            return new Date().toISOString().split('T')[0];
+        async function deleteLead() {
+            if(!confirm('Delete this lead?'))return;sync('syncing','Deleting...');
+            try {await db.from('leads').delete().eq('id',currentId);leads=leads.filter(l=>l.id!==currentId);closeModal('lead-modal');render();stats();sync('ok','Deleted');toast('🗑️ Deleted');} 
+            catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
-        function getTypeIcon(type) {
-            const icons = { call: '📞', email: '✉️', follow_up: '🔄', meeting: '🤝', custom: '📝' };
-            return icons[type] || '📝';
+        function openImportModal(){document.getElementById('import-modal').classList.add('active');}
+        function openAddModal(){document.getElementById('add-modal').classList.add('active');}
+        function closeModal(id){document.getElementById(id).classList.remove('active');currentId=null;}
+
+        const dz=document.getElementById('dropzone');
+        dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+        dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+        dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f?.name.endsWith('.csv'))processCSV(f);});
+
+        function handleCSV(e){const f=e.target.files[0];if(f)processCSV(f);}
+        function processCSV(f){const r=new FileReader();r.onload=e=>parseCSV(e.target.result);r.readAsText(f);}
+
+        async function parseCSV(csv) {
+            const lines=csv.split('\n').filter(l=>l.trim());if(lines.length<2){toast('❌ Invalid CSV','error');return;}
+            const headers=parseCSVLine(lines[0]);
+            const findH=names=>{const lh=headers.map(h=>h.toLowerCase().trim());for(let n of names){const i=lh.indexOf(n.toLowerCase());if(i!==-1)return i;}return-1;};
+            const hi={company:findH(['name','company','business name','business']),contact:findH(['store owner','contact','owner']),email:findH(['email address','email']),phone:findH(['phone','telephone']),website:findH(['website','url']),address:findH(['address','location'])};
+            const newLeads=[];let skip=0;
+            for(let i=1;i<lines.length;i++){if(!lines[i].trim())continue;const v=parseCSVLine(lines[i]);const company=hi.company!==-1?v[hi.company]?.trim():'';if(!company){skip++;continue;}if(leads.find(l=>l.company.toLowerCase()===company.toLowerCase())){skip++;continue;}newLeads.push({company,contact:hi.contact!==-1?v[hi.contact]?.trim()||null:null,email:hi.email!==-1?v[hi.email]?.trim()||null:null,phone:hi.phone!==-1?v[hi.phone]?.trim()||null:null,website:hi.website!==-1?v[hi.website]?.trim()||null:null,address:hi.address!==-1?v[hi.address]?.trim()||null:null,stage:'prospecting'});}
+            if(!newLeads.length){toast(`❌ No new leads (${skip} skipped)`,'error');return;}
+            sync('syncing','Importing...');
+            try {const {data,error}=await db.from('leads').insert(newLeads).select();if(error)throw error;data.forEach(l=>{l.activities=[];leads.push(l);});closeModal('import-modal');render();stats();sync('ok','Imported');toast(`✅ ${data.length} leads imported${skip?` (${skip} skipped)`:''}`);} catch(e){console.error(e);sync('error','Failed');toast('❌ Import failed','error');}
         }
 
-        function getTypeLabel(type) {
-            const labels = { call: 'Call', email: 'Email', follow_up: 'Follow-up', meeting: 'Meeting', custom: 'Custom' };
-            return labels[type] || type;
+        function parseCSVLine(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r.map(v=>v.trim());}
+
+        async function saveLead() {
+            const company=document.getElementById('new-company').value.trim();
+            if(!company){toast('❌ Company required','error');return;}
+            if(leads.find(l=>l.company.toLowerCase()===company.toLowerCase())){toast('❌ Already exists','error');return;}
+            sync('syncing','Adding...');
+            try {const {data,error}=await db.from('leads').insert({company,contact:document.getElementById('new-contact').value.trim()||null,phone:document.getElementById('new-phone').value.trim()||null,email:document.getElementById('new-email').value.trim()||null,website:document.getElementById('new-website').value.trim()||null,address:document.getElementById('new-address').value.trim()||null,stage:'prospecting'}).select().single();if(error)throw error;data.activities=[];leads.push(data);closeModal('add-modal');['new-company','new-contact','new-phone','new-email','new-website','new-address'].forEach(id=>document.getElementById(id).value='');render();stats();sync('ok','Added');toast(`✅ Added: ${company}`);} catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
-        function formatActionDate(dateStr, today) {
-            if (dateStr === today) return 'Today';
-            
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            if (dateStr === tomorrow.toISOString().split('T')[0]) return 'Tomorrow';
-
-            const date = new Date(dateStr + 'T00:00:00');
-            const daysDiff = Math.ceil((date - new Date(today + 'T00:00:00')) / (1000 * 60 * 60 * 24));
-            
-            if (daysDiff < 0) return `${Math.abs(daysDiff)}d overdue`;
-            if (daysDiff <= 7) return date.toLocaleDateString('en-GB', { weekday: 'short' });
-            return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
-        }
-
-        // ==========================================
-        // INIT
-        // ==========================================
-
-        function init() {
-            loadData();
-            render();
-
-            // Close modal on overlay click
-            document.getElementById('addActionModal').addEventListener('click', function(e) {
-                if (e.target === this) closeModal();
-            });
-
-            console.log('🚀 SummitFlow Pipeline initialized');
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
+        function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='error'?' error':'');setTimeout(()=>t.classList.remove('show'),3000);}
+        document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');}));
+        document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active'));});
     </script>
 </body>
 </html>

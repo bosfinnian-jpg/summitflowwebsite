@@ -47,35 +47,21 @@
                     <option value="lost">❌ Lost</option>
                 </select>
             </div>
-            <span style="font-size:.85rem;color:var(--text-muted)" id="results-count">0 leads</span>
+            <div id="results-count" style="color:var(--text-muted);font-size:.85rem"></div>
         </div>
         <div class="bulk-bar" id="bulk-bar">
+            <input type="checkbox" class="checkbox" id="select-all" onchange="toggleSelectAll()">
             <span class="bulk-count"><span id="selected-count">0</span> selected</span>
-            <button class="btn" onclick="clearSelection()">Clear</button>
-            <select class="form-select" id="bulk-stage" style="border-radius:50px;padding:.5rem 1rem" onchange="bulkChangeStage()">
-                <option value="">Change Stage...</option>
-                <option value="prospecting">🎯 Prospecting</option>
-                <option value="outreach">📤 Outreach</option>
-                <option value="interested">🔥 Interested</option>
-                <option value="meeting">📅 Meeting</option>
-                <option value="won">🏆 Won</option>
-                <option value="lost">❌ Lost</option>
-            </select>
+            <select class="form-select" id="bulk-stage" style="padding:.5rem;font-size:.8rem"><option value="">Move to...</option><option value="prospecting">🎯 Prospecting</option><option value="outreach">📤 Outreach</option><option value="interested">🔥 Interested</option><option value="meeting">📅 Meeting</option><option value="won">🏆 Won</option><option value="lost">❌ Lost</option></select>
+            <button class="btn" onclick="bulkChangeStage()">Apply</button>
             <button class="btn danger" onclick="bulkDelete()">🗑️ Delete</button>
+            <div style="flex:1"></div>
+            <button class="btn" onclick="clearSelection()">Clear</button>
         </div>
         <div class="table-container">
             <div class="table-scroll">
                 <table>
-                    <thead><tr>
-                        <th style="width:50px"><input type="checkbox" class="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
-                        <th class="sortable" data-sort="company" onclick="handleSort('company')">Company</th>
-                        <th class="sortable" data-sort="phone" onclick="handleSort('phone')">Phone</th>
-                        <th class="sortable" data-sort="email" onclick="handleSort('email')">Email</th>
-                        <th class="sortable" data-sort="stage" onclick="handleSort('stage')">Stage</th>
-                        <th class="sortable" data-sort="activities" onclick="handleSort('activities')">Activities</th>
-                        <th class="sortable" data-sort="last_activity_at" onclick="handleSort('last_activity_at')">Last Activity</th>
-                        <th>Actions</th>
-                    </tr></thead>
+                    <thead><tr><th style="width:40px"><input type="checkbox" class="checkbox" id="select-all-header" onchange="toggleSelectAll()"></th><th class="sortable" data-sort="company" onclick="handleSort('company')">Company</th><th class="sortable" data-sort="phone" onclick="handleSort('phone')">Phone</th><th class="sortable" data-sort="email" onclick="handleSort('email')">Email</th><th class="sortable" data-sort="stage" onclick="handleSort('stage')">Stage</th><th class="sortable" data-sort="activities" onclick="handleSort('activities')">Activities</th><th class="sortable" data-sort="last_activity_at" onclick="handleSort('last_activity_at')">Last Activity</th><th style="width:100px">Actions</th></tr></thead>
                     <tbody id="tbody"></tbody>
                 </table>
             </div>
@@ -83,38 +69,14 @@
         </div>
     </main>
 
+    <!-- Import Modal -->
     <div class="modal-overlay" id="import-modal">
-        <div class="modal">
-            <div class="modal-header"><h2 class="modal-title">Import Leads</h2><button class="modal-close" onclick="closeModal('import-modal')">&times;</button></div>
-            <div class="modal-body">
-                <div class="csv-dropzone" id="dropzone" onclick="document.getElementById('csv-input').click()">
-                    <div style="font-size:3rem;margin-bottom:1rem">📄</div>
-                    <div style="font-weight:600;margin-bottom:.5rem">Drop CSV or click to upload</div>
-                    <div style="font-size:.85rem;color:var(--text-muted)">Google Maps exports supported</div>
-                </div>
-                <input type="file" id="csv-input" accept=".csv" onchange="handleCSV(event)">
-            </div>
-        </div>
+        <div class="modal"><div class="modal-header"><div class="modal-title">📤 Import Leads</div><button class="modal-close" onclick="closeModal('import-modal')">×</button></div><div class="modal-body"><div class="csv-dropzone" id="dropzone" onclick="document.getElementById('csv-input').click()"><div style="font-size:3rem;margin-bottom:1rem">📄</div><div style="font-size:1rem;font-weight:600;margin-bottom:.5rem">Drop CSV file here</div><div style="font-size:.85rem;color:var(--text-muted)">or click to browse</div></div><input type="file" id="csv-input" accept=".csv" onchange="handleCSV(event)"></div></div>
     </div>
 
+    <!-- Lead Modal -->
     <div class="modal-overlay" id="lead-modal">
-        <div class="modal">
-            <div class="modal-header"><h2 class="modal-title" id="modal-title">Add Lead</h2><button class="modal-close" onclick="closeModal('lead-modal')">&times;</button></div>
-            <div class="modal-body">
-                <div class="form-group" style="margin-bottom:1rem"><label class="form-label">Company *</label><input type="text" class="form-input" id="lead-company"></div>
-                <div class="form-grid">
-                    <div class="form-group"><label class="form-label">Contact</label><input type="text" class="form-input" id="lead-contact"></div>
-                    <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="lead-phone"></div>
-                    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="lead-email"></div>
-                    <div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="lead-website"></div>
-                    <div class="form-group full"><label class="form-label">Address</label><input type="text" class="form-input" id="lead-address"></div>
-                    <div class="form-group"><label class="form-label">Stage</label><select class="form-select" id="lead-stage"><option value="prospecting">🎯 Prospecting</option><option value="outreach">📤 Outreach</option><option value="interested">🔥 Interested</option><option value="meeting">📅 Meeting</option><option value="proposal">📋 Proposal</option><option value="negotiation">🤝 Negotiation</option><option value="won">🏆 Won</option><option value="lost">❌ Lost</option></select></div>
-                    <div class="form-group"><label class="form-label">Follow-up</label><input type="datetime-local" class="form-input" id="lead-followup"></div>
-                    <div class="form-group full"><label class="form-label">Notes</label><textarea class="form-textarea" id="lead-notes"></textarea></div>
-                </div>
-            </div>
-            <div class="modal-footer"><button class="btn" onclick="closeModal('lead-modal')">Cancel</button><button class="btn primary" onclick="saveLead()" id="save-btn">Add Lead</button></div>
-        </div>
+        <div class="modal"><div class="modal-header"><div class="modal-title" id="modal-title">Add Lead</div><button class="modal-close" onclick="closeModal('lead-modal')">×</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Company *</label><input type="text" class="form-input" id="lead-company" placeholder="Company name"></div><div class="form-group"><label class="form-label">Contact Name</label><input type="text" class="form-input" id="lead-contact" placeholder="John Smith"></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="lead-phone" placeholder="0113 123 4567"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="lead-email" placeholder="john@company.com"></div><div class="form-group"><label class="form-label">Website</label><input type="url" class="form-input" id="lead-website" placeholder="www.company.com"></div><div class="form-group full"><label class="form-label">Address</label><input type="text" class="form-input" id="lead-address" placeholder="123 High Street, Leeds"></div><div class="form-group"><label class="form-label">Stage</label><select class="form-select" id="lead-stage"><option value="prospecting">🎯 Prospecting</option><option value="outreach">📤 Outreach</option><option value="interested">🔥 Interested</option><option value="meeting">📅 Meeting</option><option value="proposal">📋 Proposal</option><option value="negotiation">🤝 Negotiation</option><option value="won">🏆 Won</option><option value="lost">❌ Lost</option></select></div><div class="form-group"><label class="form-label">Follow-up</label><input type="datetime-local" class="form-input" id="lead-followup"></div><div class="form-group full"><label class="form-label">Notes</label><textarea class="form-textarea" id="lead-notes"></textarea></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('lead-modal')">Cancel</button><button class="btn primary" onclick="saveLead()" id="save-btn">Add Lead</button></div></div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -153,10 +115,7 @@
             let f=leads;
             if(stageFilter)f=f.filter(l=>l.stage===stageFilter);
             if(query){const q=query.toLowerCase();f=f.filter(l=>l.company?.toLowerCase().includes(q)||l.contact?.toLowerCase().includes(q)||l.email?.toLowerCase().includes(q)||l.phone?.includes(q));}
-            f.sort((a,b)=>{let av,bv;
-                switch(sortCol){case'company':av=(a.company||'').toLowerCase();bv=(b.company||'').toLowerCase();break;case'phone':av=a.phone||'';bv=b.phone||'';break;case'email':av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();break;case'stage':av=STAGES.findIndex(s=>s.id===a.stage);bv=STAGES.findIndex(s=>s.id===b.stage);break;case'activities':av=a.activityCount;bv=b.activityCount;break;case'last_activity_at':av=a.last_activity_at?new Date(a.last_activity_at).getTime():0;bv=b.last_activity_at?new Date(b.last_activity_at).getTime():0;break;default:av=a.created_at?new Date(a.created_at).getTime():0;bv=b.created_at?new Date(b.created_at).getTime():0;}
-                if(av<bv)return sortDir==='asc'?-1:1;if(av>bv)return sortDir==='asc'?1:-1;return 0;
-            });
+            f.sort((a,b)=>{let av,bv;switch(sortCol){case'company':av=(a.company||'').toLowerCase();bv=(b.company||'').toLowerCase();break;case'phone':av=a.phone||'';bv=b.phone||'';break;case'email':av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();break;case'stage':av=STAGES.findIndex(s=>s.id===a.stage);bv=STAGES.findIndex(s=>s.id===b.stage);break;case'activities':av=a.activityCount;bv=b.activityCount;break;case'last_activity_at':av=a.last_activity_at?new Date(a.last_activity_at).getTime():0;bv=b.last_activity_at?new Date(b.last_activity_at).getTime():0;break;default:av=a.created_at?new Date(a.created_at).getTime():0;bv=b.created_at?new Date(b.created_at).getTime():0;}if(av<bv)return sortDir==='asc'?-1:1;if(av>bv)return sortDir==='asc'?1:-1;return 0;});
             return f;
         }
 
@@ -170,8 +129,7 @@
                 const la=getLastActivity(l.last_activity_at);
                 return`<tr class="${selected.has(l.id)?'selected':''}"><td><input type="checkbox" class="checkbox" ${selected.has(l.id)?'checked':''} onchange="toggleSelect('${l.id}')"></td><td><div class="lead-company"><a href="#" onclick="openEdit('${l.id}');return false">${l.company}</a></div>${l.contact?`<div class="lead-contact">${l.contact}</div>`:''}</td><td class="lead-phone">${l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'—'}</td><td class="lead-email">${l.email?`<a href="mailto:${l.email}">${l.email}</a>`:'—'}</td><td><span class="stage-badge ${s.id}">${s.icon} ${s.name}</span></td><td class="activity-count">📊 ${l.activityCount}</td><td><span class="last-activity ${la.cls}">${la.text}</span></td><td><div class="row-actions">${l.phone?`<button class="action-btn" onclick="window.open('tel:${l.phone}')">📞</button>`:''} ${l.email?`<button class="action-btn" onclick="window.open('mailto:${l.email}')">📧</button>`:''}<button class="action-btn" onclick="openEdit('${l.id}')">👁️</button></div></td></tr>`;
             }).join('');
-            renderPagination(f.length,total);
-            updateBulk();
+            renderPagination(f.length,total);updateBulk();
         }
 
         function getLastActivity(d){if(!d)return{text:'Never',cls:'old'};const dt=new Date(d),now=new Date(),diff=Math.floor((now-dt)/(1000*60*60*24));if(diff===0)return{text:'Today',cls:'recent'};if(diff===1)return{text:'Yesterday',cls:'recent'};if(diff<3)return{text:diff+'d ago',cls:'recent'};if(diff<7)return{text:diff+'d ago',cls:'stale'};return{text:dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'}),cls:'old'};}
@@ -194,25 +152,13 @@
         function updateBulk(){document.getElementById('bulk-bar').classList.toggle('active',selected.size>0);document.getElementById('selected-count').textContent=selected.size;const f=getFiltered(),start=(page-1)*pageSize,paged=f.slice(start,start+pageSize);document.getElementById('select-all').checked=paged.length>0&&paged.every(l=>selected.has(l.id));}
 
         async function bulkChangeStage(){
-            const ns=document.getElementById('bulk-stage').value;if(!ns||!selected.size)return;
-            sync('syncing','Saving...');
-            try{
-                const ids=[...selected];
-                await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).in('id',ids);
-                leads.forEach(l=>{if(selected.has(l.id)){l.stage=ns;l.last_activity_at=new Date().toISOString();}});
-                document.getElementById('bulk-stage').value='';selected.clear();renderStats();renderTable();sync('ok','Saved');toast(`✅ ${ids.length} leads updated`);
-            }catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
+            const ns=document.getElementById('bulk-stage').value;if(!ns||!selected.size)return;sync('syncing','Saving...');
+            try{const ids=[...selected];await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).in('id',ids);leads.forEach(l=>{if(selected.has(l.id)){l.stage=ns;l.last_activity_at=new Date().toISOString();}});document.getElementById('bulk-stage').value='';selected.clear();renderStats();renderTable();sync('ok','Saved');toast(`✅ ${ids.length} leads updated`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
         async function bulkDelete(){
-            if(!selected.size||!confirm(`Delete ${selected.size} leads?`))return;
-            sync('syncing','Deleting...');
-            try{
-                const ids=[...selected];
-                await db.from('leads').delete().in('id',ids);
-                leads=leads.filter(l=>!selected.has(l.id));
-                selected.clear();renderStats();renderTable();sync('ok','Deleted');toast(`🗑️ ${ids.length} leads deleted`);
-            }catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
+            if(!selected.size||!confirm(`Delete ${selected.size} leads?`))return;sync('syncing','Deleting...');
+            try{const ids=[...selected];await db.from('leads').delete().in('id',ids);leads=leads.filter(l=>!selected.has(l.id));selected.clear();renderStats();renderTable();sync('ok','Deleted');toast(`🗑️ ${ids.length} leads deleted`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
         function openImport(){document.getElementById('import-modal').classList.add('active');}
@@ -226,17 +172,8 @@
             const data={company,contact:document.getElementById('lead-contact').value.trim()||null,phone:document.getElementById('lead-phone').value.trim()||null,email:document.getElementById('lead-email').value.trim()||null,website:document.getElementById('lead-website').value.trim()||null,address:document.getElementById('lead-address').value.trim()||null,stage:document.getElementById('lead-stage').value,follow_up:document.getElementById('lead-followup').value?new Date(document.getElementById('lead-followup').value).toISOString():null,notes:document.getElementById('lead-notes').value.trim()||null};
             sync('syncing','Saving...');
             try{
-                if(editingId){
-                    await db.from('leads').update(data).eq('id',editingId);
-                    const l=leads.find(x=>x.id===editingId);if(l)Object.assign(l,data);
-                    toast(`✅ Updated: ${company}`);
-                }else{
-                    if(leads.find(l=>l.company.toLowerCase()===company.toLowerCase())){toast('❌ Already exists','error');return;}
-                    const{data:newLead,error}=await db.from('leads').insert(data).select().single();
-                    if(error)throw error;
-                    newLead.activityCount=0;leads.unshift(newLead);
-                    toast(`✅ Added: ${company}`);
-                }
+                if(editingId){await db.from('leads').update(data).eq('id',editingId);const l=leads.find(x=>x.id===editingId);if(l)Object.assign(l,data);toast(`✅ Updated: ${company}`);}
+                else{if(leads.find(l=>l.company.toLowerCase()===company.toLowerCase())){toast('❌ Already exists','error');return;}const{data:newLead,error}=await db.from('leads').insert(data).select().single();if(error)throw error;newLead.activityCount=0;leads.unshift(newLead);toast(`✅ Added: ${company}`);}
                 closeModal('lead-modal');renderStats();renderTable();sync('ok','Saved');
             }catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
@@ -257,8 +194,7 @@
             for(let i=1;i<lines.length;i++){if(!lines[i].trim())continue;const v=parseCSVLine(lines[i]);const company=hi.company!==-1?v[hi.company]?.trim():'';if(!company){skip++;continue;}if(leads.find(l=>l.company.toLowerCase()===company.toLowerCase())){skip++;continue;}newLeads.push({company,contact:hi.contact!==-1?v[hi.contact]?.trim()||null:null,email:hi.email!==-1?v[hi.email]?.trim()||null:null,phone:hi.phone!==-1?v[hi.phone]?.trim()||null:null,website:hi.website!==-1?v[hi.website]?.trim()||null:null,address:hi.address!==-1?v[hi.address]?.trim()||null:null,stage:'prospecting'});}
             if(!newLeads.length){toast(`❌ No new leads (${skip} skipped)`,'error');return;}
             sync('syncing','Importing...');
-            try{const{data,error}=await db.from('leads').insert(newLeads).select();if(error)throw error;data.forEach(l=>{l.activityCount=0;leads.unshift(l);});closeModal('import-modal');renderStats();renderTable();sync('ok','Imported');toast(`✅ ${data.length} imported${skip?` (${skip} skipped)`:''}`);
-            }catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
+            try{const{data,error}=await db.from('leads').insert(newLeads).select();if(error)throw error;data.forEach(l=>{l.activityCount=0;leads.unshift(l);});closeModal('import-modal');renderStats();renderTable();sync('ok','Imported');toast(`✅ ${data.length} imported${skip?` (${skip} skipped)`:''}`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
         function parseCSVLine(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r.map(v=>v.trim());}
 
@@ -267,9 +203,7 @@
             const headers=['Company','Contact','Phone','Email','Website','Address','Stage','Notes','Created'];
             const rows=leads.map(l=>[l.company||'',l.contact||'',l.phone||'',l.email||'',l.website||'',l.address||'',STAGES.find(s=>s.id===l.stage)?.name||l.stage,(l.notes||'').replace(/"/g,'""'),l.created_at?new Date(l.created_at).toLocaleDateString():'']).map(r=>r.map(c=>`"${c}"`).join(','));
             const csv=[headers.join(','),...rows].join('\n');
-            const blob=new Blob([csv],{type:'text/csv'});
-            const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`summitflow-leads-${new Date().toISOString().split('T')[0]}.csv`;a.click();
-            toast(`✅ Exported ${leads.length} leads`);
+            const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`summitflow-leads-${new Date().toISOString().split('T')[0]}.csv`;a.click();toast(`✅ Exported ${leads.length} leads`);
         }
 
         function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='error'?' error':'');setTimeout(()=>t.classList.remove('show'),3000);}
