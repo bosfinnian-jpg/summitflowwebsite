@@ -1397,6 +1397,158 @@ Finn</div>
             }
         }
 
+        // ========== COMMAND CENTER - PROBLEM #5 ==========
+        function renderCommandCenter() {
+            const today = getToday();
+            const todayLog = logs.find(l => l.date === today);
+            const todayCalls = (todayLog?.calls || 0) + (sessionActive ? sessionData.calls : 0);
+            
+            const progressPct = Math.min(100, Math.round((todayCalls / CONFIG.DAILY_CALL_TARGET) * 100));
+            document.getElementById('cc-progress-text').textContent = `${todayCalls}/${CONFIG.DAILY_CALL_TARGET} (${progressPct}%)`;
+            document.getElementById('cc-progress-fill').style.width = `${progressPct}%`;
+            
+            if (sessionActive && sessionStart) {
+                const elapsed = (Date.now() - sessionStart) / 3600000;
+                if (elapsed > 0.01) {
+                    const velocity = Math.round(sessionData.calls / elapsed);
+                    document.getElementById('cc-velocity').textContent = `${velocity}/hr`;
+                    document.getElementById('cc-velocity').classList.add('active');
+                }
+            } else {
+                document.getElementById('cc-velocity').textContent = '—';
+                document.getElementById('cc-velocity').classList.remove('active');
+            }
+            
+            document.getElementById('cc-streak').textContent = calculateStreak();
+            
+            const weeklyStats = getWeeklyStats();
+            document.getElementById('cc-weekly').textContent = `${weeklyStats.calls}/${CONFIG.WEEKLY_CALL_TARGET}`;
+            
+            const weekPct = weeklyStats.calls / CONFIG.WEEKLY_CALL_TARGET;
+            const statusEl = document.getElementById('cc-week-status');
+            statusEl.textContent = weekPct >= 0.8 ? 'ON TRACK' : weekPct >= 0.5 ? 'BEHIND' : 'CRITICAL';
+            statusEl.className = 'cc-week-status ' + (weekPct >= 0.8 ? 'on-track' : weekPct >= 0.5 ? 'behind' : 'critical');
+            
+            const totalCalls = logs.reduce((s,l) => s + (l.calls||0), 0);
+            const totalMeetings = logs.reduce((s,l) => s + (l.meetings||0), 0);
+            const meetingRate = totalCalls > 0 ? totalMeetings / totalCalls : 0.04;
+            const projectedMeetings = CONFIG.WEEKLY_CALL_TARGET * CONFIG.CAMPAIGN_WEEKS * meetingRate;
+            const mrr = Math.round(projectedMeetings * CONFIG.CLOSE_RATE * CONFIG.AVG_DEAL_VALUE);
+            document.getElementById('cc-mrr').textContent = `£${mrr.toLocaleString()}`;
+        }
+
+        function calculateStreak() {
+            let streak = 0;
+            const sortedLogs = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const today = getToday();
+            const todayLog = sortedLogs.find(l => l.date === today);
+            const todayCalls = (todayLog?.calls || 0) + (sessionActive ? sessionData.calls : 0);
+            let checkDate = new Date();
+            if (todayCalls < CONFIG.STREAK_THRESHOLD) checkDate.setDate(checkDate.getDate() - 1);
+            for (let i = 0; i < 365; i++) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                const log = sortedLogs.find(l => l.date === dateStr);
+                if ((log && log.calls >= CONFIG.STREAK_THRESHOLD) || (dateStr === today && todayCalls >= CONFIG.STREAK_THRESHOLD)) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else break;
+            }
+            return streak;
+        }
+
+        function getWeeklyStats() {
+            const ws = getWeekStart();
+            const weekLogs = logs.filter(l => new Date(l.date) >= ws);
+            return {
+                calls: weekLogs.reduce((s,l) => s + (l.calls||0), 0) + (sessionActive ? sessionData.calls : 0),
+                meetings: weekLogs.reduce((s,l) => s + (l.meetings||0), 0) + (sessionActive ? sessionData.meetings : 0)
+            };
+        }
+
+        // ========== SMART ACTIONS - PROBLEM #6 ==========
+        function renderSmartActions() {
+            const suggestions = [];
+            const today = getToday();
+            const overdueCallbacks = actions.filter(a => a.type === 'follow_up' && a.status === 'planned' && a.date < today);
+            if (overdueCallbacks.length > 0) {
+                suggestions.push({ priority: 'urgent', text: `${overdueCallbacks.length} callback${overdueCallbacks.length > 1 ? 's' : ''} overdue`, label: 'Add to Queue', action: 'addOverdueToQueue()' });
+            }
+            const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const untouchedLeads = leads.filter(l => {
+                if (!['prospecting', 'outreach', 'interested'].includes(l.stage)) return false;
+                const lastActivity = l.last_activity_at ? new Date(l.last_activity_at) : new Date(l.created_at);
+                return lastActivity < sevenDaysAgo;
+            });
+            if (untouchedLeads.length > 0) {
+                suggestions.push({ priority: 'high', text: `${untouchedLeads.length} lead${untouchedLeads.length > 1 ? 's' : ''} untouched 7+ days`, label: 'Add to Queue', action: 'addUntouchedToQueue()' });
+            }
+            const panel = document.getElementById('smart-actions');
+            const container = document.getElementById('smart-suggestions');
+            if (suggestions.length === 0) { panel.style.display = 'none'; return; }
+            panel.style.display = 'block';
+            container.innerHTML = suggestions.map(s => `
+                <div class="smart-suggestion ${s.priority}">
+                    <div class="smart-suggestion-header"><span class="smart-suggestion-priority ${s.priority}">${s.priority === 'urgent' ? '⚠️ URGENT' : '🔴 HIGH'}</span></div>
+                    <div class="smart-suggestion-text">${s.text}</div>
+                    <div class="smart-suggestion-actions"><button class="smart-suggestion-btn primary" onclick="${s.action}">${s.label}</button></div>
+                </div>
+            `).join('');
+        }
+
+        function addOverdueToQueue() {
+            const today = getToday();
+            let added = 0;
+            actions.filter(a => a.type === 'follow_up' && a.status === 'planned' && a.date < today).forEach(a => {
+                if (!queue.includes(a.lead_id)) { queue.unshift(a.lead_id); added++; }
+            });
+            if (added > 0) { currentIdx = 0; persistQueueState(); renderCurrent(); toast(`Added ${added} leads to queue`); }
+            switchTab('dialer');
+        }
+
+        function addUntouchedToQueue() {
+            const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            let added = 0;
+            leads.filter(l => ['prospecting', 'outreach', 'interested'].includes(l.stage) && 
+                (l.last_activity_at ? new Date(l.last_activity_at) : new Date(l.created_at)) < sevenDaysAgo
+            ).forEach(l => { if (!queue.includes(l.id)) { queue.unshift(l.id); added++; } });
+            if (added > 0) { currentIdx = 0; persistQueueState(); renderCurrent(); toast(`Added ${added} leads to queue`); }
+            switchTab('dialer');
+        }
+
+        // ========== 12-WEEK FORECAST - PROBLEM #8 ==========
+        function renderForecast() {
+            const totalCalls = logs.reduce((s,l) => s + (l.calls||0), 0);
+            const totalMeetings = logs.reduce((s,l) => s + (l.meetings||0), 0);
+            const weeklyStats = getWeeklyStats();
+            const fourWeeksAgo = new Date(); fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+            const recentLogs = logs.filter(l => new Date(l.date) >= fourWeeksAgo);
+            const weeksOfData = Math.max(1, Math.ceil(recentLogs.length / 7) || 1);
+            const avgCallsPerWeek = Math.round(recentLogs.reduce((s,l) => s + (l.calls||0), 0) / weeksOfData) || 0;
+            const meetingRate = totalCalls > 0 ? totalMeetings / totalCalls : 0.04;
+            
+            const currentPaceMeetings = Math.round(avgCallsPerWeek * CONFIG.CAMPAIGN_WEEKS * meetingRate);
+            const currentPaceClients = Math.round(currentPaceMeetings * CONFIG.CLOSE_RATE);
+            const targetPaceMeetings = Math.round(CONFIG.WEEKLY_CALL_TARGET * CONFIG.CAMPAIGN_WEEKS * meetingRate);
+            const targetPaceClients = Math.round(targetPaceMeetings * CONFIG.CLOSE_RATE);
+            
+            document.getElementById('fc-current-pace').textContent = avgCallsPerWeek;
+            document.getElementById('fc-current-meetings').textContent = currentPaceMeetings;
+            document.getElementById('fc-current-clients').textContent = `${Math.floor(currentPaceClients * 0.8)}-${Math.ceil(currentPaceClients * 1.2)}`;
+            document.getElementById('fc-current-mrr').textContent = `£${Math.round(currentPaceClients * CONFIG.AVG_DEAL_VALUE).toLocaleString()}`;
+            document.getElementById('fc-target-meetings').textContent = targetPaceMeetings;
+            document.getElementById('fc-target-clients').textContent = `${Math.floor(targetPaceClients * 0.8)}-${Math.ceil(targetPaceClients * 1.2)}`;
+            document.getElementById('fc-target-mrr').textContent = `£${Math.round(targetPaceClients * CONFIG.AVG_DEAL_VALUE).toLocaleString()}`;
+            
+            const callsGap = Math.max(0, CONFIG.WEEKLY_CALL_TARGET - weeklyStats.calls);
+            document.getElementById('fc-gap-calls').textContent = callsGap > 0 ? `+${callsGap}` : '0 (on track!)';
+            document.getElementById('fc-gap-sessions').textContent = Math.ceil(callsGap / 20) > 0 ? `${Math.ceil(callsGap / 20)} more sessions` : 'None needed!';
+            
+            const pacePct = avgCallsPerWeek / CONFIG.WEEKLY_CALL_TARGET;
+            const statusEl = document.getElementById('forecast-status');
+            statusEl.textContent = pacePct >= 0.8 ? '✓ ON TRACK' : pacePct >= 0.5 ? '⚠ BEHIND' : '🚨 CRITICAL';
+            statusEl.className = 'forecast-status ' + (pacePct >= 0.8 ? 'on-track' : pacePct >= 0.5 ? 'behind' : 'critical');
+        }
+
         // ========== CALENDAR TAB ==========
         function renderCalendar() {
             if (calendarView === 'today') {
@@ -1751,11 +1903,16 @@ Finn</div>
             if (!l) {
                 queue.splice(currentIdx, 1);
                 if (currentIdx >= queue.length) currentIdx = Math.max(0, queue.length - 1);
+                persistQueueState();
                 renderCurrent();
                 return;
             }
             
             currentLead = l;
+
+            // Get last activity
+            const lastActivity = activities.find(a => a.lead_id === l.id && a.type === 'call');
+            const lastCalledText = lastActivity ? getTimeAgo(new Date(lastActivity.created_at)) : null;
 
             c.innerHTML = `
                 <div class="current-lead">
@@ -1766,54 +1923,112 @@ Finn</div>
                         </div>
                         <div class="lead-index">${currentIdx + 1} / ${queue.length}</div>
                     </div>
-                    <div class="contact-grid">
-                        <div class="contact-item">
-                            <div class="contact-icon">📞</div>
-                            <div>
-                                <div class="contact-label">Phone</div>
-                                <div class="contact-value">${l.phone ? `<a href="tel:${l.phone}">${l.phone}</a>` : '—'}</div>
+                    
+                    <!-- Giant Phone CTA - PROBLEM #4 -->
+                    <div class="phone-cta">
+                        ${l.phone ? `
+                            <a href="tel:${l.phone}" class="phone-cta-btn">
+                                <div class="phone-cta-label">📞 TAP TO CALL</div>
+                                <div class="phone-cta-number">${l.phone}</div>
+                            </a>
+                            ${lastCalledText ? `<div class="last-called">Last called: ${lastCalledText}</div>` : ''}
+                        ` : `
+                            <div class="phone-cta-btn no-phone">
+                                <div class="phone-cta-label">No Phone Number</div>
+                                <div class="phone-cta-number">—</div>
                             </div>
-                        </div>
-                        <div class="contact-item">
-                            <div class="contact-icon">📧</div>
-                            <div>
-                                <div class="contact-label">Email</div>
-                                <div class="contact-value">${l.email ? `<a href="mailto:${l.email}">${l.email}</a>` : '—'}</div>
-                            </div>
-                        </div>
-                        ${l.website ? `
-                        <div class="contact-item">
-                            <div class="contact-icon">🌐</div>
-                            <div>
-                                <div class="contact-label">Website</div>
-                                <div class="contact-value"><a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank">${l.website}</a></div>
-                            </div>
-                        </div>` : ''}
-                        ${l.address ? `
-                        <div class="contact-item">
-                            <div class="contact-icon">📍</div>
-                            <div>
-                                <div class="contact-label">Address</div>
-                                <div class="contact-value">${l.address}</div>
-                            </div>
-                        </div>` : ''}
+                        `}
                     </div>
-                    <div class="quick-log">
-                        <button class="quick-btn" onclick="logOutcome('no_answer')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📵</span>No Answer</button>
-                        <button class="quick-btn" onclick="logOutcome('voicemail')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📝</span>Voicemail</button>
-                        <button class="quick-btn" onclick="logOutcome('gatekeeper')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">🚪</span>Gatekeeper</button>
-                        <button class="quick-btn" onclick="logOutcome('not_interested')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">👎</span>Not Interested</button>
-                        <button class="quick-btn warning" onclick="logOutcome('callback')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">⏰</span>Callback</button>
-                        <button class="quick-btn warning" onclick="logOutcome('interested')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">🔥</span>Interested!</button>
-                        <button class="quick-btn success" onclick="logOutcome('meeting')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📅</span>Meeting!</button>
-                        <button class="quick-btn" onclick="logOutcome('email')" ${!sessionActive ? 'disabled' : ''}><span class="quick-icon">📧</span>Email Sent</button>
+                    
+                    <!-- Secondary Contact Info -->
+                    <div class="contact-secondary">
+                        ${l.email ? `<a href="mailto:${l.email}" class="contact-chip">📧 ${l.email}</a>` : ''}
+                        ${l.website ? `<a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank" class="contact-chip">🌐 Website</a>` : ''}
+                        ${l.address ? `<span class="contact-chip">📍 ${l.address}</span>` : ''}
                     </div>
+                    
+                    <!-- Quick Notes -->
+                    <div class="quick-notes">
+                        <input type="text" class="quick-notes-input" id="quick-notes-input" placeholder="Quick notes... (auto-saves)" value="${l.notes || ''}" onblur="saveQuickNotes()">
+                        <div class="quick-notes-saved" id="quick-notes-saved">✓ Saved</div>
+                    </div>
+                    
+                    <!-- Two-Tier Action System - PROBLEM #2 -->
+                    <div class="action-tiers">
+                        ${sessionActive ? `
+                            <div class="action-tier-primary">
+                                <button class="tier-btn primary-action" onclick="showOutcomeButtons()">
+                                    <span class="icon">📞</span>
+                                    <span>Called</span>
+                                    <span class="shortcut">Space</span>
+                                </button>
+                                <button class="tier-btn email-action" onclick="logOutcome('email')">
+                                    <span class="icon">📧</span>
+                                    <span>Emailed</span>
+                                    <span class="shortcut">E</span>
+                                </button>
+                                <button class="tier-btn" onclick="skip()">
+                                    <span class="icon">⏭️</span>
+                                    <span>Skip</span>
+                                    <span class="shortcut">S</span>
+                                </button>
+                            </div>
+                            <div class="action-tier-outcomes ${showOutcomes ? 'show' : ''}" id="outcome-buttons">
+                                <button class="tier-btn outcome" onclick="logOutcome('no_answer')">
+                                    <span class="icon">📵</span><span>No Answer</span><span class="shortcut">1</span>
+                                </button>
+                                <button class="tier-btn outcome warning" onclick="logOutcome('voicemail')">
+                                    <span class="icon">📝</span><span>Voicemail</span><span class="shortcut">2</span>
+                                </button>
+                                <button class="tier-btn outcome warning" onclick="logOutcome('interested')">
+                                    <span class="icon">🔥</span><span>Interested</span><span class="shortcut">3</span>
+                                </button>
+                                <button class="tier-btn outcome warning" onclick="logOutcome('callback')">
+                                    <span class="icon">⏰</span><span>Callback</span><span class="shortcut">4</span>
+                                </button>
+                                <button class="tier-btn outcome success" onclick="logOutcome('meeting')">
+                                    <span class="icon">📅</span><span>Meeting!</span><span class="shortcut">5</span>
+                                </button>
+                                <button class="tier-btn outcome danger" onclick="logOutcome('not_interested')">
+                                    <span class="icon">👎</span><span>Rejected</span><span class="shortcut">6</span>
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="start-prompt">
+                                <p>Start a session to begin logging calls</p>
+                                <p>Press <kbd>Space</kbd> to log calls once session is active</p>
+                            </div>
+                        `}
+                    </div>
+                    
                     <div class="lead-nav">
                         <button class="nav-btn" onclick="prev()" ${currentIdx === 0 ? 'disabled' : ''}>← Previous</button>
                         <button class="nav-btn" onclick="skip()">Skip →</button>
                         <button class="nav-btn primary" onclick="next()" ${currentIdx >= queue.length - 1 ? 'disabled' : ''}>Next →</button>
                     </div>
                 </div>`;
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / 86400000);
+            if (days === 0) return 'today';
+            if (days === 1) return 'yesterday';
+            if (days < 7) return `${days} days ago`;
+            if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
+            return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`;
+        }
+
+        async function saveQuickNotes() {
+            if (!currentLead) return;
+            const notes = document.getElementById('quick-notes-input')?.value || '';
+            try {
+                await db.from('leads').update({ notes }).eq('id', currentLead.id);
+                currentLead.notes = notes;
+                const savedEl = document.getElementById('quick-notes-saved');
+                if (savedEl) { savedEl.classList.add('show'); setTimeout(() => savedEl.classList.remove('show'), 2000); }
+            } catch (e) { console.error('Failed to save notes:', e); }
         }
 
         async function logOutcome(o) {
@@ -1858,7 +2073,10 @@ Finn</div>
                 }
                 
                 updateSession();
+                persistSessionState();
                 renderActionsBar();
+                renderCommandCenter();
+                showOutcomes = false;
                 if (o !== 'meeting') setTimeout(next, 300);
             } catch(e) {
                 console.error(e);
@@ -1866,12 +2084,14 @@ Finn</div>
             }
         }
 
-        function prev() { if (currentIdx > 0) { currentIdx--; renderCurrent(); }}
-        function next() { if (currentIdx < queue.length - 1) { currentIdx++; renderCurrent(); }}
+        function prev() { if (currentIdx > 0) { currentIdx--; showOutcomes = false; persistQueueState(); renderCurrent(); }}
+        function next() { if (currentIdx < queue.length - 1) { currentIdx++; showOutcomes = false; persistQueueState(); renderCurrent(); }}
         function skip() {
             const id = queue.splice(currentIdx, 1)[0];
             queue.push(id);
             if (currentIdx >= queue.length) currentIdx = 0;
+            showOutcomes = false;
+            persistQueueState();
             renderCurrent();
         }
 
@@ -1889,13 +2109,17 @@ Finn</div>
             document.getElementById('session-panel').classList.add('active');
             
             sessionTimer = setInterval(updateTimer, 1000);
+            startAutosave();
+            persistSessionState();
             renderCurrent();
+            renderCommandCenter();
             toast('🎯 Session started — let\'s go!');
         }
 
         async function endSession() {
             sessionActive = false;
             clearInterval(sessionTimer);
+            if (autosaveTimer) clearInterval(autosaveTimer);
             
             const btn = document.getElementById('session-btn');
             btn.classList.remove('active');
@@ -1918,32 +2142,20 @@ Finn</div>
                     await db.from('daily_logs').insert({date: today, ...sessionData});
                 }
                 
-                // Reload logs
                 const {data:lg} = await db.from('daily_logs').select('*').order('date',{ascending:false});
                 logs = lg || [];
                 
-                // Auto-carryover incomplete actions
-                const incomplete = actions.filter(a => a.date === today && a.status === 'planned');
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                
-                for (const a of incomplete) {
-                    await db.from('actions').update({
-                        date: tomorrowStr,
-                        notes: (a.notes || '') + ` [Carried from ${today}]`
-                    }).eq('id', a.id);
-                    a.date = tomorrowStr;
-                }
+                persistSessionState();
                 
                 renderStats();
                 renderCurrent();
                 renderReports();
                 renderActionsBar();
                 renderCalendar();
+                renderCommandCenter();
+                renderForecast();
                 
-                const carryMsg = incomplete.length > 0 ? ` (${incomplete.length} actions carried to tomorrow)` : '';
-                toast(`✅ Session saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings${carryMsg}`);
+                toast(`✅ Session saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
             } catch(e) {
                 console.error(e);
                 toast('❌ Failed to save session', 'error');
@@ -2196,12 +2408,64 @@ Finn</div>
             });
         });
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts - PROBLEM #2
         document.addEventListener('keydown', e => {
+            // Don't trigger if typing in input/textarea
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+            
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+                return;
+            }
+            
+            // Only process dialer shortcuts if on dialer tab and session active
+            const dialerTab = document.getElementById('tab-dialer');
+            if (!dialerTab.classList.contains('active')) return;
+            
+            if (e.key === ' ' && sessionActive) {
+                e.preventDefault();
+                showOutcomeButtons();
+                return;
+            }
+            if (e.key.toLowerCase() === 'e' && sessionActive) {
+                e.preventDefault();
+                logOutcome('email');
+                return;
+            }
+            if (e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                skip();
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prev();
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                next();
+                return;
+            }
+            
+            // Outcome shortcuts (1-6) only when outcomes visible
+            if (showOutcomes && sessionActive) {
+                const outcomeMap = {'1': 'no_answer', '2': 'voicemail', '3': 'interested', '4': 'callback', '5': 'meeting', '6': 'not_interested'};
+                if (outcomeMap[e.key]) {
+                    e.preventDefault();
+                    logOutcome(outcomeMap[e.key]);
+                }
             }
         });
+
+        function showOutcomeButtons() {
+            showOutcomes = true;
+            renderCurrent();
+        }
+
+        function openShortcutsModal() {
+            document.getElementById('shortcuts-modal').classList.add('active');
+        }
     </script>
 </body>
 </html>
