@@ -93,6 +93,127 @@
         .session-stat.emails .session-stat-value{color:var(--emails)}
         .session-stat.meetings .session-stat-value{color:var(--success)}
         .session-stat.callbacks .session-stat-value{color:var(--warning)}
+        .session-velocity{margin-top:1rem;text-align:center;font-size:.9rem;color:var(--text-secondary)}
+        .session-velocity strong{color:var(--success);font-family:'JetBrains Mono',monospace}
+
+        /* Command Center - PROBLEM #5 */
+        .command-center{background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-elevated) 100%);border:2px solid var(--calls);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+        .command-center::before{content:'';position:absolute;top:0;right:0;width:300px;height:300px;background:radial-gradient(circle,var(--calls-glow),transparent 70%);transform:translate(30%,-30%)}
+        .command-center-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;position:relative}
+        .command-center-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .command-center-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:1.5rem;position:relative}
+        .cc-metric{text-align:center}
+        .cc-metric-value{font-size:1.75rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .cc-metric-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin-top:.25rem}
+        .cc-progress{padding:.5rem 0}
+        .cc-progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+        .cc-progress-label{font-size:.85rem;font-weight:600}
+        .cc-progress-value{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--calls)}
+        .cc-progress-bar{height:12px;background:var(--surface);border-radius:6px;overflow:hidden}
+        .cc-progress-fill{height:100%;background:linear-gradient(90deg,var(--calls),var(--warning));border-radius:6px;transition:width .5s ease-out}
+        .cc-velocity.active{color:var(--success)}
+        .cc-week-status{padding:.25rem .75rem;border-radius:50px;font-size:.7rem;font-weight:700;text-transform:uppercase}
+        .cc-week-status.on-track{background:var(--success-glow);color:var(--success)}
+        .cc-week-status.behind{background:var(--warning-glow);color:var(--warning)}
+        .cc-week-status.critical{background:var(--danger-glow);color:var(--danger)}
+
+        /* Session Restored Indicator - PROBLEM #1 */
+        .session-restored{position:fixed;top:80px;right:2rem;background:var(--success-glow);border:1px solid var(--success);color:var(--success);padding:.75rem 1.25rem;border-radius:50px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.5rem;z-index:999;animation:slideIn .3s ease-out}
+        @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+        /* Two-Tier Action System - PROBLEM #2 */
+        .action-tiers{display:flex;flex-direction:column;gap:1rem}
+        .action-tier-primary{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+        .action-tier-outcomes{display:none;grid-template-columns:repeat(6,1fr);gap:.75rem}
+        .action-tier-outcomes.show{display:grid;animation:fadeIn .2s}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+        .tier-btn{background:var(--surface);border:2px solid var(--border);color:var(--text);padding:1rem;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:.5rem;transition:all .2s;position:relative}
+        .tier-btn:hover:not(:disabled){border-color:var(--calls);background:var(--calls-glow);transform:translateY(-2px)}
+        .tier-btn:disabled{opacity:.4;cursor:not-allowed}
+        .tier-btn .icon{font-size:1.5rem}
+        .tier-btn .shortcut{position:absolute;top:.5rem;right:.5rem;font-size:.65rem;padding:.125rem .375rem;background:var(--bg-elevated);border-radius:4px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        .tier-btn.primary-action{background:var(--calls-glow);border-color:var(--calls)}
+        .tier-btn.primary-action:hover:not(:disabled){background:var(--calls);color:#fff}
+        .tier-btn.email-action{background:var(--emails-glow);border-color:var(--emails)}
+        .tier-btn.email-action:hover:not(:disabled){background:var(--emails);color:#fff}
+        .tier-btn.outcome{padding:.75rem .5rem;font-size:.8rem}
+        .tier-btn.outcome .icon{font-size:1.25rem}
+        .tier-btn.outcome.success:hover:not(:disabled){border-color:var(--success);background:var(--success-glow)}
+        .tier-btn.outcome.warning:hover:not(:disabled){border-color:var(--warning);background:var(--warning-glow)}
+        .tier-btn.outcome.danger:hover:not(:disabled){border-color:var(--danger);background:var(--danger-glow)}
+        .start-prompt{text-align:center;padding:2rem;color:var(--text-muted);font-size:.9rem}
+        .start-prompt kbd{background:var(--surface);padding:.25rem .5rem;border-radius:4px;font-family:'JetBrains Mono',monospace;border:1px solid var(--border)}
+
+        /* Giant Phone CTA - PROBLEM #4 */
+        .phone-cta{margin:1.5rem 0}
+        .phone-cta-btn{width:100%;background:linear-gradient(135deg,var(--success),#34D399);border:none;border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:all .2s;text-decoration:none;display:block;text-align:center}
+        .phone-cta-btn:hover{transform:translateY(-2px);box-shadow:0 15px 40px var(--success-glow)}
+        .phone-cta-label{font-size:.75rem;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem}
+        .phone-cta-number{font-size:1.75rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:#fff}
+        .phone-cta-btn.no-phone{background:var(--surface);cursor:not-allowed;opacity:.5}
+        .last-called{text-align:center;margin-top:.5rem;font-size:.8rem;color:var(--text-muted)}
+        .contact-secondary{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+        .contact-chip{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;background:var(--surface);border-radius:50px;font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .2s;border:1px solid var(--border)}
+        .contact-chip:hover{background:var(--bg-elevated);border-color:var(--border-hover);color:var(--text)}
+        .quick-notes{margin-bottom:1.5rem}
+        .quick-notes-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.875rem 1rem;color:var(--text);font-family:inherit;font-size:.9rem}
+        .quick-notes-input:focus{outline:none;border-color:var(--calls)}
+        .quick-notes-saved{font-size:.75rem;color:var(--success);margin-top:.25rem;opacity:0;transition:opacity .2s}
+        .quick-notes-saved.show{opacity:1}
+
+        /* Smart Actions - PROBLEM #6 */
+        .smart-actions{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:1px solid var(--warning);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem}
+        .smart-actions-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+        .smart-actions-title{font-weight:700;display:flex;align-items:center;gap:.5rem;color:var(--warning)}
+        .smart-suggestion{background:var(--surface);border-radius:var(--radius-sm);padding:1rem;margin-bottom:.75rem;border-left:3px solid var(--warning)}
+        .smart-suggestion.urgent{border-left-color:var(--danger)}
+        .smart-suggestion-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+        .smart-suggestion-priority{font-size:.7rem;font-weight:700;text-transform:uppercase;padding:.25rem .5rem;border-radius:4px}
+        .smart-suggestion-priority.urgent{background:var(--danger-glow);color:var(--danger)}
+        .smart-suggestion-priority.high{background:var(--warning-glow);color:var(--warning)}
+        .smart-suggestion-text{font-size:.9rem;margin-bottom:.75rem}
+        .smart-suggestion-actions{display:flex;gap:.5rem}
+        .smart-suggestion-btn{padding:.5rem 1rem;font-size:.8rem;font-weight:600;border-radius:6px;cursor:pointer;font-family:inherit;border:none}
+        .smart-suggestion-btn.primary{background:var(--calls);color:#fff}
+
+        /* 12-Week Forecast - PROBLEM #8 */
+        .forecast-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:2px solid var(--purple);border-radius:var(--radius)}
+        .forecast-content{padding:1.5rem}
+        .forecast-scenarios{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+        .forecast-scenario{padding:1.25rem;border-radius:var(--radius-sm);border:1px solid var(--border)}
+        .forecast-scenario.current{background:var(--surface)}
+        .forecast-scenario.target{background:var(--success-glow);border-color:var(--success)}
+        .forecast-scenario-title{font-size:.8rem;font-weight:700;text-transform:uppercase;margin-bottom:1rem}
+        .forecast-scenario.target .forecast-scenario-title{color:var(--success)}
+        .forecast-scenario-item{display:flex;justify-content:space-between;margin-bottom:.5rem;font-size:.9rem}
+        .forecast-scenario-item strong{font-family:'JetBrains Mono',monospace}
+        .forecast-gap{background:var(--surface);border-radius:var(--radius-sm);padding:1.25rem}
+        .forecast-gap-title{font-size:.9rem;font-weight:700;margin-bottom:1rem}
+        .forecast-gap-item{display:flex;justify-content:space-between;margin-bottom:.5rem;font-size:.9rem}
+        .forecast-gap-item.highlight{color:var(--calls);font-weight:600}
+        .forecast-status{padding:.5rem 1rem;border-radius:50px;font-size:.8rem;font-weight:700}
+        .forecast-status.on-track{background:var(--success-glow);color:var(--success)}
+        .forecast-status.behind{background:var(--warning-glow);color:var(--warning)}
+        .forecast-status.critical{background:var(--danger-glow);color:var(--danger)}
+
+        /* Keyboard Shortcuts Modal - PROBLEM #7 */
+        .shortcuts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .shortcut-item{display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--surface);border-radius:var(--radius-sm)}
+        .shortcut-key{background:var(--bg-elevated);padding:.5rem .75rem;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:600;min-width:50px;text-align:center;border:1px solid var(--border)}
+        .shortcut-desc{font-size:.9rem;color:var(--text-secondary)}
+
+        /* Help button in nav */
+        .help-btn{width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:50%;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:1rem;font-weight:600;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .help-btn:hover{border-color:var(--calls);color:var(--calls);background:var(--calls-glow)}
+
+        /* Animation helpers - PROBLEM #3 */
+        .counter-pulse{animation:counterPulse .3s ease-out}
+        @keyframes counterPulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+        .meeting-scale{animation:meetingScale .5s ease-out}
+        @keyframes meetingScale{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+        /* Reduced motion support */
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}
 
         /* Dialer Tab */
         .dialer-grid{display:grid;grid-template-columns:1fr 400px;gap:1.5rem}
@@ -397,13 +518,52 @@
         </div>
         <div class="nav-right">
             <div class="date" id="date"></div>
+            <button class="help-btn" onclick="openShortcutsModal()" title="Keyboard Shortcuts (?)">?</button>
             <button class="session-btn" id="session-btn" onclick="toggleSession()">▶ Start Session</button>
         </div>
     </nav>
 
+    <!-- Session Restored Indicator - PROBLEM #1 -->
+    <div class="session-restored" id="session-restored" style="display:none">✓ Session restored</div>
+
     <!-- App -->
     <div id="app">
         <main class="main">
+            <!-- Command Center - PROBLEM #5 -->
+            <div class="command-center" id="command-center">
+                <div class="command-center-header">
+                    <div class="command-center-title">🎯 TODAY'S MISSION</div>
+                    <span class="cc-week-status" id="cc-week-status">ON TRACK</span>
+                </div>
+                <div class="command-center-grid">
+                    <div class="cc-progress">
+                        <div class="cc-progress-header">
+                            <span class="cc-progress-label">Calls Progress</span>
+                            <span class="cc-progress-value" id="cc-progress-text">0/30 (0%)</span>
+                        </div>
+                        <div class="cc-progress-bar">
+                            <div class="cc-progress-fill" id="cc-progress-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="cc-metric">
+                        <div class="cc-metric-value cc-velocity" id="cc-velocity">—</div>
+                        <div class="cc-metric-label">⚡ Velocity</div>
+                    </div>
+                    <div class="cc-metric">
+                        <div class="cc-metric-value" id="cc-streak">0</div>
+                        <div class="cc-metric-label">🔥 Day Streak</div>
+                    </div>
+                    <div class="cc-metric">
+                        <div class="cc-metric-value" id="cc-weekly">0/100</div>
+                        <div class="cc-metric-label">📈 This Week</div>
+                    </div>
+                    <div class="cc-metric">
+                        <div class="cc-metric-value" id="cc-mrr">£0</div>
+                        <div class="cc-metric-label">💰 Projected MRR</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Actions Bar (New) -->
             <div class="actions-bar" id="actions-bar">
                 <div class="actions-stat" id="overdue-stat" onclick="switchTab('calendar')" style="display:none">
@@ -481,6 +641,14 @@
 
             <!-- Calendar Tab (New) -->
             <div class="tab-content" id="tab-calendar">
+                <!-- Smart Actions Panel - PROBLEM #6 -->
+                <div class="smart-actions" id="smart-actions" style="display:none">
+                    <div class="smart-actions-header">
+                        <div class="smart-actions-title">💡 Smart Actions</div>
+                    </div>
+                    <div id="smart-suggestions"></div>
+                </div>
+
                 <div class="calendar-header">
                     <div class="calendar-title">📅 Action Calendar</div>
                     <div class="calendar-controls">
@@ -679,6 +847,36 @@
             <!-- Reports Tab -->
             <div class="tab-content" id="tab-reports">
                 <div class="reports-grid">
+                    <!-- 12-Week Forecast - PROBLEM #8 -->
+                    <div class="report-card full forecast-card">
+                        <div class="report-header">
+                            <div class="report-title">📊 12-Week Forecast</div>
+                            <span class="forecast-status" id="forecast-status">ON TRACK</span>
+                        </div>
+                        <div class="forecast-content">
+                            <div class="forecast-scenarios">
+                                <div class="forecast-scenario current">
+                                    <div class="forecast-scenario-title">📉 Current Pace</div>
+                                    <div class="forecast-scenario-item"><span>Avg calls/week:</span><strong id="fc-current-pace">0</strong></div>
+                                    <div class="forecast-scenario-item"><span>Week 12 meetings:</span><strong id="fc-current-meetings">0</strong></div>
+                                    <div class="forecast-scenario-item"><span>Expected clients:</span><strong id="fc-current-clients">0</strong></div>
+                                    <div class="forecast-scenario-item"><span>Projected MRR:</span><strong id="fc-current-mrr">£0</strong></div>
+                                </div>
+                                <div class="forecast-scenario target">
+                                    <div class="forecast-scenario-title">🎯 Target (100/week)</div>
+                                    <div class="forecast-scenario-item"><span>Week 12 meetings:</span><strong id="fc-target-meetings">0</strong></div>
+                                    <div class="forecast-scenario-item"><span>Expected clients:</span><strong id="fc-target-clients">0</strong></div>
+                                    <div class="forecast-scenario-item"><span>Projected MRR:</span><strong id="fc-target-mrr">£0</strong></div>
+                                </div>
+                            </div>
+                            <div class="forecast-gap">
+                                <div class="forecast-gap-title">📈 GAP ANALYSIS</div>
+                                <div class="forecast-gap-item highlight"><span>Calls needed this week:</span><strong id="fc-gap-calls">+0</strong></div>
+                                <div class="forecast-gap-item"><span>Recommended:</span><strong id="fc-gap-sessions">0 more sessions</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="report-card">
                         <div class="report-header"><div class="report-title">📞 Weekly Calls</div><div class="report-period">This Week</div></div>
                         <div class="report-value-big calls" id="report-calls">0</div>
@@ -945,6 +1143,35 @@ Finn</div>
         </div>
     </div>
 
+    <!-- Keyboard Shortcuts Modal - PROBLEM #7 -->
+    <div class="modal-overlay" id="shortcuts-modal">
+        <div class="modal" style="max-width:600px">
+            <div class="modal-header">
+                <div class="modal-title">⌨️ Keyboard Shortcuts</div>
+                <button class="modal-close" onclick="closeModal('shortcuts-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item"><div class="shortcut-key">Space</div><div class="shortcut-desc">Log Call Made</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">E</div><div class="shortcut-desc">Log Email Sent</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">S</div><div class="shortcut-desc">Skip Lead</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">1</div><div class="shortcut-desc">No Answer</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">2</div><div class="shortcut-desc">Voicemail</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">3</div><div class="shortcut-desc">Interested</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">4</div><div class="shortcut-desc">Callback</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">5</div><div class="shortcut-desc">Meeting Booked</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">6</div><div class="shortcut-desc">Not Interested</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">←</div><div class="shortcut-desc">Previous Lead</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">→</div><div class="shortcut-desc">Next Lead</div></div>
+                    <div class="shortcut-item"><div class="shortcut-key">Esc</div><div class="shortcut-desc">Close Modal</div></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn primary" onclick="closeModal('shortcuts-modal')">Got it!</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
@@ -968,6 +1195,18 @@ Finn</div>
 
         const ACTION_TYPES = {call:'📞',email:'📧',follow_up:'🔄',meeting:'🤝'};
 
+        // Configuration - PROBLEM #5, #8
+        const CONFIG = {
+            DAILY_CALL_TARGET: 30,
+            WEEKLY_CALL_TARGET: 100,
+            STREAK_THRESHOLD: 20,
+            CLOSE_RATE: 0.25,
+            AVG_DEAL_VALUE: 700,
+            CAMPAIGN_WEEKS: 12,
+            AUTOSAVE_INTERVAL: 30000,
+            NOTES_DEBOUNCE: 1000
+        };
+
         const QUOTES = [
             {text:"Every dial gets you closer to your goal.", author:"Jordan Platten"},
             {text:"The fortune is in the follow-up.", author:"Jim Rohn"},
@@ -978,13 +1217,84 @@ Finn</div>
         ];
 
         let leads=[], logs=[], activities=[], actions=[], queue=[], currentIdx=0;
-        let sessionActive=false, sessionStart=null, sessionTimer=null;
+        let sessionActive=false, sessionStart=null, sessionTimer=null, autosaveTimer=null;
         let sessionData={calls:0,emails:0,meetings:0,callbacks:0};
         let currentLead=null, currentAction=null, selectedOutcome=null;
         let calendarView = 'today';
+        let showOutcomes = false;
+        let dismissedSuggestions = {};
+        let notesDebounceTimer = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', load);
+
+        // ========== LOCALSTORAGE HELPERS - PROBLEM #1 ==========
+        function safeGetStorage(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(`sf_${key}`);
+                if (item === null) return defaultValue;
+                return JSON.parse(item);
+            } catch (e) {
+                console.warn(`localStorage get error for ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetStorage(key, value) {
+            try {
+                localStorage.setItem(`sf_${key}`, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                console.warn(`localStorage set error for ${key}:`, e);
+                return false;
+            }
+        }
+
+        function persistQueueState() {
+            safeSetStorage('queue', queue);
+            safeSetStorage('currentIdx', currentIdx);
+        }
+
+        function persistSessionState() {
+            if (sessionActive) {
+                safeSetStorage('sessionActive', true);
+                safeSetStorage('sessionData', sessionData);
+                safeSetStorage('sessionStart', sessionStart);
+            } else {
+                localStorage.removeItem('sf_sessionActive');
+                localStorage.removeItem('sf_sessionData');
+                localStorage.removeItem('sf_sessionStart');
+            }
+        }
+
+        function restoreFromStorage() {
+            let restored = false;
+            const savedQueue = safeGetStorage('queue');
+            const savedIdx = safeGetStorage('currentIdx', 0);
+            if (savedQueue && Array.isArray(savedQueue) && savedQueue.length > 0) {
+                queue = savedQueue;
+                currentIdx = Math.min(savedIdx, queue.length - 1);
+                restored = true;
+            }
+            const wasSessionActive = safeGetStorage('sessionActive', false);
+            const savedSessionData = safeGetStorage('sessionData');
+            const savedSessionStart = safeGetStorage('sessionStart');
+            if (wasSessionActive && savedSessionData && savedSessionStart) {
+                sessionActive = true;
+                sessionData = savedSessionData;
+                sessionStart = savedSessionStart;
+                restored = true;
+            }
+            dismissedSuggestions = safeGetStorage('dismissedSuggestions', {});
+            return restored;
+        }
+
+        function startAutosave() {
+            if (autosaveTimer) clearInterval(autosaveTimer);
+            autosaveTimer = setInterval(() => {
+                if (sessionActive) persistSessionState();
+            }, CONFIG.AUTOSAVE_INTERVAL);
+        }
 
         async function load() {
             try {
@@ -1001,7 +1311,14 @@ Finn</div>
                 const {data:actns, error:actErr} = await db.from('actions').select('*').order('date',{ascending:true});
                 if (!actErr) actions = actns || [];
 
-                queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,50).map(l => l.id);
+                // Try to restore from localStorage - PROBLEM #1
+                const wasRestored = restoreFromStorage();
+                
+                // If no queue was restored, generate fresh
+                if (queue.length === 0) {
+                    queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,100).map(l => l.id);
+                    persistQueueState();
+                }
                 
                 setDate();
                 setQuote();
@@ -1012,6 +1329,25 @@ Finn</div>
                 renderReports();
                 renderActionsBar();
                 renderCalendar();
+                renderCommandCenter();
+                renderSmartActions();
+                renderForecast();
+                
+                // If session was restored, update UI
+                if (wasRestored && sessionActive) {
+                    const btn = document.getElementById('session-btn');
+                    btn.classList.add('active');
+                    btn.innerHTML = '⏹ End Session';
+                    document.getElementById('session-panel').classList.add('active');
+                    sessionTimer = setInterval(updateTimer, 1000);
+                    updateSession();
+                    startAutosave();
+                    
+                    // Show restored indicator
+                    const indicator = document.getElementById('session-restored');
+                    indicator.style.display = 'flex';
+                    setTimeout(() => { indicator.style.display = 'none'; }, 3000);
+                }
             } catch(e) {
                 console.error(e);
                 toast('❌ Connection failed', 'error');
