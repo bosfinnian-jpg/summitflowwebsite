@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SummitFlow | Actions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;--border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);--text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;--calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);--emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);--success:#10B981;--success-glow:rgba(16,185,129,0.25);--warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);--danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);--purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);--radius:16px;--radius-sm:10px}
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+        
+        .loading{position:fixed;inset:0;background:var(--bg-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s}
+        .loading.hidden{opacity:0;pointer-events:none}
+        .spinner{width:48px;height:48px;border:3px solid var(--surface);border-top-color:var(--calls);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        
+        .nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}
+        .nav-left{display:flex;align-items:center;gap:2rem}
+        .logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
+        .nav-tabs{display:flex;gap:.5rem}
+        .nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}
+        .nav-tab:hover{background:var(--surface);color:var(--text)}
+        .nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}
+        .nav-right{display:flex;align-items:center;gap:.75rem}
+        .sync{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted)}
+        .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+        
+        .main{padding-top:90px;padding-bottom:2rem;max-width:1400px;margin:0 auto;padding-left:2rem;padding-right:2rem}
+        
+        .page-header{margin-bottom:2rem}
+        .page-title{font-size:2.5rem;font-weight:700;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem}
+        .page-subtitle{color:var(--text-secondary);font-size:1.1rem}
+        
+        .stats-bar{display:flex;gap:1.5rem;align-items:center;padding:1.25rem 2rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:2rem}
+        .stat-item{display:flex;align-items:center;gap:.75rem}
+        .stat-value{font-size:1.75rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+        .stat-label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+        .stat-divider{width:1px;height:40px;background:var(--border)}
+        .streak{font-size:1.5rem}
+        
+        .section{margin-bottom:2rem}
+        .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+        .section-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.75rem}
+        .section-badge{background:var(--danger-glow);color:var(--danger);padding:.25rem .75rem;border-radius:50px;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace}
+        .section-badge.warning{background:var(--warning-glow);color:var(--warning)}
+        .section-badge.success{background:var(--success-glow);color:var(--success)}
+        
+        .action-card{background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:1rem;transition:all .2s;position:relative}
+        .action-card:hover{border-color:var(--border-hover);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3)}
+        .action-card.overdue{border-color:var(--danger);background:var(--danger-glow)}
+        .action-card.today{border-color:var(--calls)}
+        .action-card.completed{opacity:.5;border-color:var(--success)}
+        
+        .action-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
+        .action-lead{font-size:1.1rem;font-weight:600;margin-bottom:.25rem;cursor:pointer;color:var(--text)}
+        .action-lead:hover{color:var(--calls)}
+        .action-type{font-size:.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:.5rem}
+        .action-time{font-size:.75rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        .action-overdue-badge{background:var(--danger);color:#fff;padding:.25rem .5rem;border-radius:4px;font-size:.7rem;font-weight:600}
+        
+        .action-contact{display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap}
+        .contact-item{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--text-secondary)}
+        .contact-item a{color:var(--emails);text-decoration:none}
+        .contact-item a:hover{text-decoration:underline}
+        
+        .action-notes{font-size:.9rem;color:var(--text-secondary);margin-bottom:1rem;font-style:italic}
+        
+        .action-buttons{display:flex;gap:.75rem;flex-wrap:wrap}
+        .action-btn{padding:.625rem 1.25rem;font-size:.875rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:none;transition:all .2s;display:flex;align-items:center;gap:.5rem}
+        .action-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff}
+        .action-btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}
+        .action-btn.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+        .action-btn.secondary:hover{border-color:var(--border-hover);background:var(--bg-elevated)}
+        .action-btn.success{background:var(--success-glow);color:var(--success);border:1px solid var(--success)}
+        .action-btn.success:hover{background:var(--success);color:#fff}
+        .action-btn.danger{background:var(--danger-glow);color:var(--danger);border:1px solid var(--danger)}
+        
+        .empty-state{text-align:center;padding:4rem 2rem;color:var(--text-muted)}
+        .empty-icon{font-size:4rem;margin-bottom:1rem;opacity:.5}
+        .empty-title{font-size:1.5rem;font-weight:600;margin-bottom:.5rem;color:var(--text-secondary)}
+        .empty-text{font-size:1rem}
+        
+        .collapsible{cursor:pointer;user-select:none}
+        .collapsible-content{max-height:0;overflow:hidden;transition:max-height .3s ease}
+        .collapsible-content.open{max-height:5000px}
+        .collapsible-arrow{transition:transform .3s;display:inline-block}
+        .collapsible-arrow.open{transform:rotate(90deg)}
+        
+        .fab{position:fixed;bottom:2rem;right:2rem;width:60px;height:60px;background:linear-gradient(135deg,var(--calls),#FF8F6B);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;box-shadow:0 8px 25px var(--calls-glow);z-index:999;transition:all .2s}
+        .fab:hover{transform:scale(1.1);box-shadow:0 12px 35px var(--calls-glow)}
+        
+        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        .toast.error{border-color:var(--danger)}
+        
+        @media(max-width:768px){
+            .main{padding-left:1rem;padding-right:1rem}
+            .stats-bar{flex-wrap:wrap;gap:.75rem}
+            .action-buttons{width:100%}
+            .action-btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div style="color:var(--text-secondary)">Loading actions...</div>
+    </div>
+    
+    <nav class="nav">
+        <div class="nav-left">
+            <a href="#" class="logo">
+                <div class="logo-icon">⚡</div>
+                SummitFlow
+            </a>
+            <div class="nav-tabs">
+                <a href="summitflow-leads-hub-v2.html" class="nav-tab">Leads Hub</a>
+                <a href="summitflow-pipeline-v2.html" class="nav-tab">Pipeline</a>
+                <span class="nav-tab active">Actions</span>
+                <a href="summitflow-dashboard-v2.html" class="nav-tab">Dashboard</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="sync">
+                <div class="sync-dot" id="sync-dot"></div>
+                <span class="sync-text" id="sync-text">Connecting...</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="page-header">
+            <div class="page-title">
+                ⚡ Daily Actions
+                <span id="current-time" style="font-size:1rem;font-weight:400;color:var(--text-muted)"></span>
+            </div>
+            <div class="page-subtitle">Your daily execution command center</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div>
+                    <div class="stat-value" id="stat-today-done">0</div>
+                    <div class="stat-label">Done Today</div>
+                </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div>
+                    <div class="stat-value" id="stat-today-total">0</div>
+                    <div class="stat-label">Total Today</div>
+                </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div>
+                    <div class="stat-value" style="color:var(--danger)" id="stat-overdue">0</div>
+                    <div class="stat-label">Overdue</div>
+                </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div>
+                    <div class="stat-value" id="stat-week-total">0</div>
+                    <div class="stat-label">This Week</div>
+                </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="streak" id="streak">🔥 0</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+
+        <!-- OVERDUE SECTION -->
+        <div class="section" id="overdue-section" style="display:none">
+            <div class="section-header">
+                <div class="section-title">
+                    🔴 OVERDUE
+                    <span class="section-badge" id="overdue-count">0</span>
+                </div>
+            </div>
+            <div id="overdue-list"></div>
+        </div>
+
+        <!-- TODAY SECTION -->
+        <div class="section" id="today-section">
+            <div class="section-header">
+                <div class="section-title">
+                    ⚡ TODAY
+                    <span class="section-badge warning" id="today-count">0</span>
+                </div>
+            </div>
+            <div id="today-list"></div>
+        </div>
+
+        <!-- THIS WEEK SECTION -->
+        <div class="section" id="week-section">
+            <div class="section-header collapsible" onclick="toggleWeek()">
+                <div class="section-title">
+                    <span class="collapsible-arrow" id="week-arrow">▶</span>
+                    📅 THIS WEEK
+                    <span class="section-badge success" id="week-count">0</span>
+                </div>
+            </div>
+            <div class="collapsible-content" id="week-content">
+                <div id="week-list"></div>
+            </div>
+        </div>
+
+        <!-- COMPLETED TODAY SECTION -->
+        <div class="section" id="completed-section" style="display:none">
+            <div class="section-header collapsible" onclick="toggleCompleted()">
+                <div class="section-title">
+                    <span class="collapsible-arrow" id="completed-arrow">▶</span>
+                    ✅ COMPLETED TODAY
+                    <span class="section-badge success" id="completed-count">0</span>
+                </div>
+            </div>
+            <div class="collapsible-content" id="completed-content">
+                <div id="completed-list"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="fab" onclick="window.location='summitflow-pipeline-v2.html'" title="Add Action">+</div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeG1lb2V1Z3ltbGdhZGFqd21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NTcxNjEsImV4cCI6MjA4MzAzMzE2MX0.ciWAoTstogM4MWrK73q9VasVWECa9kucCoHlgkyHLIw';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let actions = [];
+        let leads = [];
+        
+        document.addEventListener('DOMContentLoaded', load);
+        
+        async function load() {
+            try {
+                sync('syncing', 'Loading...');
+                
+                // Load actions
+                const {data: acts, error: e1} = await db.from('actions').select('*').order('date', {ascending: true});
+                if (e1) throw e1;
+                actions = acts || [];
+                
+                // Load leads
+                const {data: lds, error: e2} = await db.from('leads').select('*');
+                if (e2) throw e2;
+                leads = lds || [];
+                
+                console.log('Loaded:', actions.length, 'actions,', leads.length, 'leads');
+                
+                updateTime();
+                setInterval(updateTime, 60000);
+                
+                render();
+                hide();
+                sync('ok', 'Connected');
+            } catch(e) {
+                console.error(e);
+                sync('error', 'Error');
+                toast('❌ Connection failed', 'error');
+                hide();
+            }
+        }
+        
+        function hide() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+        
+        function sync(s, t) {
+            const d = document.getElementById('sync-dot');
+            const x = document.getElementById('sync-text');
+            d.className = 'sync-dot';
+            if (s === 'syncing') d.style.animation = 'pulse 1s infinite';
+            if (s === 'error') d.style.background = 'var(--danger)';
+            x.textContent = t;
+        }
+        
+        function updateTime() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
+            const day = now.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'});
+            document.getElementById('current-time').textContent = `${day} ${time}`;
+        }
+        
+        function getToday() {
+            return new Date().toISOString().split('T')[0];
+        }
+        
+        function render() {
+            const today = getToday();
+            
+            // Categorize actions
+            const overdue = actions.filter(a => a.status === 'planned' && a.date < today);
+            const todayActions = actions.filter(a => a.status === 'planned' && a.date === today);
+            const weekActions = actions.filter(a => {
+                const actionDate = new Date(a.date);
+                const todayDate = new Date(today);
+                const daysDiff = Math.floor((actionDate - todayDate) / (1000 * 60 * 60 * 24));
+                return a.status === 'planned' && daysDiff > 0 && daysDiff <= 7;
+            });
+            const completedToday = actions.filter(a => a.status === 'completed' && a.date === today);
+            
+            // Update stats
+            document.getElementById('stat-today-done').textContent = completedToday.length;
+            document.getElementById('stat-today-total').textContent = todayActions.length;
+            document.getElementById('stat-overdue').textContent = overdue.length;
+            document.getElementById('stat-week-total').textContent = weekActions.length;
+            
+            // Calculate streak (simplified - just shows if completed actions today)
+            document.getElementById('streak').textContent = completedToday.length > 0 ? '🔥 1' : '💤 0';
+            
+            // Render sections
+            renderOverdue(overdue);
+            renderToday(todayActions);
+            renderWeek(weekActions);
+            renderCompleted(completedToday);
+        }
+        
+        function renderOverdue(overdueActions) {
+            const section = document.getElementById('overdue-section');
+            const list = document.getElementById('overdue-list');
+            const count = document.getElementById('overdue-count');
+            
+            if (overdueActions.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            count.textContent = overdueActions.length;
+            
+            list.innerHTML = overdueActions.map(a => renderActionCard(a, true)).join('');
+        }
+        
+        function renderToday(todayActions) {
+            const list = document.getElementById('today-list');
+            const count = document.getElementById('today-count');
+            
+            count.textContent = todayActions.length;
+            
+            if (todayActions.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎉</div>
+                        <div class="empty-title">No actions for today!</div>
+                        <div class="empty-text">Either you're caught up, or you need to plan your day</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = todayActions.map(a => renderActionCard(a, false)).join('');
+        }
+        
+        function renderWeek(weekActions) {
+            const list = document.getElementById('week-list');
+            const count = document.getElementById('week-count');
+            
+            count.textContent = weekActions.length;
+            
+            if (weekActions.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="padding:2rem"><div class="empty-text">No actions scheduled this week</div></div>';
+                return;
+            }
+            
+            list.innerHTML = weekActions.map(a => renderActionCard(a, false)).join('');
+        }
+        
+        function renderCompleted(completedActions) {
+            const section = document.getElementById('completed-section');
+            const list = document.getElementById('completed-list');
+            const count = document.getElementById('completed-count');
+            
+            if (completedActions.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            count.textContent = completedActions.length;
+            
+            list.innerHTML = completedActions.map(a => renderActionCard(a, false, true)).join('');
+        }
+        
+        function renderActionCard(action, isOverdue, isCompleted = false) {
+            const lead = leads.find(l => l.id === action.lead_id);
+            if (!lead) return '';
+            
+            const today = getToday();
+            const daysDiff = Math.floor((new Date(today) - new Date(action.date)) / (1000 * 60 * 60 * 24));
+            const overdueDays = daysDiff > 0 ? daysDiff : 0;
+            
+            const typeIcon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[action.type] || '📋';
+            const typeName = {call: 'Call', email: 'Email', follow_up: 'Follow-up', meeting: 'Meeting'}[action.type] || action.type;
+            
+            const cardClass = isCompleted ? 'action-card completed' : isOverdue ? 'action-card overdue' : 'action-card today';
+            
+            return `
+                <div class="${cardClass}">
+                    <div class="action-header">
+                        <div>
+                            <div class="action-lead" onclick="openLead('${lead.id}')">${lead.company}</div>
+                            <div class="action-type">${typeIcon} ${typeName} ${action.time ? 'at ' + action.time : ''}</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div class="action-time">${formatDate(action.date)}</div>
+                            ${isOverdue ? `<div class="action-overdue-badge">${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="action-contact">
+                        ${lead.phone ? `<div class="contact-item">📞 <a href="tel:${lead.phone}">${lead.phone}</a></div>` : ''}
+                        ${lead.email ? `<div class="contact-item">📧 <a href="mailto:${lead.email}">${lead.email}</a></div>` : ''}
+                        ${lead.contact ? `<div class="contact-item">👤 ${lead.contact}</div>` : ''}
+                    </div>
+                    
+                    ${action.notes ? `<div class="action-notes">"${action.notes}"</div>` : ''}
+                    
+                    ${!isCompleted ? `
+                        <div class="action-buttons">
+                            ${action.type === 'call' && lead.phone ? `
+                                <button class="action-btn primary" onclick="handleCall('${action.id}', '${lead.phone}')">
+                                    📞 CALL NOW
+                                </button>
+                            ` : ''}
+                            ${action.type === 'email' && lead.email ? `
+                                <button class="action-btn primary" onclick="handleEmail('${action.id}', '${lead.email}', '${lead.contact || lead.company}')">
+                                    ✉️ COMPOSE
+                                </button>
+                            ` : ''}
+                            <button class="action-btn success" onclick="completeAction('${action.id}')">
+                                ✓ Done
+                            </button>
+                            <button class="action-btn secondary" onclick="rescheduleAction('${action.id}')">
+                                ⏰ Reschedule
+                            </button>
+                            <button class="action-btn secondary" onclick="skipAction('${action.id}')">
+                                Skip
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            if (dateStr === today.toISOString().split('T')[0]) return 'Today';
+            if (dateStr === tomorrow.toISOString().split('T')[0]) return 'Tomorrow';
+            
+            const daysDiff = Math.floor((date - today) / (1000 * 60 * 60 * 24));
+            if (daysDiff < 0) return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
+            if (daysDiff < 7) return date.toLocaleDateString('en-GB', {weekday: 'long'});
+            
+            return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
+        }
+        
+        function handleCall(actionId, phone) {
+            // Copy to clipboard
+            navigator.clipboard.writeText(phone).then(() => {
+                toast(`📋 ${phone} copied to clipboard!`);
+            });
+            
+            // Try to open phone link (works on mobile)
+            window.location.href = `tel:${phone}`;
+        }
+        
+        function handleEmail(actionId, email, name) {
+            const subject = encodeURIComponent(`Following up - SummitFlow`);
+            const body = encodeURIComponent(`Hi ${name},\n\n`);
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`, '_blank');
+            
+            toast('✉️ Gmail compose opened');
+        }
+        
+        async function completeAction(actionId) {
+            try {
+                const {error} = await db.from('actions').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', actionId);
+                
+                if (error) throw error;
+                
+                const action = actions.find(a => a.id === actionId);
+                if (action) action.status = 'completed';
+                
+                toast('✅ Action completed!');
+                render();
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        async function skipAction(actionId) {
+            try {
+                const {error} = await db.from('actions').update({
+                    status: 'skipped'
+                }).eq('id', actionId);
+                
+                if (error) throw error;
+                
+                const action = actions.find(a => a.id === actionId);
+                if (action) action.status = 'skipped';
+                
+                toast('⏭️ Action skipped');
+                render();
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        async function rescheduleAction(actionId) {
+            const newDate = prompt('Reschedule to (YYYY-MM-DD):');
+            if (!newDate) return;
+            
+            try {
+                const {error} = await db.from('actions').update({
+                    date: newDate
+                }).eq('id', actionId);
+                
+                if (error) throw error;
+                
+                const action = actions.find(a => a.id === actionId);
+                if (action) action.date = newDate;
+                
+                toast('⏰ Action rescheduled');
+                render();
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        function openLead(leadId) {
+            window.location = `summitflow-pipeline-v2.html?lead=${leadId}`;
+        }
+        
+        function toggleWeek() {
+            const content = document.getElementById('week-content');
+            const arrow = document.getElementById('week-arrow');
+            content.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+        
+        function toggleCompleted() {
+            const content = document.getElementById('completed-content');
+            const arrow = document.getElementById('completed-arrow');
+            content.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+        
+        function toast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (type ? ' ' + type : '');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
