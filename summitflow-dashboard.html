@@ -2735,12 +2735,15 @@ if (typeof module !== 'undefined' && module.exports) {
             sessionStart = Date.now();
             sessionData = {calls:0, emails:0, meetings:0, callbacks:0};
             
-            // Create session in database (non-blocking)
+            // Create session in database
+            console.log('Creating session in database...');
             try {
                 const session = await SummitFlowDB.startSession('calling');
                 currentSessionId = session.id;
+                console.log('✅ Session created in DB:', session.id);
             } catch (e) {
-                console.warn('Could not create DB session:', e);
+                console.error('❌ Could not create DB session:', e);
+                console.error('Error details:', e.message, e.stack);
             }
             
             const btn = document.getElementById('session-btn');
@@ -2770,16 +2773,27 @@ if (typeof module !== 'undefined' && module.exports) {
             
             try {
                 // Save session to database
+                console.log('Ending session...', {
+                    sessionId: currentSessionId,
+                    calls: sessionData.calls,
+                    meetings: sessionData.meetings,
+                    callbacks: sessionData.callbacks
+                });
+                
                 if (currentSessionId) {
                     try {
-                        await SummitFlowDB.endSession(currentSessionId, {
+                        const result = await SummitFlowDB.endSession(currentSessionId, {
                             calls_attempted: sessionData.calls,
                             meetings_booked: sessionData.meetings,
                             callbacks_scheduled: sessionData.callbacks
                         });
+                        console.log('✅ Session saved to DB:', result);
                     } catch (e) {
-                        console.warn('Could not save session:', e);
+                        console.error('❌ Could not save session:', e);
+                        console.error('Error details:', e.message, e.stack);
                     }
+                } else {
+                    console.warn('⚠️ No currentSessionId - session not saved to DB');
                 }
                 
                 // Also save to daily_logs
