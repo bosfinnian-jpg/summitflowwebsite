@@ -3305,48 +3305,64 @@ if (typeof module !== 'undefined' && module.exports) {
         
         
         async function nuclearReset() {
-            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n\nThis CANNOT be undone!')) return;
-            if (!confirm('Are you ABSOLUTELY SURE? Type YES in your head.')) return;
+            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n- Clear localStorage\n\nThis CANNOT be undone!')) return;
+            if (!confirm('Are you ABSOLUTELY SURE?')) return;
             
             console.log('☢️ Starting nuclear reset...');
             toast('☢️ Resetting everything...');
             
             try {
-                // Delete all activities
-                await db.from('activities').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Activities deleted');
+                // 1. Delete all activities
+                const {data: acts} = await db.from('activities').select('id');
+                if (acts && acts.length > 0) {
+                    await db.from('activities').delete().in('id', acts.map(a => a.id));
+                    console.log('✅ Activities deleted:', acts.length);
+                } else {
+                    console.log('✅ No activities to delete');
+                }
                 
-                // Delete all sessions
-                await db.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Sessions deleted');
+                // 2. Delete all sessions
+                const {data: sess} = await db.from('sessions').select('id');
+                if (sess && sess.length > 0) {
+                    await db.from('sessions').delete().in('id', sess.map(s => s.id));
+                    console.log('✅ Sessions deleted:', sess.length);
+                } else {
+                    console.log('✅ No sessions to delete');
+                }
                 
-                // Delete all callbacks
-                await db.from('callbacks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Callbacks deleted');
+                // 3. Delete all callbacks
+                const {data: cbs} = await db.from('callbacks').select('id');
+                if (cbs && cbs.length > 0) {
+                    await db.from('callbacks').delete().in('id', cbs.map(c => c.id));
+                    console.log('✅ Callbacks deleted:', cbs.length);
+                } else {
+                    console.log('✅ No callbacks to delete');
+                }
                 
-                // Reset all lead stats
-                await db.from('leads').update({
-                    activity_count: 0,
-                    last_activity: null,
-                    last_activity_type: null,
-                    last_activity_outcome: null
-                }).neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Lead stats reset');
+                // 4. Reset all leads (get IDs first, then update in batches)
+                const {data: allLeads} = await db.from('leads').select('id');
+                console.log('Resetting', allLeads.length, 'leads...');
                 
-                // Clear localStorage
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('sf_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-                console.log('✅ localStorage cleared');
+                for (const lead of allLeads) {
+                    await db.from('leads').update({
+                        activity_count: 0,
+                        last_activity: null,
+                        last_activity_type: null,
+                        last_activity_outcome: null
+                    }).eq('id', lead.id);
+                }
+                console.log('✅ All lead stats reset');
+                
+                // 5. Clear ALL localStorage (not just sf_ keys)
+                localStorage.clear();
+                console.log('✅ localStorage COMPLETELY cleared');
                 
                 toast('☢️ Reset complete! Refreshing...');
-                console.log('✅ NUCLEAR RESET COMPLETE');
-                setTimeout(() => location.reload(), 1500);
+                console.log('✅ NUCLEAR RESET COMPLETE - Page will refresh in 1 second');
+                setTimeout(() => location.reload(), 1000);
             } catch(e) {
                 console.error('❌ Reset failed:', e);
-                toast('❌ Failed: ' + e.message, 'error');
+                alert('Reset failed: ' + e.message);
             }
         }
         
