@@ -3246,5 +3246,111 @@ if (typeof module !== 'undefined' && module.exports) {
             document.getElementById('shortcuts-modal').classList.add('active');
         }
     </script>
+
+        <!-- Developer Tools Panel -->
+        <div style="position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:2px solid var(--border);border-radius:12px;padding:1rem;z-index:9999;display:none" id="dev-tools">
+            <div style="font-weight:600;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center">
+                <span>🛠️ Dev Tools</span>
+                <button onclick="document.getElementById('dev-tools').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem">×</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem">
+                <button class="btn" onclick="resetAllActivityCounts()" style="font-size:0.8rem">🔄 Recalculate All Counts</button>
+                <button class="btn" onclick="clearAllActivities()" style="font-size:0.8rem;background:var(--danger-glow);border-color:var(--danger)">🗑️ Delete All Activities</button>
+                <button class="btn" onclick="showDataSummary()" style="font-size:0.8rem">📊 Show Data Summary</button>
+                <button class="btn" onclick="location.reload()" style="font-size:0.8rem">♻️ Refresh Page</button>
+            </div>
+        </div>
+        
+        <!-- Dev Tools Toggle Button -->
+        <button onclick="document.getElementById('dev-tools').style.display='block'" 
+                style="position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;background:var(--surface);border:2px solid var(--border);color:var(--text);cursor:pointer;font-size:1.2rem;z-index:9998;display:flex;align-items:center;justify-content:center"
+                title="Developer Tools">
+            🛠️
+        </button>
+
+    <script>
+
+        // Developer Tools Functions
+        async function resetAllActivityCounts() {
+            if (!confirm('Recalculate activity counts for all leads?')) return;
+            sync('syncing', 'Recalculating...');
+            try {
+                // Get all activities grouped by lead
+                const {data: activities} = await db.from('activities').select('lead_id');
+                const counts = {};
+                activities.forEach(a => {
+                    counts[a.lead_id] = (counts[a.lead_id] || 0) + 1;
+                });
+                
+                // Update each lead
+                let updated = 0;
+                for (const [leadId, count] of Object.entries(counts)) {
+                    await db.from('leads').update({activity_count: count}).eq('id', leadId);
+                    updated++;
+                }
+                
+                // Reset leads with no activities
+                await db.from('leads').update({activity_count: 0}).is('activity_count', null);
+                
+                sync('ok', 'Done');
+                toast(`✅ Reset ${updated} leads`);
+                setTimeout(() => location.reload(), 1000);
+            } catch(e) {
+                console.error(e);
+                sync('error', 'Failed');
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        async function clearAllActivities() {
+            if (!confirm('⚠️ DELETE ALL ACTIVITIES? This cannot be undone!')) return;
+            if (!confirm('Are you REALLY sure? This will delete all call logs!')) return;
+            
+            sync('syncing', 'Deleting...');
+            try {
+                const {data} = await db.from('activities').select('id');
+                await db.from('activities').delete().in('id', data.map(a => a.id));
+                await db.from('leads').update({activity_count: 0, last_activity: null, last_activity_type: null, last_activity_outcome: null});
+                
+                sync('ok', 'Deleted');
+                toast('🗑️ All activities deleted');
+                setTimeout(() => location.reload(), 1000);
+            } catch(e) {
+                console.error(e);
+                sync('error', 'Failed');
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        async function showDataSummary() {
+            try {
+                const {data: leadData} = await db.from('leads').select('id, company, activity_count');
+                const {data: actData} = await db.from('activities').select('lead_id');
+                const {data: sessData} = await db.from('sessions').select('calls_attempted');
+                
+                const totalLeads = leadData.length;
+                const leadsWithActivities = leadData.filter(l => (l.activity_count || 0) > 0).length;
+                const totalActivities = actData.length;
+                const totalCalls = sessData.reduce((sum, s) => sum + (s.calls_attempted || 0), 0);
+                
+                console.log('📊 DATA SUMMARY');
+                console.log('===============');
+                console.log('Total Leads:', totalLeads);
+                console.log('Leads with Activities:', leadsWithActivities);
+                console.log('Total Activities in DB:', totalActivities);
+                console.log('Total Calls from Sessions:', totalCalls);
+                console.log('\nLeads with activity_count > 0:');
+                leadData.filter(l => l.activity_count > 0).forEach(l => {
+                    console.log(`  ${l.company}: ${l.activity_count}`);
+                });
+                
+                toast(`📊 ${totalLeads} leads, ${totalActivities} activities - Check console`);
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
+            }
+        }
+
+    </script>
 </body>
 </html>
