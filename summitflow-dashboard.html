@@ -513,6 +513,7 @@
             <div class="nav-tabs">
                 <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
                 <a href="summitflow-pipeline.html" class="nav-tab">Pipeline</a>
+                <a href="summitflow-actions.html" class="nav-tab">Actions</a>
                 <span class="nav-tab active">Dashboard</span>
             </div>
         </div>
@@ -1175,606 +1176,6 @@ Finn</div>
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
-    
-    <!-- SummitFlow Database Module -->
-    <script>
-// =====================================================
-// SUMMITFLOW DATABASE MODULE
-// Shared database operations for all three apps
-// Save this as: summitflow-db.js
-// =====================================================
-
-// NOTE: This uses the global 'db' variable (Supabase client)
-// Each HTML file should have: const supabase = window.supabase.createClient(url, key)
-
-const SummitFlowDB = {
-  
-  // =====================================================
-  // LEADS OPERATIONS
-  // =====================================================
-  
-  /**
-   * Get leads for calling queue
-   * @param {Object} options - Filter options
-   * @param {number} options.limit - Max leads to return
-   * @param {string} options.stage - Filter by stage
-   * @param {string} options.priority - Filter by priority
-   * @param {boolean} options.uncontacted - Only leads with no activities
-   * @returns {Array} Array of lead objects
-   */
-  async getLeadsForQueue(options = {}) {
-    const {
-      limit = 100,
-      stage = null,
-      priority = null,
-      uncontacted = false
-    } = options;
-    
-    let query = db
-      .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    // Filter by stage
-    if (stage) {
-      query = query.eq('stage', stage);
-    } else {
-      // Default: only prospecting and outreach stages
-      query = query.in('stage', ['prospecting', 'outreach']);
-    }
-    
-    // Filter by priority
-    if (priority) {
-      query = query.eq('priority', priority);
-    }
-    
-    // Filter uncontacted
-    if (uncontacted) {
-      query = query.eq('activity_count', 0);
-    }
-    
-    query = query.limit(limit);
-    
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching leads:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  /**
-   * Get a single lead by ID with all related data
-   */
-  async getLeadById(leadId) {
-    const { data, error } = await db
-      .from('leads')
-      .select(`
-        *,
-        activities (
-          id,
-          type,
-          outcome,
-          notes,
-          created_at,
-          callback_scheduled
-        ),
-        callbacks (
-          id,
-          scheduled_for,
-          reason,
-          completed,
-          priority
-        )
-      `)
-      .eq('id', leadId)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching lead:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * Update lead stage
-   */
-  async updateLeadStage(leadId, newStage) {
-    const { data, error } = await db
-      .from('leads')
-      .update({ stage: newStage })
-      .eq('id', leadId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating lead stage:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * Update lead priority
-   */
-  async updateLeadPriority(leadId, priority) {
-    const { data, error } = await db
-      .from('leads')
-      .update({ priority })
-      .eq('id', leadId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating lead priority:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * Set next action for lead
-   */
-  async setNextAction(leadId, action, actionDate = null) {
-    const { data, error } = await db
-      .from('leads')
-      .update({ 
-        next_action: action,
-        next_action_date: actionDate 
-      })
-      .eq('id', leadId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error setting next action:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  // =====================================================
-  // ACTIVITY OPERATIONS
-  // =====================================================
-  
-  /**
-   * Log an activity (call, email, meeting, note)
-   * This is the CRITICAL function that your Dashboard needs
-   */
-  async logActivity(leadId, type, outcome = null, notes = null, additionalData = {}) {
-    const activityData = {
-      lead_id: leadId,
-      type, // 'call', 'email', 'meeting', 'note'
-      outcome, // 'no_answer', 'voicemail', 'interested', 'callback', 'meeting', 'not_interested'
-      notes,
-      ...additionalData
-    };
-    
-    const { data, error } = await db
-      .from('activities')
-      .insert(activityData)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error logging activity:', error);
-      throw error;
-    }
-    
-    // Trigger will automatically update lead's activity_count, last_activity, etc.
-    return data;
-  },
-  
-  /**
-   * Get activities for a lead
-   */
-  async getLeadActivities(leadId, limit = 50) {
-    const { data, error } = await db
-      .from('activities')
-      .select('*')
-      .eq('lead_id', leadId)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    
-    if (error) {
-      console.error('Error fetching activities:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  /**
-   * Get recent activities across all leads (for analytics)
-   */
-  async getRecentActivities(limit = 100) {
-    const { data, error } = await db
-      .from('activities')
-      .select(`
-        *,
-        leads (company, contact)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    
-    if (error) {
-      console.error('Error fetching recent activities:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  // =====================================================
-  // SESSION OPERATIONS
-  // =====================================================
-  
-  /**
-   * Start a new session
-   */
-  async startSession(sessionType = 'calling') {
-    const { data, error } = await db
-      .from('sessions')
-      .insert({
-        start_time: new Date().toISOString(),
-        session_type: sessionType
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error starting session:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * Update session stats (call this during session)
-   */
-  async updateSession(sessionId, stats) {
-    const { data, error } = await db
-      .from('sessions')
-      .update(stats)
-      .eq('id', sessionId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating session:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * End a session
-   */
-  async endSession(sessionId, finalStats) {
-    const endTime = new Date();
-    const { data: session } = await db
-      .from('sessions')
-      .select('start_time')
-      .eq('id', sessionId)
-      .single();
-    
-    const startTime = new Date(session.start_time);
-    const duration = Math.round((endTime - startTime) / 60000); // minutes
-    
-    const { data, error } = await db
-      .from('sessions')
-      .update({
-        ...finalStats,
-        end_time: endTime.toISOString(),
-        duration
-      })
-      .eq('id', sessionId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error ending session:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * Get recent sessions
-   */
-  async getRecentSessions(limit = 10) {
-    const { data, error } = await db
-      .from('sessions')
-      .select('*')
-      .order('start_time', { ascending: false })
-      .limit(limit);
-    
-    if (error) {
-      console.error('Error fetching sessions:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  // =====================================================
-  // CALLBACK OPERATIONS
-  // =====================================================
-  
-  /**
-   * Schedule a callback
-   */
-  async scheduleCallback(leadId, scheduledFor, reason = null, priority = 'medium', activityId = null) {
-    const { data, error } = await db
-      .from('callbacks')
-      .insert({
-        lead_id: leadId,
-        activity_id: activityId,
-        scheduled_for: scheduledFor,
-        reason,
-        priority
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error scheduling callback:', error);
-      throw error;
-    }
-    
-    // Also update lead's next_action
-    await this.setNextAction(leadId, 'callback', scheduledFor);
-    
-    return data;
-  },
-  
-  /**
-   * Complete a callback
-   */
-  async completeCallback(callbackId, outcome = null) {
-    const { data, error } = await db
-      .from('callbacks')
-      .update({
-        completed: true,
-        completed_at: new Date().toISOString(),
-        outcome
-      })
-      .eq('id', callbackId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error completing callback:', error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  /**
-   * Get overdue callbacks
-   */
-  async getOverdueCallbacks() {
-    const { data, error } = await db
-      .from('overdue_callbacks')
-      .select('*');
-    
-    if (error) {
-      console.error('Error fetching overdue callbacks:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  /**
-   * Get today's callbacks
-   */
-  async getTodaysCallbacks() {
-    const { data, error } = await db
-      .from('todays_callbacks')
-      .select('*');
-    
-    if (error) {
-      console.error('Error fetching today\'s callbacks:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  /**
-   * Get pending callbacks for a lead
-   */
-  async getLeadCallbacks(leadId, pendingOnly = true) {
-    let query = db
-      .from('callbacks')
-      .select('*')
-      .eq('lead_id', leadId)
-      .order('scheduled_for', { ascending: true });
-    
-    if (pendingOnly) {
-      query = query.eq('completed', false);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching lead callbacks:', error);
-      throw error;
-    }
-    
-    return data || [];
-  },
-  
-  // =====================================================
-  // ANALYTICS & REPORTING
-  // =====================================================
-  
-  /**
-   * Get call outcomes breakdown
-   */
-  async getCallOutcomes(startDate = null, endDate = null) {
-    let query = db
-      .from('activities')
-      .select('outcome')
-      .eq('type', 'call');
-    
-    if (startDate) {
-      query = query.gte('created_at', startDate);
-    }
-    if (endDate) {
-      query = query.lte('created_at', endDate);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching call outcomes:', error);
-      throw error;
-    }
-    
-    // Count outcomes
-    const outcomes = {};
-    data.forEach(activity => {
-      const outcome = activity.outcome || 'unknown';
-      outcomes[outcome] = (outcomes[outcome] || 0) + 1;
-    });
-    
-    return outcomes;
-  },
-  
-  /**
-   * Get conversion rates
-   */
-  async getConversionStats(startDate = null) {
-    let query = db
-      .from('activities')
-      .select('type, outcome');
-    
-    if (startDate) {
-      query = query.gte('created_at', startDate);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching conversion stats:', error);
-      throw error;
-    }
-    
-    const stats = {
-      total_calls: 0,
-      connected: 0,
-      interested: 0,
-      meetings: 0,
-      conversion_rate: 0
-    };
-    
-    data.forEach(activity => {
-      if (activity.type === 'call') {
-        stats.total_calls++;
-        if (activity.outcome && activity.outcome !== 'no_answer' && activity.outcome !== 'voicemail') {
-          stats.connected++;
-        }
-        if (activity.outcome === 'interested') {
-          stats.interested++;
-        }
-        if (activity.outcome === 'meeting') {
-          stats.meetings++;
-        }
-      }
-    });
-    
-    if (stats.total_calls > 0) {
-      stats.conversion_rate = ((stats.meetings / stats.total_calls) * 100).toFixed(2);
-    }
-    
-    return stats;
-  },
-  
-  // =====================================================
-  // REALTIME SUBSCRIPTIONS
-  // =====================================================
-  
-  /**
-   * Subscribe to lead changes
-   */
-  subscribeToLeads(callback) {
-    const channel = db
-      .channel('leads-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'leads' },
-        (payload) => {
-          callback(payload);
-        }
-      )
-      .subscribe();
-    
-    return channel;
-  },
-  
-  /**
-   * Subscribe to activity changes
-   */
-  subscribeToActivities(callback) {
-    const channel = db
-      .channel('activities-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'activities' },
-        (payload) => {
-          callback(payload);
-        }
-      )
-      .subscribe();
-    
-    return channel;
-  },
-  
-  /**
-   * Subscribe to callback changes
-   */
-  subscribeToCallbacks(callback) {
-    const channel = db
-      .channel('callbacks-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'callbacks' },
-        (payload) => {
-          callback(payload);
-        }
-      )
-      .subscribe();
-    
-    return channel;
-  },
-  
-  /**
-   * Unsubscribe from a channel
-   */
-  async unsubscribe(channel) {
-    await db.removeChannel(channel);
-  }
-};
-
-// Export for use in modules or make available globally
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = SummitFlowDB;
-} else {
-  window.SummitFlowDB = SummitFlowDB;
-}
-
-    </script>
-    
     <script>
         // ========== SUPABASE CONFIG ==========
         const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
@@ -1822,7 +1223,6 @@ if (typeof module !== 'undefined' && module.exports) {
         let currentLead=null, currentAction=null, selectedOutcome=null;
         let calendarView = 'today';
         let showOutcomes = false;
-        let currentSessionId = null;
         let dismissedSuggestions = {};
         let notesDebounceTimer = null;
 
@@ -1861,12 +1261,10 @@ if (typeof module !== 'undefined' && module.exports) {
                 safeSetStorage('sessionActive', true);
                 safeSetStorage('sessionData', sessionData);
                 safeSetStorage('sessionStart', sessionStart);
-                safeSetStorage('currentSessionId', currentSessionId);
             } else {
                 localStorage.removeItem('sf_sessionActive');
                 localStorage.removeItem('sf_sessionData');
                 localStorage.removeItem('sf_sessionStart');
-                localStorage.removeItem('sf_currentSessionId');
             }
         }
 
@@ -1882,16 +1280,10 @@ if (typeof module !== 'undefined' && module.exports) {
             const wasSessionActive = safeGetStorage('sessionActive', false);
             const savedSessionData = safeGetStorage('sessionData');
             const savedSessionStart = safeGetStorage('sessionStart');
-            const savedSessionId = safeGetStorage('currentSessionId');
             if (wasSessionActive && savedSessionData && savedSessionStart) {
                 sessionActive = true;
                 sessionData = savedSessionData;
                 sessionStart = savedSessionStart;
-                currentSessionId = savedSessionId; // Restore the session ID
-                console.log('Restored session from localStorage:', {
-                    sessionId: currentSessionId,
-                    calls: sessionData.calls
-                });
                 restored = true;
             }
             dismissedSuggestions = safeGetStorage('dismissedSuggestions', {});
@@ -1905,112 +1297,7 @@ if (typeof module !== 'undefined' && module.exports) {
             }, CONFIG.AUTOSAVE_INTERVAL);
         }
 
-        
-    // ============================================
-    // REAL-TIME SYNC MODULE
-    // ============================================
-    // Listens for database changes and updates UI automatically
-    
-    let realtimeChannel = null;
-    
-    function setupRealtime() {
-        // Subscribe to leads table changes
-        realtimeChannel = db.channel('summitflow-sync')
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'leads' }, 
-                handleLeadChange
-            )
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'activities' }, 
-                handleActivityChange
-            )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('✅ Real-time sync active');
-                }
-            });
-    }
-    
-    function handleLeadChange(payload) {
-        console.log('Lead changed:', payload.eventType, payload.new?.company || payload.old?.company);
-        
-        if (payload.eventType === 'INSERT') {
-            // New lead added
-            const newLead = payload.new;
-            if (!leads.find(l => l.id === newLead.id)) {
-                newLead.activityCount = newLead.activity_count || 0;
-                newLead.activities = [];
-                leads.unshift(newLead);
-                render ? render() : renderTable();
-                stats ? stats() : renderStats();
-                toast('✨ New lead added');
-            }
-        } else if (payload.eventType === 'UPDATE') {
-            // Lead updated
-            const updated = payload.new;
-            const lead = leads.find(l => l.id === updated.id);
-            if (lead) {
-                Object.assign(lead, updated);
-                lead.activityCount = updated.activity_count || lead.activityCount || 0;
-                render ? render() : renderTable();
-                stats ? stats() : renderStats();
-            }
-        } else if (payload.eventType === 'DELETE') {
-            // Lead deleted
-            const index = leads.findIndex(l => l.id === payload.old.id);
-            if (index !== -1) {
-                leads.splice(index, 1);
-                render ? render() : renderTable();
-                stats ? stats() : renderStats();
-                toast('🗑️ Lead deleted');
-            }
-        }
-    }
-    
-    function handleActivityChange(payload) {
-        console.log('Activity changed:', payload.eventType);
-        
-        if (payload.eventType === 'INSERT') {
-            // New activity logged
-            const activity = payload.new;
-            const lead = leads.find(l => l.id === activity.lead_id);
-            if (lead) {
-                // Add to activities array
-                if (!lead.activities) lead.activities = [];
-                lead.activities.unshift(activity);
-                
-                // Update count (will be corrected by next lead update from trigger)
-                lead.activityCount = (lead.activityCount || 0) + 1;
-                
-                // Re-render
-                render ? render() : renderTable();
-                
-                // If modal is open for this lead, update timeline
-                if (typeof renderTimeline === 'function' && currentId === lead.id) {
-                    renderTimeline(lead);
-                }
-            }
-        }
-    }
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (realtimeChannel) {
-            db.removeChannel(realtimeChannel);
-        }
-    });
-
-
         async function load() {
-            // Verify SummitFlowDB is loaded
-            if (typeof SummitFlowDB === 'undefined') {
-                console.error('CRITICAL: SummitFlowDB module not loaded!');
-                toast('❌ Database module not loaded', 'error');
-                return;
-            } else {
-                console.log('✅ SummitFlowDB module loaded successfully');
-            }
-
             try {
                 const {data:ld} = await db.from('leads').select('*').order('created_at',{ascending:false});
                 leads = ld || [];
@@ -2029,11 +1316,8 @@ if (typeof module !== 'undefined' && module.exports) {
                 const wasRestored = restoreFromStorage();
                 
                 // If no queue was restored, generate fresh
-                if (queue.length === 0 && leads.length > 0) {
-                    queue = leads.filter(l => 
-                        l.stage !== 'won' && l.stage !== 'lost' // Exclude only won/lost
-                    ).slice(0,100).map(l => l.id);
-                    console.log('Queue generated:', queue.length, 'leads');
+                if (queue.length === 0) {
+                    queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,100).map(l => l.id);
                     persistQueueState();
                 }
                 
@@ -2049,7 +1333,6 @@ if (typeof module !== 'undefined' && module.exports) {
                 renderCommandCenter();
                 renderSmartActions();
                 renderForecast();
-                setupRealtime();
                 
                 // If session was restored, update UI
                 if (wasRestored && sessionActive) {
@@ -2491,7 +1774,7 @@ if (typeof module !== 'undefined' && module.exports) {
                 if (selectedOutcome === 'meeting') {
                     const lead = leads.find(l => l.id === currentAction.lead_id);
                     if (lead) {
-                        await db.from('leads').update({stage: 'meeting', last_activity: new Date().toISOString()}).eq('id', lead.id);
+                        await db.from('leads').update({stage: 'meeting', last_activity_at: new Date().toISOString()}).eq('id', lead.id);
                         lead.stage = 'meeting';
                         celebrate();
                         toast('🎉 Meeting booked!');
@@ -2500,7 +1783,7 @@ if (typeof module !== 'undefined' && module.exports) {
                 } else if (selectedOutcome === 'interested') {
                     const lead = leads.find(l => l.id === currentAction.lead_id);
                     if (lead && (lead.stage === 'prospecting' || lead.stage === 'outreach')) {
-                        await db.from('leads').update({stage: 'interested', last_activity: new Date().toISOString()}).eq('id', lead.id);
+                        await db.from('leads').update({stage: 'interested', last_activity_at: new Date().toISOString()}).eq('id', lead.id);
                         lead.stage = 'interested';
                     }
                     toast('🔥 Interested!');
@@ -2750,34 +2033,17 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         async function logOutcome(o) {
-            if (!sessionActive) {
-                console.warn('No active session');
-                return;
-            }
+            if (!sessionActive) return;
             const lid = queue[currentIdx];
             const l = leads.find(x => x.id === lid);
-            if (!l) {
-                console.warn('No lead found at index', currentIdx);
-                return;
-            }
+            if (!l) return;
 
             const type = o === 'email' ? 'email' : 'call';
-            console.log('Logging outcome:', {outcome: o, type, leadId: lid, leadName: l.company});
             
             try {
-                console.log('About to call SummitFlowDB.logActivity...');
+                await db.from('activities').insert({lead_id: lid, type, outcome: o, notes: 'Logged during session'});
                 
-                // Log activity using database module
-                const activityResult = await SummitFlowDB.logActivity(lid, type, o, 'Logged during session');
-                
-                console.log('Activity logged successfully:', activityResult);
-                
-                // Update lead to trigger broadcast
-                let upd = {
-                    last_activity: new Date().toISOString(),
-                    last_activity_type: type,
-                    last_activity_outcome: o
-                };
+                let upd = {last_activity_at: new Date().toISOString()};
                 if (o === 'interested' && (l.stage === 'prospecting' || l.stage === 'outreach')) upd.stage = 'interested';
                 else if (o === 'meeting') upd.stage = 'meeting';
                 else if (l.stage === 'prospecting') upd.stage = 'outreach';
@@ -2814,15 +2080,8 @@ if (typeof module !== 'undefined' && module.exports) {
                 showOutcomes = false;
                 if (o !== 'meeting') setTimeout(next, 300);
             } catch(e) {
-                console.error('ERROR in logOutcome:', e);
-                console.error('Error details:', {
-                    message: e.message,
-                    stack: e.stack,
-                    leadId: lid,
-                    outcome: o,
-                    type: type
-                });
-                toast('❌ Failed to log: ' + e.message, 'error');
+                console.error(e);
+                toast('❌ Failed to log', 'error');
             }
         }
 
@@ -2840,21 +2099,10 @@ if (typeof module !== 'undefined' && module.exports) {
         // ========== SESSION ==========
         function toggleSession() { sessionActive ? endSession() : startSession(); }
 
-        async function startSession() {
+        function startSession() {
             sessionActive = true;
             sessionStart = Date.now();
             sessionData = {calls:0, emails:0, meetings:0, callbacks:0};
-            
-            // Create session in database
-            console.log('Creating session in database...');
-            try {
-                const session = await SummitFlowDB.startSession('calling');
-                currentSessionId = session.id;
-                console.log('✅ Session created in DB:', session.id);
-            } catch (e) {
-                console.error('❌ Could not create DB session:', e);
-                console.error('Error details:', e.message, e.stack);
-            }
             
             const btn = document.getElementById('session-btn');
             btn.classList.add('active');
@@ -2882,31 +2130,6 @@ if (typeof module !== 'undefined' && module.exports) {
             const today = new Date().toISOString().split('T')[0];
             
             try {
-                // Save session to database
-                console.log('Ending session...', {
-                    sessionId: currentSessionId,
-                    calls: sessionData.calls,
-                    meetings: sessionData.meetings,
-                    callbacks: sessionData.callbacks
-                });
-                
-                if (currentSessionId) {
-                    try {
-                        const result = await SummitFlowDB.endSession(currentSessionId, {
-                            calls_attempted: sessionData.calls,
-                            meetings_booked: sessionData.meetings,
-                            callbacks_scheduled: sessionData.callbacks
-                        });
-                        console.log('✅ Session saved to DB:', result);
-                    } catch (e) {
-                        console.error('❌ Could not save session:', e);
-                        console.error('Error details:', e.message, e.stack);
-                    }
-                } else {
-                    console.warn('⚠️ No currentSessionId - session not saved to DB');
-                }
-                
-                // Also save to daily_logs
                 const {data: existing} = await db.from('daily_logs').select('*').eq('date', today).single();
                 
                 if (existing) {
@@ -2932,7 +2155,6 @@ if (typeof module !== 'undefined' && module.exports) {
                 renderCalendar();
                 renderCommandCenter();
                 renderForecast();
-                setupRealtime();
                 
                 toast(`✅ Session saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
             } catch(e) {
@@ -3245,144 +2467,6 @@ if (typeof module !== 'undefined' && module.exports) {
         function openShortcutsModal() {
             document.getElementById('shortcuts-modal').classList.add('active');
         }
-    </script>
-
-        <!-- Developer Tools Panel -->
-        <div style="position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:2px solid var(--border);border-radius:12px;padding:1rem;z-index:9999;display:none" id="dev-tools">
-            <div style="font-weight:600;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center">
-                <span>🛠️ Dev Tools</span>
-                <button onclick="document.getElementById('dev-tools').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem">×</button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:0.5rem">
-                <button class="btn" onclick="resetAllActivityCounts()" style="font-size:0.8rem">🔄 Recalculate All Counts</button>
-                <button class="btn" onclick="clearAllActivities()" style="font-size:0.8rem;background:var(--warning-glow);border-color:var(--warning)">🗑️ Delete All Activities</button>
-                <button class="btn" onclick="nuclearReset()" style="font-size:0.8rem;background:var(--danger-glow);border-color:var(--danger)">☢️ NUCLEAR RESET</button>
-                <button class="btn" onclick="showDataSummary()" style="font-size:0.8rem">📊 Show Data Summary</button>
-                <button class="btn" onclick="location.reload()" style="font-size:0.8rem">♻️ Refresh Page</button>
-            </div>
-        </div>
-        
-        <!-- Dev Tools Toggle Button -->
-        <button onclick="document.getElementById('dev-tools').style.display='block'" 
-                style="position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;background:var(--surface);border:2px solid var(--border);color:var(--text);cursor:pointer;font-size:1.2rem;z-index:9998;display:flex;align-items:center;justify-content:center"
-                title="Developer Tools">
-            🛠️
-        </button>
-
-    <script>
-
-        // Developer Tools Functions
-        async function resetAllActivityCounts() {
-            if (!confirm('Recalculate activity counts for all leads?')) return;
-            sync('syncing', 'Recalculating...');
-            try {
-                // Get all activities grouped by lead
-                const {data: activities} = await db.from('activities').select('lead_id');
-                const counts = {};
-                activities.forEach(a => {
-                    counts[a.lead_id] = (counts[a.lead_id] || 0) + 1;
-                });
-                
-                // Update each lead
-                let updated = 0;
-                for (const [leadId, count] of Object.entries(counts)) {
-                    await db.from('leads').update({activity_count: count}).eq('id', leadId);
-                    updated++;
-                }
-                
-                // Reset leads with no activities
-                await db.from('leads').update({activity_count: 0}).is('activity_count', null);
-                
-                sync('ok', 'Done');
-                toast(`✅ Reset ${updated} leads`);
-                setTimeout(() => location.reload(), 1000);
-            } catch(e) {
-                console.error(e);
-                sync('error', 'Failed');
-                toast('❌ Failed', 'error');
-            }
-        }
-        
-        
-        async function nuclearReset() {
-            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- All daily logs\n- Reset all lead stats\n- Clear localStorage\n\nThis CANNOT be undone!')) return;
-            if (!confirm('Are you ABSOLUTELY SURE? This will erase ALL your data!')) return;
-            
-            console.log('☢️ Starting nuclear reset...');
-            toast('☢️ Resetting everything...');
-            
-            try {
-                // Call the SQL function
-                const {data, error} = await db.rpc('nuclear_reset');
-                
-                if (error) {
-                    throw error;
-                }
-                
-                console.log('✅ Database reset:', data);
-                
-                // Clear ALL localStorage
-                localStorage.clear();
-                console.log('✅ localStorage cleared');
-                
-                toast('☢️ Reset complete! Refreshing...');
-                console.log('✅ NUCLEAR RESET COMPLETE');
-                setTimeout(() => location.reload(), 1000);
-            } catch(e) {
-                console.error('❌ Reset failed:', e);
-                alert('Reset failed: ' + e.message + '\n\nMake sure you ran the SQL function creation script first!');
-            }
-        }
-        
-        async function clearAllActivities() {
-            if (!confirm('⚠️ DELETE ALL ACTIVITIES? This cannot be undone!')) return;
-            if (!confirm('Are you REALLY sure? This will delete all call logs!')) return;
-            
-            sync('syncing', 'Deleting...');
-            try {
-                const {data} = await db.from('activities').select('id');
-                await db.from('activities').delete().in('id', data.map(a => a.id));
-                await db.from('leads').update({activity_count: 0, last_activity: null, last_activity_type: null, last_activity_outcome: null});
-                
-                sync('ok', 'Deleted');
-                toast('🗑️ All activities deleted');
-                setTimeout(() => location.reload(), 1000);
-            } catch(e) {
-                console.error(e);
-                sync('error', 'Failed');
-                toast('❌ Failed', 'error');
-            }
-        }
-        
-        async function showDataSummary() {
-            try {
-                const {data: leadData} = await db.from('leads').select('id, company, activity_count');
-                const {data: actData} = await db.from('activities').select('lead_id');
-                const {data: sessData} = await db.from('sessions').select('calls_attempted');
-                
-                const totalLeads = leadData.length;
-                const leadsWithActivities = leadData.filter(l => (l.activity_count || 0) > 0).length;
-                const totalActivities = actData.length;
-                const totalCalls = sessData.reduce((sum, s) => sum + (s.calls_attempted || 0), 0);
-                
-                console.log('📊 DATA SUMMARY');
-                console.log('===============');
-                console.log('Total Leads:', totalLeads);
-                console.log('Leads with Activities:', leadsWithActivities);
-                console.log('Total Activities in DB:', totalActivities);
-                console.log('Total Calls from Sessions:', totalCalls);
-                console.log('\nLeads with activity_count > 0:');
-                leadData.filter(l => l.activity_count > 0).forEach(l => {
-                    console.log(`  ${l.company}: ${l.activity_count}`);
-                });
-                
-                toast(`📊 ${totalLeads} leads, ${totalActivities} activities - Check console`);
-            } catch(e) {
-                console.error(e);
-                toast('❌ Failed', 'error');
-            }
-        }
-
     </script>
 </body>
 </html>
