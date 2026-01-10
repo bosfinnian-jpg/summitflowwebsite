@@ -1175,6 +1175,606 @@ Finn</div>
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    
+    <!-- SummitFlow Database Module -->
+    <script>
+// =====================================================
+// SUMMITFLOW DATABASE MODULE
+// Shared database operations for all three apps
+// Save this as: summitflow-db.js
+// =====================================================
+
+// NOTE: This assumes Supabase client is already initialized as 'supabase'
+// Each HTML file should have: const supabase = window.supabase.createClient(url, key)
+
+const SummitFlowDB = {
+  
+  // =====================================================
+  // LEADS OPERATIONS
+  // =====================================================
+  
+  /**
+   * Get leads for calling queue
+   * @param {Object} options - Filter options
+   * @param {number} options.limit - Max leads to return
+   * @param {string} options.stage - Filter by stage
+   * @param {string} options.priority - Filter by priority
+   * @param {boolean} options.uncontacted - Only leads with no activities
+   * @returns {Array} Array of lead objects
+   */
+  async getLeadsForQueue(options = {}) {
+    const {
+      limit = 100,
+      stage = null,
+      priority = null,
+      uncontacted = false
+    } = options;
+    
+    let query = supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    // Filter by stage
+    if (stage) {
+      query = query.eq('stage', stage);
+    } else {
+      // Default: only prospecting and outreach stages
+      query = query.in('stage', ['prospecting', 'outreach']);
+    }
+    
+    // Filter by priority
+    if (priority) {
+      query = query.eq('priority', priority);
+    }
+    
+    // Filter uncontacted
+    if (uncontacted) {
+      query = query.eq('activity_count', 0);
+    }
+    
+    query = query.limit(limit);
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching leads:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  /**
+   * Get a single lead by ID with all related data
+   */
+  async getLeadById(leadId) {
+    const { data, error } = await supabase
+      .from('leads')
+      .select(`
+        *,
+        activities (
+          id,
+          type,
+          outcome,
+          notes,
+          created_at,
+          callback_scheduled
+        ),
+        callbacks (
+          id,
+          scheduled_for,
+          reason,
+          completed,
+          priority
+        )
+      `)
+      .eq('id', leadId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching lead:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Update lead stage
+   */
+  async updateLeadStage(leadId, newStage) {
+    const { data, error } = await supabase
+      .from('leads')
+      .update({ stage: newStage })
+      .eq('id', leadId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating lead stage:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Update lead priority
+   */
+  async updateLeadPriority(leadId, priority) {
+    const { data, error } = await supabase
+      .from('leads')
+      .update({ priority })
+      .eq('id', leadId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating lead priority:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Set next action for lead
+   */
+  async setNextAction(leadId, action, actionDate = null) {
+    const { data, error } = await supabase
+      .from('leads')
+      .update({ 
+        next_action: action,
+        next_action_date: actionDate 
+      })
+      .eq('id', leadId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error setting next action:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  // =====================================================
+  // ACTIVITY OPERATIONS
+  // =====================================================
+  
+  /**
+   * Log an activity (call, email, meeting, note)
+   * This is the CRITICAL function that your Dashboard needs
+   */
+  async logActivity(leadId, type, outcome = null, notes = null, additionalData = {}) {
+    const activityData = {
+      lead_id: leadId,
+      type, // 'call', 'email', 'meeting', 'note'
+      outcome, // 'no_answer', 'voicemail', 'interested', 'callback', 'meeting', 'not_interested'
+      notes,
+      ...additionalData
+    };
+    
+    const { data, error } = await supabase
+      .from('activities')
+      .insert(activityData)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error logging activity:', error);
+      throw error;
+    }
+    
+    // Trigger will automatically update lead's activity_count, last_activity, etc.
+    return data;
+  },
+  
+  /**
+   * Get activities for a lead
+   */
+  async getLeadActivities(leadId, limit = 50) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error('Error fetching activities:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  /**
+   * Get recent activities across all leads (for analytics)
+   */
+  async getRecentActivities(limit = 100) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select(`
+        *,
+        leads (company, contact)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error('Error fetching recent activities:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  // =====================================================
+  // SESSION OPERATIONS
+  // =====================================================
+  
+  /**
+   * Start a new session
+   */
+  async startSession(sessionType = 'calling') {
+    const { data, error } = await supabase
+      .from('sessions')
+      .insert({
+        start_time: new Date().toISOString(),
+        session_type: sessionType
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error starting session:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Update session stats (call this during session)
+   */
+  async updateSession(sessionId, stats) {
+    const { data, error } = await supabase
+      .from('sessions')
+      .update(stats)
+      .eq('id', sessionId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating session:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * End a session
+   */
+  async endSession(sessionId, finalStats) {
+    const endTime = new Date();
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('start_time')
+      .eq('id', sessionId)
+      .single();
+    
+    const startTime = new Date(session.start_time);
+    const duration = Math.round((endTime - startTime) / 60000); // minutes
+    
+    const { data, error } = await supabase
+      .from('sessions')
+      .update({
+        ...finalStats,
+        end_time: endTime.toISOString(),
+        duration
+      })
+      .eq('id', sessionId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error ending session:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Get recent sessions
+   */
+  async getRecentSessions(limit = 10) {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .order('start_time', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error('Error fetching sessions:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  // =====================================================
+  // CALLBACK OPERATIONS
+  // =====================================================
+  
+  /**
+   * Schedule a callback
+   */
+  async scheduleCallback(leadId, scheduledFor, reason = null, priority = 'medium', activityId = null) {
+    const { data, error } = await supabase
+      .from('callbacks')
+      .insert({
+        lead_id: leadId,
+        activity_id: activityId,
+        scheduled_for: scheduledFor,
+        reason,
+        priority
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error scheduling callback:', error);
+      throw error;
+    }
+    
+    // Also update lead's next_action
+    await this.setNextAction(leadId, 'callback', scheduledFor);
+    
+    return data;
+  },
+  
+  /**
+   * Complete a callback
+   */
+  async completeCallback(callbackId, outcome = null) {
+    const { data, error } = await supabase
+      .from('callbacks')
+      .update({
+        completed: true,
+        completed_at: new Date().toISOString(),
+        outcome
+      })
+      .eq('id', callbackId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error completing callback:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Get overdue callbacks
+   */
+  async getOverdueCallbacks() {
+    const { data, error } = await supabase
+      .from('overdue_callbacks')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching overdue callbacks:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  /**
+   * Get today's callbacks
+   */
+  async getTodaysCallbacks() {
+    const { data, error } = await supabase
+      .from('todays_callbacks')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching today\'s callbacks:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  /**
+   * Get pending callbacks for a lead
+   */
+  async getLeadCallbacks(leadId, pendingOnly = true) {
+    let query = supabase
+      .from('callbacks')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('scheduled_for', { ascending: true });
+    
+    if (pendingOnly) {
+      query = query.eq('completed', false);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching lead callbacks:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+  
+  // =====================================================
+  // ANALYTICS & REPORTING
+  // =====================================================
+  
+  /**
+   * Get call outcomes breakdown
+   */
+  async getCallOutcomes(startDate = null, endDate = null) {
+    let query = supabase
+      .from('activities')
+      .select('outcome')
+      .eq('type', 'call');
+    
+    if (startDate) {
+      query = query.gte('created_at', startDate);
+    }
+    if (endDate) {
+      query = query.lte('created_at', endDate);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching call outcomes:', error);
+      throw error;
+    }
+    
+    // Count outcomes
+    const outcomes = {};
+    data.forEach(activity => {
+      const outcome = activity.outcome || 'unknown';
+      outcomes[outcome] = (outcomes[outcome] || 0) + 1;
+    });
+    
+    return outcomes;
+  },
+  
+  /**
+   * Get conversion rates
+   */
+  async getConversionStats(startDate = null) {
+    let query = supabase
+      .from('activities')
+      .select('type, outcome');
+    
+    if (startDate) {
+      query = query.gte('created_at', startDate);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching conversion stats:', error);
+      throw error;
+    }
+    
+    const stats = {
+      total_calls: 0,
+      connected: 0,
+      interested: 0,
+      meetings: 0,
+      conversion_rate: 0
+    };
+    
+    data.forEach(activity => {
+      if (activity.type === 'call') {
+        stats.total_calls++;
+        if (activity.outcome && activity.outcome !== 'no_answer' && activity.outcome !== 'voicemail') {
+          stats.connected++;
+        }
+        if (activity.outcome === 'interested') {
+          stats.interested++;
+        }
+        if (activity.outcome === 'meeting') {
+          stats.meetings++;
+        }
+      }
+    });
+    
+    if (stats.total_calls > 0) {
+      stats.conversion_rate = ((stats.meetings / stats.total_calls) * 100).toFixed(2);
+    }
+    
+    return stats;
+  },
+  
+  // =====================================================
+  // REALTIME SUBSCRIPTIONS
+  // =====================================================
+  
+  /**
+   * Subscribe to lead changes
+   */
+  subscribeToLeads(callback) {
+    const channel = supabase
+      .channel('leads-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'leads' },
+        (payload) => {
+          callback(payload);
+        }
+      )
+      .subscribe();
+    
+    return channel;
+  },
+  
+  /**
+   * Subscribe to activity changes
+   */
+  subscribeToActivities(callback) {
+    const channel = supabase
+      .channel('activities-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'activities' },
+        (payload) => {
+          callback(payload);
+        }
+      )
+      .subscribe();
+    
+    return channel;
+  },
+  
+  /**
+   * Subscribe to callback changes
+   */
+  subscribeToCallbacks(callback) {
+    const channel = supabase
+      .channel('callbacks-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'callbacks' },
+        (payload) => {
+          callback(payload);
+        }
+      )
+      .subscribe();
+    
+    return channel;
+  },
+  
+  /**
+   * Unsubscribe from a channel
+   */
+  async unsubscribe(channel) {
+    await supabase.removeChannel(channel);
+  }
+};
+
+// Export for use in modules or make available globally
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = SummitFlowDB;
+} else {
+  window.SummitFlowDB = SummitFlowDB;
+}
+
+    </script>
+    
     <script>
         // ========== SUPABASE CONFIG ==========
         const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
@@ -1222,6 +1822,7 @@ Finn</div>
         let currentLead=null, currentAction=null, selectedOutcome=null;
         let calendarView = 'today';
         let showOutcomes = false;
+        let currentSessionId = null;
         let dismissedSuggestions = {};
         let notesDebounceTimer = null;
 
@@ -1315,7 +1916,7 @@ Finn</div>
                 const wasRestored = restoreFromStorage();
                 
                 // If no queue was restored, generate fresh
-                if (queue.length === 0) {
+                if (queue.length === 0 && leads.length > 0) {
                     queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,100).map(l => l.id);
                     persistQueueState();
                 }
@@ -2040,7 +2641,8 @@ Finn</div>
             const type = o === 'email' ? 'email' : 'call';
             
             try {
-                await db.from('activities').insert({lead_id: lid, type, outcome: o, notes: 'Logged during session'});
+                // Log activity using database module
+                await SummitFlowDB.logActivity(lid, type, o, 'Logged during session');
                 
                 let upd = {last_activity_at: new Date().toISOString()};
                 if (o === 'interested' && (l.stage === 'prospecting' || l.stage === 'outreach')) upd.stage = 'interested';
@@ -2098,10 +2700,18 @@ Finn</div>
         // ========== SESSION ==========
         function toggleSession() { sessionActive ? endSession() : startSession(); }
 
-        function startSession() {
+        async function startSession() {
             sessionActive = true;
             sessionStart = Date.now();
             sessionData = {calls:0, emails:0, meetings:0, callbacks:0};
+            
+            // Create session in database (non-blocking)
+            try {
+                const session = await SummitFlowDB.startSession('calling');
+                currentSessionId = session.id;
+            } catch (e) {
+                console.warn('Could not create DB session:', e);
+            }
             
             const btn = document.getElementById('session-btn');
             btn.classList.add('active');
@@ -2129,6 +2739,20 @@ Finn</div>
             const today = new Date().toISOString().split('T')[0];
             
             try {
+                // Save session to database
+                if (currentSessionId) {
+                    try {
+                        await SummitFlowDB.endSession(currentSessionId, {
+                            calls_attempted: sessionData.calls,
+                            meetings_booked: sessionData.meetings,
+                            callbacks_scheduled: sessionData.callbacks
+                        });
+                    } catch (e) {
+                        console.warn('Could not save session:', e);
+                    }
+                }
+                
+                // Also save to daily_logs
                 const {data: existing} = await db.from('daily_logs').select('*').eq('date', today).single();
                 
                 if (existing) {
