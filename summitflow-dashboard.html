@@ -3306,9 +3306,11 @@ if (typeof module !== 'undefined' && module.exports) {
         
         async function nuclearReset() {
             if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n\nThis CANNOT be undone!')) return;
-            if (!confirm('Type YES in console if you are ABSOLUTELY SURE')) return;
+            if (!confirm('Are you ABSOLUTELY SURE? Type YES in your head.')) return;
             
-            sync('syncing', 'Nuclear reset...');
+            console.log('☢️ Starting nuclear reset...');
+            toast('☢️ Resetting everything...');
+            
             try {
                 // Delete all activities
                 await db.from('activities').delete().neq('id', '00000000-0000-0000-0000-000000000000');
@@ -3339,16 +3341,15 @@ if (typeof module !== 'undefined' && module.exports) {
                 });
                 console.log('✅ localStorage cleared');
                 
-                sync('ok', 'Reset complete');
-                toast('☢️ Nuclear reset complete');
+                toast('☢️ Reset complete! Refreshing...');
+                console.log('✅ NUCLEAR RESET COMPLETE');
                 setTimeout(() => location.reload(), 1500);
             } catch(e) {
-                console.error(e);
-                sync('error', 'Failed');
+                console.error('❌ Reset failed:', e);
                 toast('❌ Failed: ' + e.message, 'error');
             }
         }
-
+        
         async function clearAllActivities() {
             if (!confirm('⚠️ DELETE ALL ACTIVITIES? This cannot be undone!')) return;
             if (!confirm('Are you REALLY sure? This will delete all call logs!')) return;
