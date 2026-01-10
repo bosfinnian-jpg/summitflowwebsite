@@ -190,28 +190,41 @@
     }
     
     function handleActivityChange(payload) {
-        console.log('Activity changed:', payload.eventType);
+        console.log('🔔 Activity changed:', payload.eventType, payload.new);
         
         if (payload.eventType === 'INSERT') {
-            // New activity logged
-            const activity = payload.new;
-            const lead = leads.find(l => l.id === activity.lead_id);
-            if (lead) {
-                // Add to activities array
-                if (!lead.activities) lead.activities = [];
-                lead.activities.unshift(activity);
+            // New activity logged - the lead will be updated by trigger
+            // Just wait for the lead update event
+            console.log('Activity inserted for lead:', payload.new.lead_id);
+            
+            // Optionally reload the lead immediately
+            setTimeout(async () => {
+                const {data, error} = await db.from('leads')
+                    .select('*')
+                    .eq('id', payload.new.lead_id)
+                    .single();
                 
-                // Update count (will be corrected by next lead update from trigger)
-                lead.activityCount = (lead.activityCount || 0) + 1;
-                
-                // Re-render
-                render ? render() : renderTable();
-                
-                // If modal is open for this lead, update timeline
-                if (typeof renderTimeline === 'function' && currentId === lead.id) {
-                    renderTimeline(lead);
+                if (data && !error) {
+                    const lead = leads.find(l => l.id === data.id);
+                    if (lead) {
+                        Object.assign(lead, data);
+                        lead.activityCount = data.activity_count || 0;
+                        console.log('✅ Lead refreshed:', lead.company, 'activities:', lead.activityCount);
+                        render ? render() : renderTable();
+                        
+                        // Update timeline if modal open
+                        if (typeof renderTimeline === 'function' && currentId === lead.id) {
+                            // Reload activities for this lead
+                            const {data: acts} = await db.from('activities')
+                                .select('*')
+                                .eq('lead_id', lead.id)
+                                .order('created_at', {ascending: false});
+                            lead.activities = acts || [];
+                            renderTimeline(lead);
+                        }
+                    }
                 }
-            }
+            }, 500); // Small delay to let trigger complete
         }
     }
     
