@@ -19,6 +19,7 @@
             <div class="nav-tabs">
                 <span class="nav-tab active">Leads Hub</span>
                 <a href="summitflow-pipeline.html" class="nav-tab">Pipeline</a>
+                <a href="summitflow-actions.html" class="nav-tab">Actions</a>
                 <a href="summitflow-dashboard.html" class="nav-tab">Dashboard</a>
             </div>
         </div>
@@ -115,7 +116,7 @@
             let f=leads;
             if(stageFilter)f=f.filter(l=>l.stage===stageFilter);
             if(query){const q=query.toLowerCase();f=f.filter(l=>l.company?.toLowerCase().includes(q)||l.contact?.toLowerCase().includes(q)||l.email?.toLowerCase().includes(q)||l.phone?.includes(q));}
-            f.sort((a,b)=>{let av,bv;switch(sortCol){case'company':av=(a.company||'').toLowerCase();bv=(b.company||'').toLowerCase();break;case'phone':av=a.phone||'';bv=b.phone||'';break;case'email':av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();break;case'stage':av=STAGES.findIndex(s=>s.id===a.stage);bv=STAGES.findIndex(s=>s.id===b.stage);break;case'activities':av=a.activityCount;bv=b.activityCount;break;case'last_activity_at':av=(a.last_activity||a.last_activity_at)?new Date(a.last_activity||a.last_activity_at).getTime():0;bv=(b.last_activity||b.last_activity_at)?new Date(b.last_activity||b.last_activity_at).getTime():0;break;default:av=a.created_at?new Date(a.created_at).getTime():0;bv=b.created_at?new Date(b.created_at).getTime():0;}if(av<bv)return sortDir==='asc'?-1:1;if(av>bv)return sortDir==='asc'?1:-1;return 0;});
+            f.sort((a,b)=>{let av,bv;switch(sortCol){case'company':av=(a.company||'').toLowerCase();bv=(b.company||'').toLowerCase();break;case'phone':av=a.phone||'';bv=b.phone||'';break;case'email':av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();break;case'stage':av=STAGES.findIndex(s=>s.id===a.stage);bv=STAGES.findIndex(s=>s.id===b.stage);break;case'activities':av=a.activityCount;bv=b.activityCount;break;case'last_activity_at':av=a.last_activity_at?new Date(a.last_activity_at).getTime():0;bv=b.last_activity_at?new Date(b.last_activity_at).getTime():0;break;default:av=a.created_at?new Date(a.created_at).getTime():0;bv=b.created_at?new Date(b.created_at).getTime():0;}if(av<bv)return sortDir==='asc'?-1:1;if(av>bv)return sortDir==='asc'?1:-1;return 0;});
             return f;
         }
 
@@ -126,7 +127,7 @@
             if(!paged.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">${query||stageFilter?'No matches':'No leads yet'}</div><div class="empty-text">${query||stageFilter?'Try different filters':'Import or add leads'}</div>${!query&&!stageFilter?'<button class="btn primary" onclick="openImport()">📤 Import</button>':''}</div></td></tr>`;document.getElementById('pagination').innerHTML='';return;}
             tbody.innerHTML=paged.map(l=>{
                 const s=STAGES.find(x=>x.id===l.stage)||STAGES[0];
-                const la=getLastActivity(l.last_activity||l.last_activity_at);
+                const la=getLastActivity(l.last_activity_at);
                 return`<tr class="${selected.has(l.id)?'selected':''}"><td><input type="checkbox" class="checkbox" ${selected.has(l.id)?'checked':''} onchange="toggleSelect('${l.id}')"></td><td><div class="lead-company"><a href="#" onclick="openEdit('${l.id}');return false">${l.company}</a></div>${l.contact?`<div class="lead-contact">${l.contact}</div>`:''}</td><td class="lead-phone">${l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'—'}</td><td class="lead-email">${l.email?`<a href="mailto:${l.email}">${l.email}</a>`:'—'}</td><td><span class="stage-badge ${s.id}">${s.icon} ${s.name}</span></td><td class="activity-count">📊 ${l.activityCount}</td><td><span class="last-activity ${la.cls}">${la.text}</span></td><td><div class="row-actions">${l.phone?`<button class="action-btn" onclick="window.open('tel:${l.phone}')">📞</button>`:''} ${l.email?`<button class="action-btn" onclick="window.open('mailto:${l.email}')">📧</button>`:''}<button class="action-btn" onclick="openEdit('${l.id}')">👁️</button></div></td></tr>`;
             }).join('');
             renderPagination(f.length,total);updateBulk();
@@ -153,7 +154,7 @@
 
         async function bulkChangeStage(){
             const ns=document.getElementById('bulk-stage').value;if(!ns||!selected.size)return;sync('syncing','Saving...');
-            try{const ids=[...selected];await db.from('leads').update({stage:ns,last_activity:new Date().toISOString()}).in('id',ids);leads.forEach(l=>{if(selected.has(l.id)){l.stage=ns;l.last_activity=new Date().toISOString();}});document.getElementById('bulk-stage').value='';selected.clear();renderStats();renderTable();sync('ok','Saved');toast(`✅ ${ids.length} leads updated`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
+            try{const ids=[...selected];await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).in('id',ids);leads.forEach(l=>{if(selected.has(l.id)){l.stage=ns;l.last_activity_at=new Date().toISOString();}});document.getElementById('bulk-stage').value='';selected.clear();renderStats();renderTable();sync('ok','Saved');toast(`✅ ${ids.length} leads updated`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}
         }
 
         async function bulkDelete(){
