@@ -1898,6 +1898,15 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         async function load() {
+            // Verify SummitFlowDB is loaded
+            if (typeof SummitFlowDB === 'undefined') {
+                console.error('CRITICAL: SummitFlowDB module not loaded!');
+                toast('❌ Database module not loaded', 'error');
+                return;
+            } else {
+                console.log('✅ SummitFlowDB module loaded successfully');
+            }
+
             try {
                 const {data:ld} = await db.from('leads').select('*').order('created_at',{ascending:false});
                 leads = ld || [];
@@ -2651,8 +2660,12 @@ if (typeof module !== 'undefined' && module.exports) {
             console.log('Logging outcome:', {outcome: o, type, leadId: lid, leadName: l.company});
             
             try {
+                console.log('About to call SummitFlowDB.logActivity...');
+                
                 // Log activity using database module
-                await SummitFlowDB.logActivity(lid, type, o, 'Logged during session');
+                const activityResult = await SummitFlowDB.logActivity(lid, type, o, 'Logged during session');
+                
+                console.log('Activity logged successfully:', activityResult);
                 
                 let upd = {last_activity_at: new Date().toISOString()};
                 if (o === 'interested' && (l.stage === 'prospecting' || l.stage === 'outreach')) upd.stage = 'interested';
@@ -2691,8 +2704,15 @@ if (typeof module !== 'undefined' && module.exports) {
                 showOutcomes = false;
                 if (o !== 'meeting') setTimeout(next, 300);
             } catch(e) {
-                console.error(e);
-                toast('❌ Failed to log', 'error');
+                console.error('ERROR in logOutcome:', e);
+                console.error('Error details:', {
+                    message: e.message,
+                    stack: e.stack,
+                    leadId: lid,
+                    outcome: o,
+                    type: type
+                });
+                toast('❌ Failed to log: ' + e.message, 'error');
             }
         }
 
