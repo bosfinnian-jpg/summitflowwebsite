@@ -1905,6 +1905,102 @@ if (typeof module !== 'undefined' && module.exports) {
             }, CONFIG.AUTOSAVE_INTERVAL);
         }
 
+        
+    // ============================================
+    // REAL-TIME SYNC MODULE
+    // ============================================
+    // Listens for database changes and updates UI automatically
+    
+    let realtimeChannel = null;
+    
+    function setupRealtime() {
+        // Subscribe to leads table changes
+        realtimeChannel = db.channel('summitflow-sync')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'leads' }, 
+                handleLeadChange
+            )
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'activities' }, 
+                handleActivityChange
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ Real-time sync active');
+                }
+            });
+    }
+    
+    function handleLeadChange(payload) {
+        console.log('Lead changed:', payload.eventType, payload.new?.company || payload.old?.company);
+        
+        if (payload.eventType === 'INSERT') {
+            // New lead added
+            const newLead = payload.new;
+            if (!leads.find(l => l.id === newLead.id)) {
+                newLead.activityCount = newLead.activity_count || 0;
+                newLead.activities = [];
+                leads.unshift(newLead);
+                render ? render() : renderTable();
+                stats ? stats() : renderStats();
+                toast('✨ New lead added');
+            }
+        } else if (payload.eventType === 'UPDATE') {
+            // Lead updated
+            const updated = payload.new;
+            const lead = leads.find(l => l.id === updated.id);
+            if (lead) {
+                Object.assign(lead, updated);
+                lead.activityCount = updated.activity_count || lead.activityCount || 0;
+                render ? render() : renderTable();
+                stats ? stats() : renderStats();
+            }
+        } else if (payload.eventType === 'DELETE') {
+            // Lead deleted
+            const index = leads.findIndex(l => l.id === payload.old.id);
+            if (index !== -1) {
+                leads.splice(index, 1);
+                render ? render() : renderTable();
+                stats ? stats() : renderStats();
+                toast('🗑️ Lead deleted');
+            }
+        }
+    }
+    
+    function handleActivityChange(payload) {
+        console.log('Activity changed:', payload.eventType);
+        
+        if (payload.eventType === 'INSERT') {
+            // New activity logged
+            const activity = payload.new;
+            const lead = leads.find(l => l.id === activity.lead_id);
+            if (lead) {
+                // Add to activities array
+                if (!lead.activities) lead.activities = [];
+                lead.activities.unshift(activity);
+                
+                // Update count (will be corrected by next lead update from trigger)
+                lead.activityCount = (lead.activityCount || 0) + 1;
+                
+                // Re-render
+                render ? render() : renderTable();
+                
+                // If modal is open for this lead, update timeline
+                if (typeof renderTimeline === 'function' && currentId === lead.id) {
+                    renderTimeline(lead);
+                }
+            }
+        }
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (realtimeChannel) {
+            db.removeChannel(realtimeChannel);
+        }
+    });
+
+
         async function load() {
             // Verify SummitFlowDB is loaded
             if (typeof SummitFlowDB === 'undefined') {
@@ -1953,6 +2049,7 @@ if (typeof module !== 'undefined' && module.exports) {
                 renderCommandCenter();
                 renderSmartActions();
                 renderForecast();
+                setupRealtime();
                 
                 // If session was restored, update UI
                 if (wasRestored && sessionActive) {
@@ -2394,7 +2491,7 @@ if (typeof module !== 'undefined' && module.exports) {
                 if (selectedOutcome === 'meeting') {
                     const lead = leads.find(l => l.id === currentAction.lead_id);
                     if (lead) {
-                        await db.from('leads').update({stage: 'meeting', last_activity_at: new Date().toISOString()}).eq('id', lead.id);
+                        await db.from('leads').update({stage: 'meeting', last_activity: new Date().toISOString()}).eq('id', lead.id);
                         lead.stage = 'meeting';
                         celebrate();
                         toast('🎉 Meeting booked!');
@@ -2403,7 +2500,7 @@ if (typeof module !== 'undefined' && module.exports) {
                 } else if (selectedOutcome === 'interested') {
                     const lead = leads.find(l => l.id === currentAction.lead_id);
                     if (lead && (lead.stage === 'prospecting' || lead.stage === 'outreach')) {
-                        await db.from('leads').update({stage: 'interested', last_activity_at: new Date().toISOString()}).eq('id', lead.id);
+                        await db.from('leads').update({stage: 'interested', last_activity: new Date().toISOString()}).eq('id', lead.id);
                         lead.stage = 'interested';
                     }
                     toast('🔥 Interested!');
@@ -2675,7 +2772,12 @@ if (typeof module !== 'undefined' && module.exports) {
                 
                 console.log('Activity logged successfully:', activityResult);
                 
-                let upd = {last_activity_at: new Date().toISOString()};
+                // Update lead to trigger broadcast
+                let upd = {
+                    last_activity: new Date().toISOString(),
+                    last_activity_type: type,
+                    last_activity_outcome: o
+                };
                 if (o === 'interested' && (l.stage === 'prospecting' || l.stage === 'outreach')) upd.stage = 'interested';
                 else if (o === 'meeting') upd.stage = 'meeting';
                 else if (l.stage === 'prospecting') upd.stage = 'outreach';
@@ -2830,6 +2932,7 @@ if (typeof module !== 'undefined' && module.exports) {
                 renderCalendar();
                 renderCommandCenter();
                 renderForecast();
+                setupRealtime();
                 
                 toast(`✅ Session saved: ${sessionData.calls} calls, ${sessionData.meetings} meetings`);
             } catch(e) {
