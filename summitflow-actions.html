@@ -227,7 +227,7 @@
 
     </main>
 
-    <div class="fab" onclick="window.location='summitflow-pipeline-v2.html'" title="Add Action">+</div>
+    <div class="fab" onclick="window.location='summitflow-pipeline.html'" title="Add Action">+</div>
     
     <div class="toast" id="toast"></div>
 
@@ -358,7 +358,56 @@
                 return;
             }
             
-            list.innerHTML = todayActions.map(a => renderActionCard(a, false)).join('');
+            // Smart categorization
+            const hotLeads = todayActions.filter(a => {
+                const lead = leads.find(l => l.id === a.lead_id);
+                return lead && (lead.stage === 'interested' || lead.stage === 'meeting');
+            });
+            
+            const callbacks = todayActions.filter(a => 
+                a.notes && (a.notes.toLowerCase().includes('callback') || a.notes.toLowerCase().includes('requested'))
+            ).filter(a => !hotLeads.includes(a));
+            
+            const followUps = todayActions.filter(a => !hotLeads.includes(a) && !callbacks.includes(a));
+            
+            let html = '';
+            
+            if (hotLeads.length > 0) {
+                html += `
+                    <div style="margin-bottom:2rem">
+                        <h4 style="font-size:1rem;margin-bottom:1rem;color:var(--danger);font-weight:700;display:flex;align-items:center;gap:0.5rem">
+                            🔥 HOT LEADS (${hotLeads.length})
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">Call these first!</span>
+                        </h4>
+                        ${hotLeads.map(a => renderActionCard(a, false)).join('')}
+                    </div>
+                `;
+            }
+            
+            if (callbacks.length > 0) {
+                html += `
+                    <div style="margin-bottom:2rem">
+                        <h4 style="font-size:1rem;margin-bottom:1rem;color:var(--warning);font-weight:700;display:flex;align-items:center;gap:0.5rem">
+                            ⏰ CALLBACKS (${callbacks.length})
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">They're expecting your call</span>
+                        </h4>
+                        ${callbacks.map(a => renderActionCard(a, false)).join('')}
+                    </div>
+                `;
+            }
+            
+            if (followUps.length > 0) {
+                html += `
+                    <div>
+                        <h4 style="font-size:1rem;margin-bottom:1rem;color:var(--text-secondary);font-weight:700;display:flex;align-items:center;gap:0.5rem">
+                            📧 FOLLOW-UPS (${followUps.length})
+                        </h4>
+                        ${followUps.map(a => renderActionCard(a, false)).join('')}
+                    </div>
+                `;
+            }
+            
+            list.innerHTML = html;
         }
         
         function renderWeek(weekActions) {
@@ -486,23 +535,202 @@
             toast('✉️ Gmail compose opened');
         }
         
-        async function completeAction(actionId) {
+        function completeAction(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
+            
+            const lead = leads.find(l => l.id === action.lead_id);
+            if (!lead) return;
+            
+            // Show outcome modal
+            showOutcomeModal(actionId, action, lead);
+        }
+        
+        function showOutcomeModal(actionId, action, lead) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto';
+            
+            const outcomes = action.type === 'call' ? [
+                {value: 'no_answer', label: '📵 No Answer', next: 'callback-1day'},
+                {value: 'voicemail', label: '📞 Voicemail', next: 'follow-up-2days'},
+                {value: 'gatekeeper', label: '🚪 Gatekeeper', next: 'callback-2days'},
+                {value: 'callback', label: '⏰ Callback Requested', next: 'callback-custom'},
+                {value: 'not_interested', label: '❌ Not Interested', next: 'none'},
+                {value: 'interested', label: '🔥 Interested!', next: 'hot-follow-up'},
+                {value: 'meeting', label: '🎉 Meeting Booked!', next: 'post-meeting'}
+            ] : [
+                {value: 'sent', label: '✉️ Email Sent', next: 'follow-up-3days'},
+                {value: 'bounced', label: '⚠️ Bounced', next: 'none'},
+                {value: 'replied', label: '💬 They Replied!', next: 'hot-follow-up'}
+            ];
+            
+            modal.innerHTML = `
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:500px;width:90%;margin:2rem">
+                    <h3 style="margin-bottom:0.5rem;font-size:1.25rem">✅ Complete Action</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:1.5rem">${lead.company} - ${action.type === 'call' ? 'Call' : 'Email'}</p>
+                    
+                    <div style="margin-bottom:1.5rem">
+                        <label style="display:block;margin-bottom:0.75rem;font-weight:600">What happened?</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem" id="outcome-grid">
+                            ${outcomes.map(o => `
+                                <button class="outcome-btn" data-outcome="${o.value}" data-next="${o.next}" style="
+                                    padding:0.875rem;
+                                    background:var(--surface);
+                                    border:2px solid var(--border);
+                                    border-radius:var(--radius-sm);
+                                    color:var(--text);
+                                    cursor:pointer;
+                                    font-size:0.9rem;
+                                    font-weight:500;
+                                    transition:all .2s;
+                                    text-align:left;
+                                " onmouseover="this.style.borderColor='var(--calls)'" onmouseout="this.style.borderColor='var(--border)'" onclick="selectOutcome(this)">
+                                    ${o.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom:1.5rem">
+                        <label style="display:block;margin-bottom:0.5rem;font-weight:600">Notes (optional)</label>
+                        <textarea id="outcome-notes" style="
+                            width:100%;
+                            min-height:80px;
+                            background:var(--surface);
+                            border:1px solid var(--border);
+                            border-radius:6px;
+                            padding:0.75rem;
+                            color:var(--text);
+                            font-family:inherit;
+                            resize:vertical;
+                        " placeholder="Any important details..."></textarea>
+                    </div>
+                    
+                    <div style="display:flex;gap:0.75rem">
+                        <button class="action-btn" style="flex:1" onclick="this.closest('.modal-overlay').remove()">
+                            Cancel
+                        </button>
+                        <button class="action-btn primary" style="flex:1" onclick="saveOutcome('${actionId}', '${action.lead_id}')">
+                            Save & Continue
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        let selectedOutcome = null;
+        let selectedNext = null;
+        
+        function selectOutcome(btn) {
+            document.querySelectorAll('.outcome-btn').forEach(b => {
+                b.style.borderColor = 'var(--border)';
+                b.style.background = 'var(--surface)';
+            });
+            btn.style.borderColor = 'var(--calls)';
+            btn.style.background = 'var(--calls-glow)';
+            selectedOutcome = btn.dataset.outcome;
+            selectedNext = btn.dataset.next;
+        }
+        
+        async function saveOutcome(actionId, leadId) {
+            if (!selectedOutcome) {
+                toast('⚠️ Please select an outcome', 'error');
+                return;
+            }
+            
+            const notes = document.getElementById('outcome-notes').value;
+            
             try {
-                const {error} = await db.from('actions').update({
+                // Mark action complete
+                await db.from('actions').update({
                     status: 'completed',
                     completed_at: new Date().toISOString()
                 }).eq('id', actionId);
                 
-                if (error) throw error;
-                
                 const action = actions.find(a => a.id === actionId);
                 if (action) action.status = 'completed';
                 
-                toast('✅ Action completed!');
+                // Log activity
+                await db.from('activities').insert({
+                    lead_id: leadId,
+                    type: action.type,
+                    outcome: selectedOutcome,
+                    notes: notes || action.notes || 'Completed from actions page'
+                });
+                
+                // Update lead
+                await db.from('leads').update({
+                    last_activity: new Date().toISOString(),
+                    last_activity_type: action.type,
+                    last_activity_outcome: selectedOutcome
+                }).eq('id', leadId);
+                
+                // Create follow-up action based on outcome
+                await createFollowUpAction(leadId, selectedNext, selectedOutcome);
+                
+                document.querySelector('.modal-overlay')?.remove();
+                toast('✅ Completed! Follow-up created');
+                
+                // Reload actions
+                const {data} = await db.from('actions').select('*').order('date', {ascending: true});
+                actions = data || [];
                 render();
             } catch(e) {
                 console.error(e);
-                toast('❌ Failed', 'error');
+                toast('❌ Failed: ' + e.message, 'error');
+            }
+        }
+        
+        async function createFollowUpAction(leadId, nextType, outcome) {
+            if (nextType === 'none') return;
+            
+            const today = new Date();
+            let followUpDate = new Date(today);
+            let actionType = 'call';
+            let actionNotes = '';
+            
+            switch(nextType) {
+                case 'callback-1day':
+                    followUpDate.setDate(followUpDate.getDate() + 1);
+                    actionNotes = 'Follow-up call after no answer';
+                    break;
+                case 'follow-up-2days':
+                    followUpDate.setDate(followUpDate.getDate() + 2);
+                    actionNotes = 'Follow-up after voicemail';
+                    break;
+                case 'callback-2days':
+                    followUpDate.setDate(followUpDate.getDate() + 2);
+                    actionNotes = 'Callback after gatekeeper';
+                    break;
+                case 'callback-custom':
+                    followUpDate.setDate(followUpDate.getDate() + 1);
+                    actionNotes = 'Callback as requested';
+                    break;
+                case 'hot-follow-up':
+                    followUpDate.setDate(followUpDate.getDate() + 1);
+                    actionNotes = '🔥 HOT LEAD - Follow up immediately';
+                    break;
+                case 'post-meeting':
+                    followUpDate.setDate(followUpDate.getDate() + 1);
+                    actionType = 'email';
+                    actionNotes = 'Send meeting confirmation';
+                    break;
+                case 'follow-up-3days':
+                    followUpDate.setDate(followUpDate.getDate() + 3);
+                    actionNotes = 'Check if they received email';
+                    break;
+            }
+            
+            if (actionNotes) {
+                await db.from('actions').insert({
+                    lead_id: leadId,
+                    type: actionType,
+                    date: followUpDate.toISOString().split('T')[0],
+                    notes: actionNotes,
+                    status: 'planned'
+                });
             }
         }
         
@@ -525,21 +753,61 @@
             }
         }
         
-        async function rescheduleAction(actionId) {
-            const newDate = prompt('Reschedule to (YYYY-MM-DD):');
-            if (!newDate) return;
+        function rescheduleAction(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
             
+            // Show quick reschedule modal
+            showRescheduleModal(actionId);
+        }
+        
+        function showRescheduleModal(actionId) {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const twoDays = new Date(today);
+            twoDays.setDate(twoDays.getDate() + 2);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999';
+            modal.innerHTML = `
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:400px;width:90%">
+                    <h3 style="margin-bottom:1.5rem;font-size:1.25rem">⏰ Reschedule Action</h3>
+                    <div style="display:flex;flex-direction:column;gap:0.75rem">
+                        <button class="action-btn secondary" style="width:100%" onclick="quickReschedule('${actionId}', '${tomorrow.toISOString().split('T')[0]}')">
+                            Tomorrow (${tomorrow.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'})})
+                        </button>
+                        <button class="action-btn secondary" style="width:100%" onclick="quickReschedule('${actionId}', '${twoDays.toISOString().split('T')[0]}')">
+                            In 2 Days (${twoDays.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'})})
+                        </button>
+                        <button class="action-btn secondary" style="width:100%" onclick="quickReschedule('${actionId}', '${nextWeek.toISOString().split('T')[0]}')">
+                            Next Week (${nextWeek.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'})})
+                        </button>
+                        <button class="action-btn secondary" style="width:100%" onclick="customReschedule('${actionId}')">
+                            📅 Custom Date
+                        </button>
+                    </div>
+                    <button class="action-btn" style="width:100%;margin-top:1rem" onclick="this.closest('.modal-overlay').remove()">
+                        Cancel
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function quickReschedule(actionId, newDate) {
             try {
-                const {error} = await db.from('actions').update({
-                    date: newDate
-                }).eq('id', actionId);
-                
+                const {error} = await db.from('actions').update({date: newDate}).eq('id', actionId);
                 if (error) throw error;
                 
                 const action = actions.find(a => a.id === actionId);
                 if (action) action.date = newDate;
                 
-                toast('⏰ Action rescheduled');
+                document.querySelector('.modal-overlay')?.remove();
+                toast('⏰ Rescheduled to ' + formatDate(newDate));
                 render();
             } catch(e) {
                 console.error(e);
@@ -547,8 +815,14 @@
             }
         }
         
+        function customReschedule(actionId) {
+            const newDate = prompt('Enter date (YYYY-MM-DD):');
+            if (!newDate) return;
+            quickReschedule(actionId, newDate);
+        }
+        
         function openLead(leadId) {
-            window.location = `summitflow-pipeline-v2.html?lead=${leadId}`;
+            window.location = `summitflow-pipeline.html?lead=${leadId}`;
         }
         
         function toggleWeek() {
