@@ -127,6 +127,102 @@
 
         document.addEventListener('DOMContentLoaded', load);
 
+        
+    // ============================================
+    // REAL-TIME SYNC MODULE
+    // ============================================
+    // Listens for database changes and updates UI automatically
+    
+    let realtimeChannel = null;
+    
+    function setupRealtime() {
+        // Subscribe to leads table changes
+        realtimeChannel = db.channel('summitflow-sync')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'leads' }, 
+                handleLeadChange
+            )
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'activities' }, 
+                handleActivityChange
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ Real-time sync active');
+                }
+            });
+    }
+    
+    function handleLeadChange(payload) {
+        console.log('Lead changed:', payload.eventType, payload.new?.company || payload.old?.company);
+        
+        if (payload.eventType === 'INSERT') {
+            // New lead added
+            const newLead = payload.new;
+            if (!leads.find(l => l.id === newLead.id)) {
+                newLead.activityCount = newLead.activity_count || 0;
+                newLead.activities = [];
+                leads.unshift(newLead);
+                render ? render() : renderTable();
+                stats ? stats() : renderStats();
+                toast('✨ New lead added');
+            }
+        } else if (payload.eventType === 'UPDATE') {
+            // Lead updated
+            const updated = payload.new;
+            const lead = leads.find(l => l.id === updated.id);
+            if (lead) {
+                Object.assign(lead, updated);
+                lead.activityCount = updated.activity_count || lead.activityCount || 0;
+                render ? render() : renderTable();
+                stats ? stats() : renderStats();
+            }
+        } else if (payload.eventType === 'DELETE') {
+            // Lead deleted
+            const index = leads.findIndex(l => l.id === payload.old.id);
+            if (index !== -1) {
+                leads.splice(index, 1);
+                render ? render() : renderTable();
+                stats ? stats() : renderStats();
+                toast('🗑️ Lead deleted');
+            }
+        }
+    }
+    
+    function handleActivityChange(payload) {
+        console.log('Activity changed:', payload.eventType);
+        
+        if (payload.eventType === 'INSERT') {
+            // New activity logged
+            const activity = payload.new;
+            const lead = leads.find(l => l.id === activity.lead_id);
+            if (lead) {
+                // Add to activities array
+                if (!lead.activities) lead.activities = [];
+                lead.activities.unshift(activity);
+                
+                // Update count (will be corrected by next lead update from trigger)
+                lead.activityCount = (lead.activityCount || 0) + 1;
+                
+                // Re-render
+                render ? render() : renderTable();
+                
+                // If modal is open for this lead, update timeline
+                if (typeof renderTimeline === 'function' && currentId === lead.id) {
+                    renderTimeline(lead);
+                }
+            }
+        }
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (realtimeChannel) {
+            db.removeChannel(realtimeChannel);
+        }
+    });
+
+
         async function load() {
             try {
                 sync('syncing','Loading...');
@@ -138,9 +234,14 @@
                 activities={};
                 (acts||[]).forEach(a=>{if(!activities[a.lead_id])activities[a.lead_id]=[];activities[a.lead_id].push(a);});
                 leads.forEach(l=>l.activities=activities[l.id]||[]);
+                console.log('Pipeline loaded:', {
+                    leads: leads.length,
+                    totalActivities: Object.keys(activities).length,
+                    leadsWithActivities: leads.filter(l => l.activity_count > 0).length
+                });
                 const {data:actns, error:e3} = await db.from('actions').select('*').order('date',{ascending:true});
                 if (!e3) actions = actns || [];
-                render();stats();hide();sync('ok','Connected');
+                render();stats();hide();sync('ok','Connected');setupRealtime();
             } catch(e) {console.error(e);sync('error','Error');toast('❌ Connection failed','error');hide();}
         }
 
@@ -161,7 +262,7 @@
         }
 
         function card(l,s) {
-            const rot = getRot(l,s), acts = l.activities?.length||0;
+            const rot = getRot(l,s), acts = l.activity_count || l.activities?.length || 0;
             const cb = l.follow_up && new Date(l.follow_up)>new Date();
             const od = l.follow_up && new Date(l.follow_up)<new Date();
             const leadActions = getLeadActions(l.id), overdueActions = getOverdueActions(l.id);
@@ -177,7 +278,7 @@
                     ${od && !hasOverdue?`<span class="tag overdue">⚠️ Overdue</span>`:''}
                 </div>
                 <div class="card-footer">
-                    <span class="card-time">${fmtTime(l.last_activity_at||l.created_at)}</span>
+                    <span class="card-time">${fmtTime(l.last_activity||l.last_activity_at||l.created_at)}</span>
                     <div class="card-actions">
                         ${l.phone?`<button class="action-btn" onclick="event.stopPropagation();window.open('tel:${l.phone}');openLead('${l.id}')">📞</button>`:''}
                         ${l.email?`<button class="action-btn" onclick="event.stopPropagation();window.open('mailto:${l.email}');openLead('${l.id}')">📧</button>`:''}
@@ -186,7 +287,7 @@
             </div>`;
         }
 
-        function getRot(l,s){if(!s.rot)return'';const d=Math.floor((Date.now()-new Date(l.last_activity_at||l.created_at))/(1000*60*60*24));if(d>=s.rot*2)return'rotting-danger';if(d>=s.rot)return'rotting-warning';return'';}
+        function getRot(l,s){if(!s.rot)return'';const d=Math.floor((Date.now()-new Date(l.last_activity||l.last_activity_at||l.created_at))/(1000*60*60*24));if(d>=s.rot*2)return'rotting-danger';if(d>=s.rot)return'rotting-warning';return'';}
         function fmtTime(d){if(!d)return'Never';const dt=new Date(d),now=new Date(),diff=Math.floor((now-dt)/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<7)return diff+'d ago';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
         function fmtFU(d){const dt=new Date(d),diff=Math.floor((dt-new Date())/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Tomorrow';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
         function stats(){const t=leads.length,h=leads.filter(l=>l.stage==='interested').length,m=leads.filter(l=>l.stage==='meeting').length,w=leads.filter(l=>l.stage==='won').length;document.getElementById('total').textContent=t;document.getElementById('hot').textContent=h;document.getElementById('meetings').textContent=m;document.getElementById('won').textContent=w;document.getElementById('rate').textContent=t?Math.round(w/t*100)+'%':'0%';}
@@ -200,7 +301,7 @@
             document.querySelectorAll('.col-body').forEach(c=>{
                 c.addEventListener('dragover',e=>{e.preventDefault();c.style.background='var(--calls-glow)';});
                 c.addEventListener('dragleave',e=>{c.style.background='';});
-                c.addEventListener('drop',async e=>{e.preventDefault();c.style.background='';if(!dragId)return;const ns=c.dataset.stage,l=leads.find(x=>x.id===dragId);if(!l||l.stage===ns)return;const os=l.stage;sync('syncing','Saving...');try{await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).eq('id',dragId);await db.from('activities').insert({lead_id:dragId,type:'note',outcome:'moved',notes:`Moved from ${getSN(os)} to ${getSN(ns)}`});l.stage=ns;l.last_activity_at=new Date().toISOString();render();stats();sync('ok','Saved');toast(`✅ Moved to ${getSN(ns)}`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}});
+                c.addEventListener('drop',async e=>{e.preventDefault();c.style.background='';if(!dragId)return;const ns=c.dataset.stage,l=leads.find(x=>x.id===dragId);if(!l||l.stage===ns)return;const os=l.stage;sync('syncing','Saving...');try{await db.from('leads').update({stage:ns,last_activity:new Date().toISOString()}).eq('id',dragId);await db.from('activities').insert({lead_id:dragId,type:'note',outcome:'moved',notes:`Moved from ${getSN(os)} to ${getSN(ns)}`});l.stage=ns;l.last_activity_at=new Date().toISOString();render();stats();sync('ok','Saved');toast(`✅ Moved to ${getSN(ns)}`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}});
             });
         }
 
