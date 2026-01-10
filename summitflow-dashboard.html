@@ -3305,64 +3305,32 @@ if (typeof module !== 'undefined' && module.exports) {
         
         
         async function nuclearReset() {
-            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n- Clear localStorage\n\nThis CANNOT be undone!')) return;
-            if (!confirm('Are you ABSOLUTELY SURE?')) return;
+            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- All daily logs\n- Reset all lead stats\n- Clear localStorage\n\nThis CANNOT be undone!')) return;
+            if (!confirm('Are you ABSOLUTELY SURE? This will erase ALL your data!')) return;
             
             console.log('☢️ Starting nuclear reset...');
             toast('☢️ Resetting everything...');
             
             try {
-                // 1. Delete all activities
-                const {data: acts} = await db.from('activities').select('id');
-                if (acts && acts.length > 0) {
-                    await db.from('activities').delete().in('id', acts.map(a => a.id));
-                    console.log('✅ Activities deleted:', acts.length);
-                } else {
-                    console.log('✅ No activities to delete');
+                // Call the SQL function
+                const {data, error} = await db.rpc('nuclear_reset');
+                
+                if (error) {
+                    throw error;
                 }
                 
-                // 2. Delete all sessions
-                const {data: sess} = await db.from('sessions').select('id');
-                if (sess && sess.length > 0) {
-                    await db.from('sessions').delete().in('id', sess.map(s => s.id));
-                    console.log('✅ Sessions deleted:', sess.length);
-                } else {
-                    console.log('✅ No sessions to delete');
-                }
+                console.log('✅ Database reset:', data);
                 
-                // 3. Delete all callbacks
-                const {data: cbs} = await db.from('callbacks').select('id');
-                if (cbs && cbs.length > 0) {
-                    await db.from('callbacks').delete().in('id', cbs.map(c => c.id));
-                    console.log('✅ Callbacks deleted:', cbs.length);
-                } else {
-                    console.log('✅ No callbacks to delete');
-                }
-                
-                // 4. Reset all leads (get IDs first, then update in batches)
-                const {data: allLeads} = await db.from('leads').select('id');
-                console.log('Resetting', allLeads.length, 'leads...');
-                
-                for (const lead of allLeads) {
-                    await db.from('leads').update({
-                        activity_count: 0,
-                        last_activity: null,
-                        last_activity_type: null,
-                        last_activity_outcome: null
-                    }).eq('id', lead.id);
-                }
-                console.log('✅ All lead stats reset');
-                
-                // 5. Clear ALL localStorage (not just sf_ keys)
+                // Clear ALL localStorage
                 localStorage.clear();
-                console.log('✅ localStorage COMPLETELY cleared');
+                console.log('✅ localStorage cleared');
                 
                 toast('☢️ Reset complete! Refreshing...');
-                console.log('✅ NUCLEAR RESET COMPLETE - Page will refresh in 1 second');
+                console.log('✅ NUCLEAR RESET COMPLETE');
                 setTimeout(() => location.reload(), 1000);
             } catch(e) {
                 console.error('❌ Reset failed:', e);
-                alert('Reset failed: ' + e.message);
+                alert('Reset failed: ' + e.message + '\n\nMake sure you ran the SQL function creation script first!');
             }
         }
         
