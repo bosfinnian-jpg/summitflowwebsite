@@ -284,6 +284,10 @@
                 <div class="card-header"><div class="card-company">${l.company}</div><button class="card-menu" onclick="openLead('${l.id}')">⋯</button></div>
                 ${l.contact?`<div class="card-contact">${l.contact}</div>`:''}
                 <div class="card-meta">
+                    ${(() => {
+                        const status = getHealthStatus(l, s);
+                        return `<span class="tag" style="background:${status.healthColor}15;color:${status.healthColor};border:1px solid ${status.healthColor}40">${status.healthIcon} ${status.health} (${status.daysSince}d)</span>`;
+                    })()}
                     ${acts?`<span class="tag activities">📊 ${acts}</span>`:''}
                     ${hasOverdue?`<span class="tag actions-overdue">⚠️ ${overdueActions.length} overdue</span>`:''}
                     ${hasActions && !hasOverdue?`<span class="tag actions">📋 ${leadActions.length}</span>`:''}
@@ -291,7 +295,13 @@
                     ${od && !hasOverdue?`<span class="tag overdue">⚠️ Overdue</span>`:''}
                 </div>
                 <div class="card-footer">
-                    <span class="card-time">${fmtTime(l.last_activity||l.last_activity_at||l.created_at)}</span>
+                    <div style="display:flex;flex-direction:column;gap:0.25rem">
+                        <span class="card-time">${fmtTime(l.last_activity||l.last_activity_at||l.created_at)}</span>
+                        ${(() => {
+                            const status = getHealthStatus(l, s);
+                            return status.daysInStage > 0 ? `<span style="font-size:0.65rem;color:var(--text-muted)">In ${s.name}: ${status.daysInStage}d</span>` : '';
+                        })()}
+                    </div>
                     <div class="card-actions">
                         ${l.phone?`<button class="action-btn" onclick="event.stopPropagation();window.open('tel:${l.phone}');openLead('${l.id}')">📞</button>`:''}
                         ${l.email?`<button class="action-btn" onclick="event.stopPropagation();window.open('mailto:${l.email}');openLead('${l.id}')">📧</button>`:''}
@@ -301,6 +311,40 @@
         }
 
         function getRot(l,s){if(!s.rot)return'';const d=Math.floor((Date.now()-new Date(l.last_activity||l.last_activity_at||l.created_at))/(1000*60*60*24));if(d>=s.rot*2)return'rotting-danger';if(d>=s.rot)return'rotting-warning';return'';}
+        
+        function getHealthStatus(l, s) {
+            const lastActivity = l.last_activity || l.last_activity_at || l.created_at;
+            const daysSince = Math.floor((Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24));
+            
+            // Calculate time in stage
+            const stageStart = l.stage_changed_at || l.created_at;
+            const daysInStage = Math.floor((Date.now() - new Date(stageStart)) / (1000 * 60 * 60 * 24));
+            
+            // Determine health based on days since last activity
+            let health, healthIcon, healthColor;
+            if (daysSince < 3) {
+                health = 'Fresh';
+                healthIcon = '🟢';
+                healthColor = 'var(--success)';
+            } else if (daysSince < 7) {
+                health = 'Stale';
+                healthIcon = '🟡';
+                healthColor = 'var(--warning)';
+            } else {
+                health = 'At Risk';
+                healthIcon = '🔴';
+                healthColor = 'var(--danger)';
+            }
+            
+            return {
+                health,
+                healthIcon,
+                healthColor,
+                daysSince,
+                daysInStage,
+                lastActivity
+            };
+        }
         function fmtTime(d){if(!d)return'Never';const dt=new Date(d),now=new Date(),diff=Math.floor((now-dt)/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<7)return diff+'d ago';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
         function fmtFU(d){const dt=new Date(d),diff=Math.floor((dt-new Date())/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Tomorrow';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
         function stats(){const t=leads.length,h=leads.filter(l=>l.stage==='interested').length,m=leads.filter(l=>l.stage==='meeting').length,w=leads.filter(l=>l.stage==='won').length;document.getElementById('total').textContent=t;document.getElementById('hot').textContent=h;document.getElementById('meetings').textContent=m;document.getElementById('won').textContent=w;document.getElementById('rate').textContent=t?Math.round(w/t*100)+'%':'0%';}
@@ -457,6 +501,160 @@
         function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='error'?' error':'');setTimeout(()=>t.classList.remove('show'),3000);}
         document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');}));
         document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active'));});
+    </script>
+
+        <!-- Developer Tools Panel -->
+        <div style="position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:2px solid var(--border);border-radius:12px;padding:1rem;z-index:9999;display:none" id="dev-tools">
+            <div style="font-weight:600;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center">
+                <span>🛠️ Dev Tools</span>
+                <button onclick="document.getElementById('dev-tools').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem">×</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem">
+                <button class="btn" onclick="resetAllActivityCounts()" style="font-size:0.8rem">🔄 Recalculate All Counts</button>
+                <button class="btn" onclick="clearAllActivities()" style="font-size:0.8rem;background:var(--warning-glow);border-color:var(--warning)">🗑️ Delete All Activities</button>
+                <button class="btn" onclick="nuclearReset()" style="font-size:0.8rem;background:var(--danger-glow);border-color:var(--danger)">☢️ NUCLEAR RESET</button>
+                <button class="btn" onclick="showDataSummary()" style="font-size:0.8rem">📊 Show Data Summary</button>
+                <button class="btn" onclick="location.reload()" style="font-size:0.8rem">♻️ Refresh Page</button>
+            </div>
+        </div>
+        
+        <!-- Dev Tools Toggle Button -->
+        <button onclick="document.getElementById('dev-tools').style.display='block'" 
+                style="position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;background:var(--surface);border:2px solid var(--border);color:var(--text);cursor:pointer;font-size:1.2rem;z-index:9998;display:flex;align-items:center;justify-content:center"
+                title="Developer Tools">
+            🛠️
+        </button>
+
+    <script>
+
+        // Developer Tools Functions
+        async function resetAllActivityCounts() {
+            if (!confirm('Recalculate activity counts for all leads?')) return;
+            sync('syncing', 'Recalculating...');
+            try {
+                // Get all activities grouped by lead
+                const {data: activities} = await db.from('activities').select('lead_id');
+                const counts = {};
+                activities.forEach(a => {
+                    counts[a.lead_id] = (counts[a.lead_id] || 0) + 1;
+                });
+                
+                // Update each lead
+                let updated = 0;
+                for (const [leadId, count] of Object.entries(counts)) {
+                    await db.from('leads').update({activity_count: count}).eq('id', leadId);
+                    updated++;
+                }
+                
+                // Reset leads with no activities
+                await db.from('leads').update({activity_count: 0}).is('activity_count', null);
+                
+                sync('ok', 'Done');
+                toast(`✅ Reset ${updated} leads`);
+                setTimeout(() => location.reload(), 1000);
+            } catch(e) {
+                console.error(e);
+                sync('error', 'Failed');
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        
+        async function nuclearReset() {
+            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n\nThis CANNOT be undone!')) return;
+            if (!confirm('Are you ABSOLUTELY SURE? Type YES in your head.')) return;
+            
+            console.log('☢️ Starting nuclear reset...');
+            toast('☢️ Resetting everything...');
+            
+            try {
+                // Delete all activities
+                await db.from('activities').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Activities deleted');
+                
+                // Delete all sessions
+                await db.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Sessions deleted');
+                
+                // Delete all callbacks
+                await db.from('callbacks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Callbacks deleted');
+                
+                // Reset all lead stats
+                await db.from('leads').update({
+                    activity_count: 0,
+                    last_activity: null,
+                    last_activity_type: null,
+                    last_activity_outcome: null
+                }).neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Lead stats reset');
+                
+                // Clear localStorage
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sf_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                console.log('✅ localStorage cleared');
+                
+                toast('☢️ Reset complete! Refreshing...');
+                console.log('✅ NUCLEAR RESET COMPLETE');
+                setTimeout(() => location.reload(), 1500);
+            } catch(e) {
+                console.error('❌ Reset failed:', e);
+                toast('❌ Failed: ' + e.message, 'error');
+            }
+        }
+        
+        async function clearAllActivities() {
+            if (!confirm('⚠️ DELETE ALL ACTIVITIES? This cannot be undone!')) return;
+            if (!confirm('Are you REALLY sure? This will delete all call logs!')) return;
+            
+            sync('syncing', 'Deleting...');
+            try {
+                const {data} = await db.from('activities').select('id');
+                await db.from('activities').delete().in('id', data.map(a => a.id));
+                await db.from('leads').update({activity_count: 0, last_activity: null, last_activity_type: null, last_activity_outcome: null});
+                
+                sync('ok', 'Deleted');
+                toast('🗑️ All activities deleted');
+                setTimeout(() => location.reload(), 1000);
+            } catch(e) {
+                console.error(e);
+                sync('error', 'Failed');
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        async function showDataSummary() {
+            try {
+                const {data: leadData} = await db.from('leads').select('id, company, activity_count');
+                const {data: actData} = await db.from('activities').select('lead_id');
+                const {data: sessData} = await db.from('sessions').select('calls_attempted');
+                
+                const totalLeads = leadData.length;
+                const leadsWithActivities = leadData.filter(l => (l.activity_count || 0) > 0).length;
+                const totalActivities = actData.length;
+                const totalCalls = sessData.reduce((sum, s) => sum + (s.calls_attempted || 0), 0);
+                
+                console.log('📊 DATA SUMMARY');
+                console.log('===============');
+                console.log('Total Leads:', totalLeads);
+                console.log('Leads with Activities:', leadsWithActivities);
+                console.log('Total Activities in DB:', totalActivities);
+                console.log('Total Calls from Sessions:', totalCalls);
+                console.log('\nLeads with activity_count > 0:');
+                leadData.filter(l => l.activity_count > 0).forEach(l => {
+                    console.log(`  ${l.company}: ${l.activity_count}`);
+                });
+                
+                toast(`📊 ${totalLeads} leads, ${totalActivities} activities - Check console`);
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
+            }
+        }
+
     </script>
 </body>
 </html>
