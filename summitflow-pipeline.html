@@ -19,6 +19,7 @@
             <div class="nav-tabs">
                 <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
                 <span class="nav-tab active">Pipeline</span>
+                <a href="summitflow-actions.html" class="nav-tab">Actions</a>
                 <a href="summitflow-dashboard.html" class="nav-tab">Dashboard</a>
             </div>
         </div>
@@ -51,13 +52,7 @@
                 <div class="section-title">Contact Info</div>
                 <div class="info-grid" id="contact-info"></div>
                 <div class="actions-panel" id="lead-actions-panel">
-                    <div class="actions-panel-header">
-                        <div class="actions-panel-title">📋 Upcoming Actions</div>
-                        <div style="display:flex;gap:0.5rem">
-                            <button class="btn" style="padding:.375rem .75rem;font-size:.75rem;background:var(--purple-glow);border-color:var(--purple);color:var(--purple)" onclick="openTemplateModal()">📋 Template</button>
-                            <button class="btn" style="padding:.375rem .75rem;font-size:.75rem" onclick="openAddActionForLead()">+ Add</button>
-                        </div>
-                    </div>
+                    <div class="actions-panel-header"><div class="actions-panel-title">📋 Upcoming Actions</div><button class="btn" style="padding:.375rem .75rem;font-size:.75rem" onclick="openAddActionForLead()">+ Add</button></div>
                     <div class="actions-list" id="lead-actions-list"></div>
                 </div>
                 <div class="section-title">Notes</div>
@@ -106,20 +101,6 @@
         </div>
     </div>
 
-    
-    <!-- Action Templates Modal -->
-    <div class="modal-overlay" id="template-modal">
-        <div class="modal" style="max-width:600px">
-            <div class="modal-header">
-                <div class="modal-title">📋 Apply Action Template</div>
-                <button class="modal-close" onclick="closeModal('template-modal')">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" id="template-grid"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Add Action Modal -->
     <div class="modal-overlay" id="action-modal">
         <div class="modal" style="max-width:400px">
@@ -143,250 +124,9 @@
         const STAGES = [{id:'prospecting',name:'Prospecting',icon:'🎯',rot:3},{id:'outreach',name:'Outreach',icon:'📤',rot:3},{id:'interested',name:'Interested',icon:'🔥',rot:5},{id:'meeting',name:'Meeting',icon:'📅',rot:null},{id:'proposal',name:'Proposal',icon:'📋',rot:7},{id:'negotiation',name:'Negotiation',icon:'🤝',rot:14},{id:'won',name:'Won',icon:'🏆',rot:null},{id:'lost',name:'Lost',icon:'❌',rot:null}];
         const ACTION_TYPES = {call:'📞',email:'📧',follow_up:'🔄',meeting:'🤝'};
 
-        // ============================================
-        // ACTION TEMPLATES
-        // ============================================
-        
-        const ACTION_TEMPLATES = {
-            'new-lead': {
-                name: 'New Lead Outreach',
-                icon: '🎯',
-                description: 'Initial contact sequence for new prospects',
-                actions: [
-                    { type: 'call', offset: 0, notes: 'Initial outreach call' },
-                    { type: 'email', offset: 0, notes: 'Follow-up email with intro' },
-                    { type: 'call', offset: 2, notes: 'Second attempt call' },
-                    { type: 'email', offset: 4, notes: 'Value proposition email' },
-                    { type: 'call', offset: 7, notes: 'Final touch call' }
-                ]
-            },
-            'post-meeting': {
-                name: 'Post-Meeting Follow-up',
-                icon: '🤝',
-                description: 'Systematic follow-up after booking meeting',
-                actions: [
-                    { type: 'email', offset: 0, notes: 'Meeting confirmation + calendar invite' },
-                    { type: 'email', offset: 1, notes: 'Meeting prep + agenda' },
-                    { type: 'call', offset: 3, notes: 'Post-meeting follow-up call' },
-                    { type: 'email', offset: 7, notes: 'Check-in: Any questions?' },
-                    { type: 'call', offset: 14, notes: 'Two-week follow-up' }
-                ]
-            },
-            'proposal-sent': {
-                name: 'Proposal Follow-up',
-                icon: '📋',
-                description: 'Follow-up sequence after sending proposal',
-                actions: [
-                    { type: 'email', offset: 2, notes: 'Check-in: Did you receive the proposal?' },
-                    { type: 'call', offset: 5, notes: 'Call to discuss proposal' },
-                    { type: 'email', offset: 7, notes: 'Answer common questions' },
-                    { type: 'call', offset: 10, notes: 'Final closing call' }
-                ]
-            },
-            'callback-requested': {
-                name: 'Callback Sequence',
-                icon: '⏰',
-                description: 'When prospect asks to be called back',
-                actions: [
-                    { type: 'call', offset: 1, notes: 'Callback as requested' },
-                    { type: 'email', offset: 2, notes: 'Tried to reach you email' },
-                    { type: 'call', offset: 5, notes: 'Second callback attempt' }
-                ]
-            },
-            'no-answer': {
-                name: 'No Answer Follow-up',
-                icon: '📞',
-                description: 'When calls go unanswered',
-                actions: [
-                    { type: 'call', offset: 1, notes: 'Second call attempt' },
-                    { type: 'email', offset: 1, notes: 'Left voicemail email' },
-                    { type: 'call', offset: 3, notes: 'Third call attempt' },
-                    { type: 'call', offset: 7, notes: 'Final attempt before moving on' }
-                ]
-            },
-            'interested': {
-                name: 'Hot Lead Nurture',
-                icon: '🔥',
-                description: 'When prospect shows strong interest',
-                actions: [
-                    { type: 'email', offset: 0, notes: 'Send additional resources' },
-                    { type: 'call', offset: 1, notes: 'Book discovery call' },
-                    { type: 'follow_up', offset: 3, notes: 'Check-in on resources' }
-                ]
-            }
-        };
-        
-        function applyTemplate(templateId, leadId) {
-            const template = ACTION_TEMPLATES[templateId];
-            if (!template) {
-                toast('❌ Template not found', 'error');
-                return;
-            }
-            
-            const lead = leads.find(l => l.id === leadId);
-            if (!lead) {
-                toast('❌ Lead not found', 'error');
-                return;
-            }
-            
-            // Create actions based on template
-            const today = new Date();
-            const actionsToCreate = template.actions.map(a => {
-                const actionDate = new Date(today);
-                actionDate.setDate(actionDate.getDate() + a.offset);
-                
-                return {
-                    lead_id: leadId,
-                    type: a.type,
-                    date: actionDate.toISOString().split('T')[0],
-                    time: null,
-                    notes: a.notes,
-                    status: 'planned'
-                };
-            });
-            
-            // Save all actions
-            (async () => {
-                try {
-                    sync('syncing', 'Creating actions...');
-                    const {data, error} = await db.from('actions').insert(actionsToCreate).select();
-                    if (error) throw error;
-                    
-                    // Add to local array
-                    actions.push(...data);
-                    
-                    sync('ok', 'Done');
-                    toast(`✅ Applied ${template.name}: ${actionsToCreate.length} actions created`);
-                    
-                    // Refresh actions panel if modal is open
-                    if (currentId === leadId) {
-                        renderLeadActions(lead);
-                    }
-                    
-                    render();
-                } catch(e) {
-                    console.error(e);
-                    sync('error', 'Failed');
-                    toast('❌ Failed to create actions', 'error');
-                }
-            })();
-            
-            closeModal('template-modal');
-        }
-
-
         let leads=[], activities={}, actions=[], currentId=null, dragId=null, query='';
 
         document.addEventListener('DOMContentLoaded', load);
-
-        
-    // ============================================
-    // REAL-TIME SYNC MODULE
-    // ============================================
-    // Listens for database changes and updates UI automatically
-    
-    let realtimeChannel = null;
-    
-    function setupRealtime() {
-        // Subscribe to leads table changes
-        realtimeChannel = db.channel('summitflow-sync')
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'leads' }, 
-                handleLeadChange
-            )
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'activities' }, 
-                handleActivityChange
-            )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('✅ Real-time sync active');
-                }
-            });
-    }
-    
-    function handleLeadChange(payload) {
-        console.log('Lead changed:', payload.eventType, payload.new?.company || payload.old?.company);
-        
-        if (payload.eventType === 'INSERT') {
-            // New lead added
-            const newLead = payload.new;
-            if (!leads.find(l => l.id === newLead.id)) {
-                newLead.activityCount = newLead.activity_count || 0;
-                newLead.activities = [];
-                leads.unshift(newLead);
-                render ? render() : renderTable();
-                stats ? stats() : renderStats();
-                toast('✨ New lead added');
-            }
-        } else if (payload.eventType === 'UPDATE') {
-            // Lead updated
-            const updated = payload.new;
-            const lead = leads.find(l => l.id === updated.id);
-            if (lead) {
-                Object.assign(lead, updated);
-                lead.activityCount = updated.activity_count || lead.activityCount || 0;
-                render ? render() : renderTable();
-                stats ? stats() : renderStats();
-            }
-        } else if (payload.eventType === 'DELETE') {
-            // Lead deleted
-            const index = leads.findIndex(l => l.id === payload.old.id);
-            if (index !== -1) {
-                leads.splice(index, 1);
-                render ? render() : renderTable();
-                stats ? stats() : renderStats();
-                toast('🗑️ Lead deleted');
-            }
-        }
-    }
-    
-    function handleActivityChange(payload) {
-        console.log('🔔 Activity changed:', payload.eventType, payload.new);
-        
-        if (payload.eventType === 'INSERT') {
-            // New activity logged - the lead will be updated by trigger
-            // Just wait for the lead update event
-            console.log('Activity inserted for lead:', payload.new.lead_id);
-            
-            // Optionally reload the lead immediately
-            setTimeout(async () => {
-                const {data, error} = await db.from('leads')
-                    .select('*')
-                    .eq('id', payload.new.lead_id)
-                    .single();
-                
-                if (data && !error) {
-                    const lead = leads.find(l => l.id === data.id);
-                    if (lead) {
-                        Object.assign(lead, data);
-                        lead.activityCount = data.activity_count || 0;
-                        console.log('✅ Lead refreshed:', lead.company, 'activities:', lead.activityCount);
-                        render ? render() : renderTable();
-                        
-                        // Update timeline if modal open
-                        if (typeof renderTimeline === 'function' && currentId === lead.id) {
-                            // Reload activities for this lead
-                            const {data: acts} = await db.from('activities')
-                                .select('*')
-                                .eq('lead_id', lead.id)
-                                .order('created_at', {ascending: false});
-                            lead.activities = acts || [];
-                            renderTimeline(lead);
-                        }
-                    }
-                }
-            }, 500); // Small delay to let trigger complete
-        }
-    }
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (realtimeChannel) {
-            db.removeChannel(realtimeChannel);
-        }
-    });
-
 
         async function load() {
             try {
@@ -399,14 +139,9 @@
                 activities={};
                 (acts||[]).forEach(a=>{if(!activities[a.lead_id])activities[a.lead_id]=[];activities[a.lead_id].push(a);});
                 leads.forEach(l=>l.activities=activities[l.id]||[]);
-                console.log('Pipeline loaded:', {
-                    leads: leads.length,
-                    totalActivities: Object.keys(activities).length,
-                    leadsWithActivities: leads.filter(l => l.activity_count > 0).length
-                });
                 const {data:actns, error:e3} = await db.from('actions').select('*').order('date',{ascending:true});
                 if (!e3) actions = actns || [];
-                render();stats();hide();sync('ok','Connected');setupRealtime();
+                render();stats();hide();sync('ok','Connected');
             } catch(e) {console.error(e);sync('error','Error');toast('❌ Connection failed','error');hide();}
         }
 
@@ -427,7 +162,7 @@
         }
 
         function card(l,s) {
-            const rot = getRot(l,s), acts = l.activity_count || l.activities?.length || 0;
+            const rot = getRot(l,s), acts = l.activities?.length||0;
             const cb = l.follow_up && new Date(l.follow_up)>new Date();
             const od = l.follow_up && new Date(l.follow_up)<new Date();
             const leadActions = getLeadActions(l.id), overdueActions = getOverdueActions(l.id);
@@ -436,10 +171,6 @@
                 <div class="card-header"><div class="card-company">${l.company}</div><button class="card-menu" onclick="openLead('${l.id}')">⋯</button></div>
                 ${l.contact?`<div class="card-contact">${l.contact}</div>`:''}
                 <div class="card-meta">
-                    ${(() => {
-                        const status = getHealthStatus(l, s);
-                        return `<span class="tag" style="background:${status.healthColor}15;color:${status.healthColor};border:1px solid ${status.healthColor}40">${status.healthIcon} ${status.health} (${status.daysSince}d)</span>`;
-                    })()}
                     ${acts?`<span class="tag activities">📊 ${acts}</span>`:''}
                     ${hasOverdue?`<span class="tag actions-overdue">⚠️ ${overdueActions.length} overdue</span>`:''}
                     ${hasActions && !hasOverdue?`<span class="tag actions">📋 ${leadActions.length}</span>`:''}
@@ -447,13 +178,7 @@
                     ${od && !hasOverdue?`<span class="tag overdue">⚠️ Overdue</span>`:''}
                 </div>
                 <div class="card-footer">
-                    <div style="display:flex;flex-direction:column;gap:0.25rem">
-                        <span class="card-time">${fmtTime(l.last_activity||l.last_activity_at||l.created_at)}</span>
-                        ${(() => {
-                            const status = getHealthStatus(l, s);
-                            return status.daysInStage > 0 ? `<span style="font-size:0.65rem;color:var(--text-muted)">In ${s.name}: ${status.daysInStage}d</span>` : '';
-                        })()}
-                    </div>
+                    <span class="card-time">${fmtTime(l.last_activity_at||l.created_at)}</span>
                     <div class="card-actions">
                         ${l.phone?`<button class="action-btn" onclick="event.stopPropagation();window.open('tel:${l.phone}');openLead('${l.id}')">📞</button>`:''}
                         ${l.email?`<button class="action-btn" onclick="event.stopPropagation();window.open('mailto:${l.email}');openLead('${l.id}')">📧</button>`:''}
@@ -462,41 +187,7 @@
             </div>`;
         }
 
-        function getRot(l,s){if(!s.rot)return'';const d=Math.floor((Date.now()-new Date(l.last_activity||l.last_activity_at||l.created_at))/(1000*60*60*24));if(d>=s.rot*2)return'rotting-danger';if(d>=s.rot)return'rotting-warning';return'';}
-        
-        function getHealthStatus(l, s) {
-            const lastActivity = l.last_activity || l.last_activity_at || l.created_at;
-            const daysSince = Math.floor((Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24));
-            
-            // Calculate time in stage
-            const stageStart = l.stage_changed_at || l.created_at;
-            const daysInStage = Math.floor((Date.now() - new Date(stageStart)) / (1000 * 60 * 60 * 24));
-            
-            // Determine health based on days since last activity
-            let health, healthIcon, healthColor;
-            if (daysSince < 3) {
-                health = 'Fresh';
-                healthIcon = '🟢';
-                healthColor = 'var(--success)';
-            } else if (daysSince < 7) {
-                health = 'Stale';
-                healthIcon = '🟡';
-                healthColor = 'var(--warning)';
-            } else {
-                health = 'At Risk';
-                healthIcon = '🔴';
-                healthColor = 'var(--danger)';
-            }
-            
-            return {
-                health,
-                healthIcon,
-                healthColor,
-                daysSince,
-                daysInStage,
-                lastActivity
-            };
-        }
+        function getRot(l,s){if(!s.rot)return'';const d=Math.floor((Date.now()-new Date(l.last_activity_at||l.created_at))/(1000*60*60*24));if(d>=s.rot*2)return'rotting-danger';if(d>=s.rot)return'rotting-warning';return'';}
         function fmtTime(d){if(!d)return'Never';const dt=new Date(d),now=new Date(),diff=Math.floor((now-dt)/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<7)return diff+'d ago';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
         function fmtFU(d){const dt=new Date(d),diff=Math.floor((dt-new Date())/(1000*60*60*24));if(diff===0)return'Today';if(diff===1)return'Tomorrow';return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
         function stats(){const t=leads.length,h=leads.filter(l=>l.stage==='interested').length,m=leads.filter(l=>l.stage==='meeting').length,w=leads.filter(l=>l.stage==='won').length;document.getElementById('total').textContent=t;document.getElementById('hot').textContent=h;document.getElementById('meetings').textContent=m;document.getElementById('won').textContent=w;document.getElementById('rate').textContent=t?Math.round(w/t*100)+'%':'0%';}
@@ -510,7 +201,7 @@
             document.querySelectorAll('.col-body').forEach(c=>{
                 c.addEventListener('dragover',e=>{e.preventDefault();c.style.background='var(--calls-glow)';});
                 c.addEventListener('dragleave',e=>{c.style.background='';});
-                c.addEventListener('drop',async e=>{e.preventDefault();c.style.background='';if(!dragId)return;const ns=c.dataset.stage,l=leads.find(x=>x.id===dragId);if(!l||l.stage===ns)return;const os=l.stage;sync('syncing','Saving...');try{await db.from('leads').update({stage:ns,last_activity:new Date().toISOString()}).eq('id',dragId);await db.from('activities').insert({lead_id:dragId,type:'note',outcome:'moved',notes:`Moved from ${getSN(os)} to ${getSN(ns)}`});l.stage=ns;l.last_activity_at=new Date().toISOString();render();stats();sync('ok','Saved');toast(`✅ Moved to ${getSN(ns)}`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}});
+                c.addEventListener('drop',async e=>{e.preventDefault();c.style.background='';if(!dragId)return;const ns=c.dataset.stage,l=leads.find(x=>x.id===dragId);if(!l||l.stage===ns)return;const os=l.stage;sync('syncing','Saving...');try{await db.from('leads').update({stage:ns,last_activity_at:new Date().toISOString()}).eq('id',dragId);await db.from('activities').insert({lead_id:dragId,type:'note',outcome:'moved',notes:`Moved from ${getSN(os)} to ${getSN(ns)}`});l.stage=ns;l.last_activity_at=new Date().toISOString();render();stats();sync('ok','Saved');toast(`✅ Moved to ${getSN(ns)}`);}catch(e){console.error(e);sync('error','Failed');toast('❌ Failed','error');}});
             });
         }
 
@@ -543,34 +234,6 @@
                 const l = leads.find(x => x.id === currentId);if (l) renderLeadActions(l);
                 render();toast('✅ Action completed');
             } catch(e) {console.error(e);toast('❌ Failed', 'error');}
-        }
-
-        
-        function openTemplateModal() {
-            if (!currentId) return;
-            
-            const lead = leads.find(l => l.id === currentId);
-            if (!lead) return;
-            
-            // Render template cards
-            const grid = document.getElementById('template-grid');
-            grid.innerHTML = Object.entries(ACTION_TEMPLATES).map(([id, tmpl]) => `
-                <div onclick="applyTemplate('${id}', '${currentId}')" style="
-                    padding:1rem;
-                    background:var(--surface);
-                    border:2px solid var(--border);
-                    border-radius:var(--radius-sm);
-                    cursor:pointer;
-                    transition:all .2s;
-                " onmouseover="this.style.borderColor='var(--calls)'" onmouseout="this.style.borderColor='var(--border)'">
-                    <div style="font-size:2rem;margin-bottom:0.5rem">${tmpl.icon}</div>
-                    <div style="font-weight:600;margin-bottom:0.25rem">${tmpl.name}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem">${tmpl.description}</div>
-                    <div style="font-size:0.7rem;color:var(--text-secondary)">${tmpl.actions.length} actions</div>
-                </div>
-            `).join('');
-            
-            document.getElementById('template-modal').classList.add('active');
         }
 
         function openAddActionForLead() {
@@ -681,160 +344,6 @@
         function toast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='error'?' error':'');setTimeout(()=>t.classList.remove('show'),3000);}
         document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');}));
         document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active'));});
-    </script>
-
-        <!-- Developer Tools Panel -->
-        <div style="position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:2px solid var(--border);border-radius:12px;padding:1rem;z-index:9999;display:none" id="dev-tools">
-            <div style="font-weight:600;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center">
-                <span>🛠️ Dev Tools</span>
-                <button onclick="document.getElementById('dev-tools').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem">×</button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:0.5rem">
-                <button class="btn" onclick="resetAllActivityCounts()" style="font-size:0.8rem">🔄 Recalculate All Counts</button>
-                <button class="btn" onclick="clearAllActivities()" style="font-size:0.8rem;background:var(--warning-glow);border-color:var(--warning)">🗑️ Delete All Activities</button>
-                <button class="btn" onclick="nuclearReset()" style="font-size:0.8rem;background:var(--danger-glow);border-color:var(--danger)">☢️ NUCLEAR RESET</button>
-                <button class="btn" onclick="showDataSummary()" style="font-size:0.8rem">📊 Show Data Summary</button>
-                <button class="btn" onclick="location.reload()" style="font-size:0.8rem">♻️ Refresh Page</button>
-            </div>
-        </div>
-        
-        <!-- Dev Tools Toggle Button -->
-        <button onclick="document.getElementById('dev-tools').style.display='block'" 
-                style="position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;background:var(--surface);border:2px solid var(--border);color:var(--text);cursor:pointer;font-size:1.2rem;z-index:9998;display:flex;align-items:center;justify-content:center"
-                title="Developer Tools">
-            🛠️
-        </button>
-
-    <script>
-
-        // Developer Tools Functions
-        async function resetAllActivityCounts() {
-            if (!confirm('Recalculate activity counts for all leads?')) return;
-            sync('syncing', 'Recalculating...');
-            try {
-                // Get all activities grouped by lead
-                const {data: activities} = await db.from('activities').select('lead_id');
-                const counts = {};
-                activities.forEach(a => {
-                    counts[a.lead_id] = (counts[a.lead_id] || 0) + 1;
-                });
-                
-                // Update each lead
-                let updated = 0;
-                for (const [leadId, count] of Object.entries(counts)) {
-                    await db.from('leads').update({activity_count: count}).eq('id', leadId);
-                    updated++;
-                }
-                
-                // Reset leads with no activities
-                await db.from('leads').update({activity_count: 0}).is('activity_count', null);
-                
-                sync('ok', 'Done');
-                toast(`✅ Reset ${updated} leads`);
-                setTimeout(() => location.reload(), 1000);
-            } catch(e) {
-                console.error(e);
-                sync('error', 'Failed');
-                toast('❌ Failed', 'error');
-            }
-        }
-        
-        
-        async function nuclearReset() {
-            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n\nThis CANNOT be undone!')) return;
-            if (!confirm('Are you ABSOLUTELY SURE? Type YES in your head.')) return;
-            
-            console.log('☢️ Starting nuclear reset...');
-            toast('☢️ Resetting everything...');
-            
-            try {
-                // Delete all activities
-                await db.from('activities').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Activities deleted');
-                
-                // Delete all sessions
-                await db.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Sessions deleted');
-                
-                // Delete all callbacks
-                await db.from('callbacks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Callbacks deleted');
-                
-                // Reset all lead stats
-                await db.from('leads').update({
-                    activity_count: 0,
-                    last_activity: null,
-                    last_activity_type: null,
-                    last_activity_outcome: null
-                }).neq('id', '00000000-0000-0000-0000-000000000000');
-                console.log('✅ Lead stats reset');
-                
-                // Clear localStorage
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('sf_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-                console.log('✅ localStorage cleared');
-                
-                toast('☢️ Reset complete! Refreshing...');
-                console.log('✅ NUCLEAR RESET COMPLETE');
-                setTimeout(() => location.reload(), 1500);
-            } catch(e) {
-                console.error('❌ Reset failed:', e);
-                toast('❌ Failed: ' + e.message, 'error');
-            }
-        }
-        
-        async function clearAllActivities() {
-            if (!confirm('⚠️ DELETE ALL ACTIVITIES? This cannot be undone!')) return;
-            if (!confirm('Are you REALLY sure? This will delete all call logs!')) return;
-            
-            sync('syncing', 'Deleting...');
-            try {
-                const {data} = await db.from('activities').select('id');
-                await db.from('activities').delete().in('id', data.map(a => a.id));
-                await db.from('leads').update({activity_count: 0, last_activity: null, last_activity_type: null, last_activity_outcome: null});
-                
-                sync('ok', 'Deleted');
-                toast('🗑️ All activities deleted');
-                setTimeout(() => location.reload(), 1000);
-            } catch(e) {
-                console.error(e);
-                sync('error', 'Failed');
-                toast('❌ Failed', 'error');
-            }
-        }
-        
-        async function showDataSummary() {
-            try {
-                const {data: leadData} = await db.from('leads').select('id, company, activity_count');
-                const {data: actData} = await db.from('activities').select('lead_id');
-                const {data: sessData} = await db.from('sessions').select('calls_attempted');
-                
-                const totalLeads = leadData.length;
-                const leadsWithActivities = leadData.filter(l => (l.activity_count || 0) > 0).length;
-                const totalActivities = actData.length;
-                const totalCalls = sessData.reduce((sum, s) => sum + (s.calls_attempted || 0), 0);
-                
-                console.log('📊 DATA SUMMARY');
-                console.log('===============');
-                console.log('Total Leads:', totalLeads);
-                console.log('Leads with Activities:', leadsWithActivities);
-                console.log('Total Activities in DB:', totalActivities);
-                console.log('Total Calls from Sessions:', totalCalls);
-                console.log('\nLeads with activity_count > 0:');
-                leadData.filter(l => l.activity_count > 0).forEach(l => {
-                    console.log(`  ${l.company}: ${l.activity_count}`);
-                });
-                
-                toast(`📊 ${totalLeads} leads, ${totalActivities} activities - Check console`);
-            } catch(e) {
-                console.error(e);
-                toast('❌ Failed', 'error');
-            }
-        }
-
     </script>
 </body>
 </html>
