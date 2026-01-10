@@ -100,6 +100,20 @@
         </div>
     </div>
 
+    
+    <!-- Action Templates Modal -->
+    <div class="modal-overlay" id="template-modal">
+        <div class="modal" style="max-width:600px">
+            <div class="modal-header">
+                <div class="modal-title">📋 Apply Action Template</div>
+                <button class="modal-close" onclick="closeModal('template-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" id="template-grid"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Action Modal -->
     <div class="modal-overlay" id="action-modal">
         <div class="modal" style="max-width:400px">
@@ -122,6 +136,138 @@
 
         const STAGES = [{id:'prospecting',name:'Prospecting',icon:'🎯',rot:3},{id:'outreach',name:'Outreach',icon:'📤',rot:3},{id:'interested',name:'Interested',icon:'🔥',rot:5},{id:'meeting',name:'Meeting',icon:'📅',rot:null},{id:'proposal',name:'Proposal',icon:'📋',rot:7},{id:'negotiation',name:'Negotiation',icon:'🤝',rot:14},{id:'won',name:'Won',icon:'🏆',rot:null},{id:'lost',name:'Lost',icon:'❌',rot:null}];
         const ACTION_TYPES = {call:'📞',email:'📧',follow_up:'🔄',meeting:'🤝'};
+
+        // ============================================
+        // ACTION TEMPLATES
+        // ============================================
+        
+        const ACTION_TEMPLATES = {
+            'new-lead': {
+                name: 'New Lead Outreach',
+                icon: '🎯',
+                description: 'Initial contact sequence for new prospects',
+                actions: [
+                    { type: 'call', offset: 0, notes: 'Initial outreach call' },
+                    { type: 'email', offset: 0, notes: 'Follow-up email with intro' },
+                    { type: 'call', offset: 2, notes: 'Second attempt call' },
+                    { type: 'email', offset: 4, notes: 'Value proposition email' },
+                    { type: 'call', offset: 7, notes: 'Final touch call' }
+                ]
+            },
+            'post-meeting': {
+                name: 'Post-Meeting Follow-up',
+                icon: '🤝',
+                description: 'Systematic follow-up after booking meeting',
+                actions: [
+                    { type: 'email', offset: 0, notes: 'Meeting confirmation + calendar invite' },
+                    { type: 'email', offset: 1, notes: 'Meeting prep + agenda' },
+                    { type: 'call', offset: 3, notes: 'Post-meeting follow-up call' },
+                    { type: 'email', offset: 7, notes: 'Check-in: Any questions?' },
+                    { type: 'call', offset: 14, notes: 'Two-week follow-up' }
+                ]
+            },
+            'proposal-sent': {
+                name: 'Proposal Follow-up',
+                icon: '📋',
+                description: 'Follow-up sequence after sending proposal',
+                actions: [
+                    { type: 'email', offset: 2, notes: 'Check-in: Did you receive the proposal?' },
+                    { type: 'call', offset: 5, notes: 'Call to discuss proposal' },
+                    { type: 'email', offset: 7, notes: 'Answer common questions' },
+                    { type: 'call', offset: 10, notes: 'Final closing call' }
+                ]
+            },
+            'callback-requested': {
+                name: 'Callback Sequence',
+                icon: '⏰',
+                description: 'When prospect asks to be called back',
+                actions: [
+                    { type: 'call', offset: 1, notes: 'Callback as requested' },
+                    { type: 'email', offset: 2, notes: 'Tried to reach you email' },
+                    { type: 'call', offset: 5, notes: 'Second callback attempt' }
+                ]
+            },
+            'no-answer': {
+                name: 'No Answer Follow-up',
+                icon: '📞',
+                description: 'When calls go unanswered',
+                actions: [
+                    { type: 'call', offset: 1, notes: 'Second call attempt' },
+                    { type: 'email', offset: 1, notes: 'Left voicemail email' },
+                    { type: 'call', offset: 3, notes: 'Third call attempt' },
+                    { type: 'call', offset: 7, notes: 'Final attempt before moving on' }
+                ]
+            },
+            'interested': {
+                name: 'Hot Lead Nurture',
+                icon: '🔥',
+                description: 'When prospect shows strong interest',
+                actions: [
+                    { type: 'email', offset: 0, notes: 'Send additional resources' },
+                    { type: 'call', offset: 1, notes: 'Book discovery call' },
+                    { type: 'follow_up', offset: 3, notes: 'Check-in on resources' }
+                ]
+            }
+        };
+        
+        function applyTemplate(templateId, leadId) {
+            const template = ACTION_TEMPLATES[templateId];
+            if (!template) {
+                toast('❌ Template not found', 'error');
+                return;
+            }
+            
+            const lead = leads.find(l => l.id === leadId);
+            if (!lead) {
+                toast('❌ Lead not found', 'error');
+                return;
+            }
+            
+            // Create actions based on template
+            const today = new Date();
+            const actionsToCreate = template.actions.map(a => {
+                const actionDate = new Date(today);
+                actionDate.setDate(actionDate.getDate() + a.offset);
+                
+                return {
+                    lead_id: leadId,
+                    type: a.type,
+                    date: actionDate.toISOString().split('T')[0],
+                    time: null,
+                    notes: a.notes,
+                    status: 'planned'
+                };
+            });
+            
+            // Save all actions
+            (async () => {
+                try {
+                    sync('syncing', 'Creating actions...');
+                    const {data, error} = await db.from('actions').insert(actionsToCreate).select();
+                    if (error) throw error;
+                    
+                    // Add to local array
+                    actions.push(...data);
+                    
+                    sync('ok', 'Done');
+                    toast(`✅ Applied ${template.name}: ${actionsToCreate.length} actions created`);
+                    
+                    // Refresh actions panel if modal is open
+                    if (currentId === leadId) {
+                        renderLeadActions(lead);
+                    }
+                    
+                    render();
+                } catch(e) {
+                    console.error(e);
+                    sync('error', 'Failed');
+                    toast('❌ Failed to create actions', 'error');
+                }
+            })();
+            
+            closeModal('template-modal');
+        }
+
 
         let leads=[], activities={}, actions=[], currentId=null, dragId=null, query='';
 
@@ -391,6 +537,34 @@
                 const l = leads.find(x => x.id === currentId);if (l) renderLeadActions(l);
                 render();toast('✅ Action completed');
             } catch(e) {console.error(e);toast('❌ Failed', 'error');}
+        }
+
+        
+        function openTemplateModal() {
+            if (!currentId) return;
+            
+            const lead = leads.find(l => l.id === currentId);
+            if (!lead) return;
+            
+            // Render template cards
+            const grid = document.getElementById('template-grid');
+            grid.innerHTML = Object.entries(ACTION_TEMPLATES).map(([id, tmpl]) => `
+                <div onclick="applyTemplate('${id}', '${currentId}')" style="
+                    padding:1rem;
+                    background:var(--surface);
+                    border:2px solid var(--border);
+                    border-radius:var(--radius-sm);
+                    cursor:pointer;
+                    transition:all .2s;
+                " onmouseover="this.style.borderColor='var(--calls)'" onmouseout="this.style.borderColor='var(--border)'">
+                    <div style="font-size:2rem;margin-bottom:0.5rem">${tmpl.icon}</div>
+                    <div style="font-weight:600;margin-bottom:0.25rem">${tmpl.name}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem">${tmpl.description}</div>
+                    <div style="font-size:0.7rem;color:var(--text-secondary)">${tmpl.actions.length} actions</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('template-modal').classList.add('active');
         }
 
         function openAddActionForLead() {
