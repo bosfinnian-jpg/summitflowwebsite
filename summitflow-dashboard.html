@@ -1861,10 +1861,12 @@ if (typeof module !== 'undefined' && module.exports) {
                 safeSetStorage('sessionActive', true);
                 safeSetStorage('sessionData', sessionData);
                 safeSetStorage('sessionStart', sessionStart);
+                safeSetStorage('currentSessionId', currentSessionId);
             } else {
                 localStorage.removeItem('sf_sessionActive');
                 localStorage.removeItem('sf_sessionData');
                 localStorage.removeItem('sf_sessionStart');
+                localStorage.removeItem('sf_currentSessionId');
             }
         }
 
@@ -1880,10 +1882,16 @@ if (typeof module !== 'undefined' && module.exports) {
             const wasSessionActive = safeGetStorage('sessionActive', false);
             const savedSessionData = safeGetStorage('sessionData');
             const savedSessionStart = safeGetStorage('sessionStart');
+            const savedSessionId = safeGetStorage('currentSessionId');
             if (wasSessionActive && savedSessionData && savedSessionStart) {
                 sessionActive = true;
                 sessionData = savedSessionData;
                 sessionStart = savedSessionStart;
+                currentSessionId = savedSessionId; // Restore the session ID
+                console.log('Restored session from localStorage:', {
+                    sessionId: currentSessionId,
+                    calls: sessionData.calls
+                });
                 restored = true;
             }
             dismissedSuggestions = safeGetStorage('dismissedSuggestions', {});
