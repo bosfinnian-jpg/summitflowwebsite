@@ -1917,7 +1917,10 @@ if (typeof module !== 'undefined' && module.exports) {
                 
                 // If no queue was restored, generate fresh
                 if (queue.length === 0 && leads.length > 0) {
-                    queue = leads.filter(l => l.stage === 'prospecting' || l.stage === 'outreach').slice(0,100).map(l => l.id);
+                    queue = leads.filter(l => 
+                        l.stage !== 'won' && l.stage !== 'lost' // Exclude only won/lost
+                    ).slice(0,100).map(l => l.id);
+                    console.log('Queue generated:', queue.length, 'leads');
                     persistQueueState();
                 }
                 
@@ -2633,12 +2636,19 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         async function logOutcome(o) {
-            if (!sessionActive) return;
+            if (!sessionActive) {
+                console.warn('No active session');
+                return;
+            }
             const lid = queue[currentIdx];
             const l = leads.find(x => x.id === lid);
-            if (!l) return;
+            if (!l) {
+                console.warn('No lead found at index', currentIdx);
+                return;
+            }
 
             const type = o === 'email' ? 'email' : 'call';
+            console.log('Logging outcome:', {outcome: o, type, leadId: lid, leadName: l.company});
             
             try {
                 // Log activity using database module
