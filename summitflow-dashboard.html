@@ -3255,7 +3255,8 @@ if (typeof module !== 'undefined' && module.exports) {
             </div>
             <div style="display:flex;flex-direction:column;gap:0.5rem">
                 <button class="btn" onclick="resetAllActivityCounts()" style="font-size:0.8rem">🔄 Recalculate All Counts</button>
-                <button class="btn" onclick="clearAllActivities()" style="font-size:0.8rem;background:var(--danger-glow);border-color:var(--danger)">🗑️ Delete All Activities</button>
+                <button class="btn" onclick="clearAllActivities()" style="font-size:0.8rem;background:var(--warning-glow);border-color:var(--warning)">🗑️ Delete All Activities</button>
+                <button class="btn" onclick="nuclearReset()" style="font-size:0.8rem;background:var(--danger-glow);border-color:var(--danger)">☢️ NUCLEAR RESET</button>
                 <button class="btn" onclick="showDataSummary()" style="font-size:0.8rem">📊 Show Data Summary</button>
                 <button class="btn" onclick="location.reload()" style="font-size:0.8rem">♻️ Refresh Page</button>
             </div>
@@ -3302,6 +3303,52 @@ if (typeof module !== 'undefined' && module.exports) {
             }
         }
         
+        
+        async function nuclearReset() {
+            if (!confirm('⚠️ NUCLEAR RESET - Delete EVERYTHING?\n\n- All activities\n- All sessions\n- All callbacks\n- Reset all lead stats\n\nThis CANNOT be undone!')) return;
+            if (!confirm('Type YES in console if you are ABSOLUTELY SURE')) return;
+            
+            sync('syncing', 'Nuclear reset...');
+            try {
+                // Delete all activities
+                await db.from('activities').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Activities deleted');
+                
+                // Delete all sessions
+                await db.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Sessions deleted');
+                
+                // Delete all callbacks
+                await db.from('callbacks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Callbacks deleted');
+                
+                // Reset all lead stats
+                await db.from('leads').update({
+                    activity_count: 0,
+                    last_activity: null,
+                    last_activity_type: null,
+                    last_activity_outcome: null
+                }).neq('id', '00000000-0000-0000-0000-000000000000');
+                console.log('✅ Lead stats reset');
+                
+                // Clear localStorage
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sf_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                console.log('✅ localStorage cleared');
+                
+                sync('ok', 'Reset complete');
+                toast('☢️ Nuclear reset complete');
+                setTimeout(() => location.reload(), 1500);
+            } catch(e) {
+                console.error(e);
+                sync('error', 'Failed');
+                toast('❌ Failed: ' + e.message, 'error');
+            }
+        }
+
         async function clearAllActivities() {
             if (!confirm('⚠️ DELETE ALL ACTIVITIES? This cannot be undone!')) return;
             if (!confirm('Are you REALLY sure? This will delete all call logs!')) return;
