@@ -2,234 +2,187 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SummitFlow | Actions</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        :root{--bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;--border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);--text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;--calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);--emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);--success:#10B981;--success-glow:rgba(16,185,129,0.25);--warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);--danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);--purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);--radius:16px;--radius-sm:10px}
-        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        :root{
+            --bg-deep:#08090A;--bg:#0C0D0F;--bg-card:#131416;--bg-elevated:#1A1B1E;--surface:#222326;
+            --border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);
+            --text:#F8F8F8;--text-secondary:#A0A0A5;--text-muted:#606065;
+            --calls:#FF6B35;--calls-glow:rgba(255,107,53,0.25);
+            --emails:#3B82F6;--emails-glow:rgba(59,130,246,0.25);
+            --success:#10B981;--success-glow:rgba(16,185,129,0.25);
+            --warning:#F59E0B;--warning-glow:rgba(245,158,11,0.25);
+            --danger:#EF4444;--danger-glow:rgba(239,68,68,0.25);
+            --purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);
+            --radius:16px;--radius-sm:10px;
+        }
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;touch-action:pan-y}
         
         .loading{position:fixed;inset:0;background:var(--bg-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s}
         .loading.hidden{opacity:0;pointer-events:none}
-        .spinner{width:48px;height:48px;border:3px solid var(--surface);border-top-color:var(--calls);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem}
+        .spinner{width:48px;height:48px;border:3px solid var(--surface);border-top-color:var(--calls);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
         
-        .nav{position:fixed;top:0;left:0;right:0;height:70px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000}
-        .nav-left{display:flex;align-items:center;gap:2rem}
-        .logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}
-        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
-        .nav-tabs{display:flex;gap:.5rem}
-        .nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}
-        .nav-tab:hover{background:var(--surface);color:var(--text)}
-        .nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}
-        .nav-right{display:flex;align-items:center;gap:.75rem}
-        .sync{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted)}
-        .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+        /* STICKY HEADER */
+        .header{position:sticky;top:0;background:rgba(19,20,22,0.95);border-bottom:1px solid var(--border);padding:1rem 1.5rem;z-index:100;backdrop-filter:blur(20px)}
+        .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+        .logo{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+        .nav-icon{background:var(--surface);border:1px solid var(--border);padding:.5rem .75rem;border-radius:8px;cursor:pointer;font-size:.9rem;text-decoration:none;color:var(--text);transition:all .2s}
+        .nav-icon:hover{border-color:var(--border-hover)}
+        .time{font-size:.85rem;color:var(--text-muted)}
+        .progress-bar{height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:.75rem}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--calls));transition:width .3s}
+        .stats-row{display:flex;gap:1.5rem;font-size:.85rem}
+        .stat{display:flex;align-items:center;gap:.5rem}
+        .stat-value{font-weight:700;font-family:'JetBrains Mono',monospace}
+        .stat.danger .stat-value{color:var(--danger)}
         
-        .main{padding-top:90px;padding-bottom:2rem;max-width:1400px;margin:0 auto;padding-left:2rem;padding-right:2rem}
+        /* MAIN CONTENT */
+        .main{padding:0;max-width:600px;margin:0 auto}
         
-        .page-header{margin-bottom:2rem}
-        .page-title{font-size:2.5rem;font-weight:700;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem}
-        .page-subtitle{color:var(--text-secondary);font-size:1.1rem}
+        /* CURRENT ACTION CARD */
+        .current-action{padding:2rem 1.5rem;min-height:calc(100vh - 200px);display:flex;flex-direction:column;justify-content:center}
+        .action-badge{display:inline-block;padding:.375rem .875rem;background:var(--danger-glow);color:var(--danger);border-radius:50px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1.5rem;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+        .action-badge.hot{background:var(--calls-glow);color:var(--calls)}
+        .action-badge.callback{background:var(--warning-glow);color:var(--warning)}
         
-        .stats-bar{display:flex;gap:1.5rem;align-items:center;padding:1.25rem 2rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:2rem}
-        .stat-item{display:flex;align-items:center;gap:.75rem}
-        .stat-value{font-size:1.75rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-        .stat-label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
-        .stat-divider{width:1px;height:40px;background:var(--border)}
-        .streak{font-size:1.5rem}
+        .action-title{font-size:2rem;font-weight:700;margin-bottom:.75rem;line-height:1.2}
+        .action-context{color:var(--text-secondary);font-size:.95rem;margin-bottom:2rem}
+        .context-item{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
         
-        .section{margin-bottom:2rem}
-        .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
-        .section-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.75rem}
-        .section-badge{background:var(--danger-glow);color:var(--danger);padding:.25rem .75rem;border-radius:50px;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace}
-        .section-badge.warning{background:var(--warning-glow);color:var(--warning)}
-        .section-badge.success{background:var(--success-glow);color:var(--success)}
+        .contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:2rem}
+        .contact-name{font-size:1.1rem;font-weight:600;margin-bottom:1rem}
+        .contact-item{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;font-size:.95rem}
+        .contact-item:last-child{margin-bottom:0}
+        .contact-item a{color:var(--emails);text-decoration:none;font-weight:500}
+        .contact-icon{font-size:1.1rem;width:24px;text-align:center}
         
-        .action-card{background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:1rem;transition:all .2s;position:relative}
-        .action-card:hover{border-color:var(--border-hover);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3)}
-        .action-card.overdue{border-color:var(--danger);background:var(--danger-glow)}
-        .action-card.today{border-color:var(--calls)}
-        .action-card.completed{opacity:.5;border-color:var(--success)}
+        /* PRIMARY BUTTON */
+        .primary-action{width:100%;padding:1.5rem;font-size:1.25rem;font-weight:700;border-radius:var(--radius);border:none;background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;cursor:pointer;margin-bottom:1.5rem;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.75rem;box-shadow:0 8px 25px var(--calls-glow);user-select:none}
+        .primary-action:hover{transform:translateY(-4px);box-shadow:0 12px 35px var(--calls-glow)}
+        .primary-action:active{transform:translateY(-2px)}
         
-        .action-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
-        .action-lead{font-size:1.1rem;font-weight:600;margin-bottom:.25rem;cursor:pointer;color:var(--text)}
-        .action-lead:hover{color:var(--calls)}
-        .action-type{font-size:.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:.5rem}
-        .action-time{font-size:.75rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
-        .action-overdue-badge{background:var(--danger);color:#fff;padding:.25rem .5rem;border-radius:4px;font-size:.7rem;font-weight:600}
+        /* SECONDARY ACTIONS */
+        .secondary-actions{display:flex;gap:.75rem}
+        .secondary-btn{flex:1;padding:1rem;font-size:.9rem;font-weight:600;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;user-select:none}
+        .secondary-btn:hover{border-color:var(--border-hover);background:var(--bg-elevated);transform:translateY(-2px)}
+        .secondary-btn:active{transform:translateY(0)}
+        .secondary-btn.success{border-color:var(--success);color:var(--success)}
+        .secondary-btn.success:hover{background:var(--success);color:#fff}
         
-        .action-contact{display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap}
-        .contact-item{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--text-secondary)}
-        .contact-item a{color:var(--emails);text-decoration:none}
-        .contact-item a:hover{text-decoration:underline}
+        /* OUTCOME SELECTOR */
+        .outcome-panel{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);display:none}
+        .outcome-panel.active{display:block;animation:slideDown .3s}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .outcome-label{font-size:.9rem;font-weight:600;margin-bottom:1rem;color:var(--text-secondary)}
+        .outcome-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
+        .outcome-btn{padding:.875rem;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s;text-align:center;user-select:none}
+        .outcome-btn:hover{border-color:var(--calls)}
+        .outcome-btn:active{transform:scale(.98)}
+        .outcome-btn.selected{border-color:var(--calls);background:var(--calls-glow);color:var(--calls)}
+        .notes-input{width:100%;min-height:80px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.875rem;color:var(--text);font-family:inherit;resize:vertical;margin-bottom:1rem;font-size:.9rem}
+        .notes-input:focus{outline:none;border-color:var(--calls)}
+        .save-btn{width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius-sm);border:none;background:var(--success);color:#fff;cursor:pointer;font-family:inherit;transition:all .2s;user-select:none}
+        .save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--success-glow)}
+        .save-btn:active{transform:translateY(0)}
         
-        .action-notes{font-size:.9rem;color:var(--text-secondary);margin-bottom:1rem;font-style:italic}
+        /* UP NEXT SECTION */
+        .up-next{background:var(--bg-card);border-top:1px solid var(--border);padding:1.5rem;margin-top:2rem}
+        .up-next-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+        .up-next-title{font-size:1rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em}
+        .queue-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:.75rem;cursor:pointer;transition:all .2s;user-select:none}
+        .queue-item:hover{border-color:var(--border-hover);transform:translateX(4px)}
+        .queue-item:active{transform:translateX(2px)}
+        .queue-item:last-child{margin-bottom:0}
+        .queue-title{font-weight:600;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+        .queue-meta{font-size:.8rem;color:var(--text-muted)}
         
-        .action-buttons{display:flex;gap:.75rem;flex-wrap:wrap}
-        .action-btn{padding:.625rem 1.25rem;font-size:.875rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:none;transition:all .2s;display:flex;align-items:center;gap:.5rem}
-        .action-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff}
-        .action-btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--calls-glow)}
-        .action-btn.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
-        .action-btn.secondary:hover{border-color:var(--border-hover);background:var(--bg-elevated)}
-        .action-btn.success{background:var(--success-glow);color:var(--success);border:1px solid var(--success)}
-        .action-btn.success:hover{background:var(--success);color:#fff}
-        .action-btn.danger{background:var(--danger-glow);color:var(--danger);border:1px solid var(--danger)}
+        /* EMPTY STATE */
+        .empty-state{padding:4rem 2rem;text-align:center}
+        .empty-icon{font-size:4rem;margin-bottom:1rem}
+        .empty-title{font-size:1.5rem;font-weight:700;margin-bottom:.5rem}
+        .empty-text{color:var(--text-secondary);margin-bottom:2rem}
         
-        .empty-state{text-align:center;padding:4rem 2rem;color:var(--text-muted)}
-        .empty-icon{font-size:4rem;margin-bottom:1rem;opacity:.5}
-        .empty-title{font-size:1.5rem;font-weight:600;margin-bottom:.5rem;color:var(--text-secondary)}
-        .empty-text{font-size:1rem}
-        
-        .collapsible{cursor:pointer;user-select:none}
-        .collapsible-content{max-height:0;overflow:hidden;transition:max-height .3s ease}
-        .collapsible-content.open{max-height:5000px}
-        .collapsible-arrow{transition:transform .3s;display:inline-block}
-        .collapsible-arrow.open{transform:rotate(90deg)}
-        
-        .fab{position:fixed;bottom:2rem;right:2rem;width:60px;height:60px;background:linear-gradient(135deg,var(--calls),#FF8F6B);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;box-shadow:0 8px 25px var(--calls-glow);z-index:999;transition:all .2s}
-        .fab:hover{transform:scale(1.1);box-shadow:0 12px 35px var(--calls-glow)}
-        
-        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s}
+        /* TOAST */
+        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s;box-shadow:0 8px 25px rgba(0,0,0,.5)}
         .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-        .toast.error{border-color:var(--danger)}
+        .toast.error{border-color:var(--danger);color:var(--danger)}
         
+        /* KEYBOARD HINT */
+        .keyboard-hint{position:fixed;bottom:1rem;right:1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.5rem .875rem;font-size:.7rem;color:var(--text-muted);opacity:.3;transition:opacity .2s;z-index:50;user-select:none}
+        .keyboard-hint:hover{opacity:1}
+        
+        /* MOBILE OPTIMIZATIONS */
         @media(max-width:768px){
-            .main{padding-left:1rem;padding-right:1rem}
-            .stats-bar{flex-wrap:wrap;gap:.75rem}
-            .action-buttons{width:100%}
-            .action-btn{flex:1;justify-content:center}
+            .header{padding:1rem}
+            .current-action{padding:1.5rem 1rem;min-height:calc(100vh - 180px)}
+            .action-title{font-size:1.5rem}
+            .primary-action{font-size:1.1rem;padding:1.25rem}
+            .secondary-actions{gap:.5rem}
+            .secondary-btn{padding:.875rem;font-size:.85rem}
+            .outcome-grid{grid-template-columns:1fr}
+            .keyboard-hint{display:none}
+            .stats-row{font-size:.75rem;gap:1rem}
         }
     </style>
 </head>
 <body>
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div style="color:var(--text-secondary)">Loading actions...</div>
+        <div style="color:var(--text-secondary);margin-top:1rem">Loading actions...</div>
     </div>
     
-    <nav class="nav">
-        <div class="nav-left">
-            <a href="#" class="logo">
+    <div class="header">
+        <div class="header-top">
+            <div class="logo">
                 <div class="logo-icon">⚡</div>
-                SummitFlow
-            </a>
-            <div class="nav-tabs">
-                <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
-                <a href="summitflow-pipeline.html" class="nav-tab">Pipeline</a>
-                <span class="nav-tab active">Actions</span>
-                <a href="summitflow-dashboard.html" class="nav-tab">Dashboard</a>
+                <span>Actions</span>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+                <div class="time" id="current-time"></div>
+                <a href="summitflow-pipeline-v2.html" class="nav-icon">☰</a>
             </div>
         </div>
-        <div class="nav-right">
-            <div class="sync">
-                <div class="sync-dot" id="sync-dot"></div>
-                <span class="sync-text" id="sync-text">Connecting...</span>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="stats-row">
+            <div class="stat">
+                <span class="stat-value" id="stat-done">0</span>/<span class="stat-value" id="stat-total">0</span>
+                <span>today</span>
+            </div>
+            <div class="stat danger" id="overdue-stat" style="display:none">
+                <span>🔴</span>
+                <span class="stat-value" id="stat-overdue">0</span>
+                <span>overdue</span>
+            </div>
+            <div class="stat">
+                <span>🔥</span>
+                <span class="stat-value" id="stat-streak">0</span>
             </div>
         </div>
-    </nav>
+    </div>
 
     <main class="main">
-        <div class="page-header">
-            <div class="page-title">
-                ⚡ Daily Actions
-                <span id="current-time" style="font-size:1rem;font-weight:400;color:var(--text-muted)"></span>
+        <div id="current-action-container"></div>
+        
+        <div class="up-next" id="up-next-section" style="display:none">
+            <div class="up-next-header">
+                <div class="up-next-title">Up Next</div>
+                <div style="font-size:.85rem;color:var(--text-muted)" id="queue-count">0 actions</div>
             </div>
-            <div class="page-subtitle">Your daily execution command center</div>
+            <div id="queue-list"></div>
         </div>
-
-        <div class="stats-bar">
-            <div class="stat-item">
-                <div>
-                    <div class="stat-value" id="stat-today-done">0</div>
-                    <div class="stat-label">Done Today</div>
-                </div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div>
-                    <div class="stat-value" id="stat-today-total">0</div>
-                    <div class="stat-label">Total Today</div>
-                </div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div>
-                    <div class="stat-value" style="color:var(--danger)" id="stat-overdue">0</div>
-                    <div class="stat-label">Overdue</div>
-                </div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div>
-                    <div class="stat-value" id="stat-week-total">0</div>
-                    <div class="stat-label">This Week</div>
-                </div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="streak" id="streak">🔥 0</div>
-                <div class="stat-label">Day Streak</div>
-            </div>
-        </div>
-
-        <!-- OVERDUE SECTION -->
-        <div class="section" id="overdue-section" style="display:none">
-            <div class="section-header">
-                <div class="section-title">
-                    🔴 OVERDUE
-                    <span class="section-badge" id="overdue-count">0</span>
-                </div>
-            </div>
-            <div id="overdue-list"></div>
-        </div>
-
-        <!-- TODAY SECTION -->
-        <div class="section" id="today-section">
-            <div class="section-header">
-                <div class="section-title">
-                    ⚡ TODAY
-                    <span class="section-badge warning" id="today-count">0</span>
-                </div>
-            </div>
-            <div id="today-list"></div>
-        </div>
-
-        <!-- THIS WEEK SECTION -->
-        <div class="section" id="week-section">
-            <div class="section-header collapsible" onclick="toggleWeek()">
-                <div class="section-title">
-                    <span class="collapsible-arrow" id="week-arrow">▶</span>
-                    📅 THIS WEEK
-                    <span class="section-badge success" id="week-count">0</span>
-                </div>
-            </div>
-            <div class="collapsible-content" id="week-content">
-                <div id="week-list"></div>
-            </div>
-        </div>
-
-        <!-- COMPLETED TODAY SECTION -->
-        <div class="section" id="completed-section" style="display:none">
-            <div class="section-header collapsible" onclick="toggleCompleted()">
-                <div class="section-title">
-                    <span class="collapsible-arrow" id="completed-arrow">▶</span>
-                    ✅ COMPLETED TODAY
-                    <span class="section-badge success" id="completed-count">0</span>
-                </div>
-            </div>
-            <div class="collapsible-content" id="completed-content">
-                <div id="completed-list"></div>
-            </div>
-        </div>
-
     </main>
 
-    <div class="fab" onclick="window.location='summitflow-pipeline.html'" title="Add Action">+</div>
-    
     <div class="toast" id="toast"></div>
+    <div class="keyboard-hint">SPACE=Action • D=Done • S=Skip • N=Next</div>
 
     <script>
         const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
@@ -238,19 +191,18 @@
 
         let actions = [];
         let leads = [];
+        let currentIndex = 0;
+        let showingOutcome = false;
+        let selectedOutcome = null;
         
         document.addEventListener('DOMContentLoaded', load);
         
         async function load() {
             try {
-                sync('syncing', 'Loading...');
-                
-                // Load actions
                 const {data: acts, error: e1} = await db.from('actions').select('*').order('date', {ascending: true});
                 if (e1) throw e1;
                 actions = acts || [];
                 
-                // Load leads
                 const {data: lds, error: e2} = await db.from('leads').select('*');
                 if (e2) throw e2;
                 leads = lds || [];
@@ -260,12 +212,11 @@
                 updateTime();
                 setInterval(updateTime, 60000);
                 
-                render();
+                renderCurrent();
+                setupKeyboard();
                 hide();
-                sync('ok', 'Connected');
             } catch(e) {
                 console.error(e);
-                sync('error', 'Error');
                 toast('❌ Connection failed', 'error');
                 hide();
             }
@@ -275,568 +226,465 @@
             document.getElementById('loading').classList.add('hidden');
         }
         
-        function sync(s, t) {
-            const d = document.getElementById('sync-dot');
-            const x = document.getElementById('sync-text');
-            d.className = 'sync-dot';
-            if (s === 'syncing') d.style.animation = 'pulse 1s infinite';
-            if (s === 'error') d.style.background = 'var(--danger)';
-            x.textContent = t;
-        }
-        
         function updateTime() {
             const now = new Date();
             const time = now.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
-            const day = now.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'});
-            document.getElementById('current-time').textContent = `${day} ${time}`;
+            document.getElementById('current-time').textContent = time;
         }
         
         function getToday() {
             return new Date().toISOString().split('T')[0];
         }
         
-        function render() {
+        function getPriorityActions() {
             const today = getToday();
+            let planned = actions.filter(a => a.status === 'planned');
             
-            // Categorize actions
-            const overdue = actions.filter(a => a.status === 'planned' && a.date < today);
-            const todayActions = actions.filter(a => a.status === 'planned' && a.date === today);
-            const weekActions = actions.filter(a => {
-                const actionDate = new Date(a.date);
-                const todayDate = new Date(today);
-                const daysDiff = Math.floor((actionDate - todayDate) / (1000 * 60 * 60 * 24));
-                return a.status === 'planned' && daysDiff > 0 && daysDiff <= 7;
+            planned.sort((a, b) => {
+                if (a.date < today && b.date >= today) return -1;
+                if (a.date >= today && b.date < today) return 1;
+                if (a.date < today && b.date < today) return a.date.localeCompare(b.date);
+                
+                const leadA = leads.find(l => l.id === a.lead_id);
+                const leadB = leads.find(l => l.id === b.lead_id);
+                const hotA = leadA && (leadA.stage === 'interested' || leadA.stage === 'meeting');
+                const hotB = leadB && (leadB.stage === 'interested' || leadB.stage === 'meeting');
+                if (hotA && !hotB) return -1;
+                if (!hotA && hotB) return 1;
+                
+                const cbA = a.notes && a.notes.toLowerCase().includes('callback');
+                const cbB = b.notes && b.notes.toLowerCase().includes('callback');
+                if (cbA && !cbB) return -1;
+                if (!cbA && cbB) return 1;
+                
+                return a.date.localeCompare(b.date);
             });
-            const completedToday = actions.filter(a => a.status === 'completed' && a.date === today);
             
-            // Update stats
-            document.getElementById('stat-today-done').textContent = completedToday.length;
-            document.getElementById('stat-today-total').textContent = todayActions.length;
+            return planned;
+        }
+        
+        function renderCurrent() {
+            const priorityActions = getPriorityActions();
+            const today = getToday();
+            const todayActions = actions.filter(a => a.status === 'planned' && a.date === today);
+            const completedToday = actions.filter(a => a.status === 'completed' && a.completed_at && a.completed_at.startsWith(today));
+            const overdue = actions.filter(a => a.status === 'planned' && a.date < today);
+            
+            document.getElementById('stat-done').textContent = completedToday.length;
+            document.getElementById('stat-total').textContent = todayActions.length;
             document.getElementById('stat-overdue').textContent = overdue.length;
-            document.getElementById('stat-week-total').textContent = weekActions.length;
+            document.getElementById('overdue-stat').style.display = overdue.length > 0 ? 'flex' : 'none';
             
-            // Calculate streak (simplified - just shows if completed actions today)
-            document.getElementById('streak').textContent = completedToday.length > 0 ? '🔥 1' : '💤 0';
+            const progress = todayActions.length > 0 ? (completedToday.length / todayActions.length) * 100 : 0;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('stat-streak').textContent = completedToday.length > 0 ? completedToday.length : '0';
             
-            // Render sections
-            renderOverdue(overdue);
-            renderToday(todayActions);
-            renderWeek(weekActions);
-            renderCompleted(completedToday);
-        }
-        
-        function renderOverdue(overdueActions) {
-            const section = document.getElementById('overdue-section');
-            const list = document.getElementById('overdue-list');
-            const count = document.getElementById('overdue-count');
+            const container = document.getElementById('current-action-container');
             
-            if (overdueActions.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-            
-            section.style.display = 'block';
-            count.textContent = overdueActions.length;
-            
-            list.innerHTML = overdueActions.map(a => renderActionCard(a, true)).join('');
-        }
-        
-        function renderToday(todayActions) {
-            const list = document.getElementById('today-list');
-            const count = document.getElementById('today-count');
-            
-            count.textContent = todayActions.length;
-            
-            if (todayActions.length === 0) {
-                list.innerHTML = `
+            if (currentIndex >= priorityActions.length) {
+                container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">🎉</div>
-                        <div class="empty-title">No actions for today!</div>
-                        <div class="empty-text">Either you're caught up, or you need to plan your day</div>
+                        <div class="empty-title">All Caught Up!</div>
+                        <div class="empty-text">No pending actions. You're crushing it!</div>
+                        <button class="primary-action" style="max-width:300px;margin:0 auto" onclick="window.location='summitflow-pipeline-v2.html'">
+                            Go to Pipeline
+                        </button>
                     </div>
                 `;
+                document.getElementById('up-next-section').style.display = 'none';
                 return;
             }
             
-            // Smart categorization
-            const hotLeads = todayActions.filter(a => {
-                const lead = leads.find(l => l.id === a.lead_id);
-                return lead && (lead.stage === 'interested' || lead.stage === 'meeting');
-            });
+            const action = priorityActions[currentIndex];
+            const lead = leads.find(l => l.id === action.lead_id);
             
-            const callbacks = todayActions.filter(a => 
-                a.notes && (a.notes.toLowerCase().includes('callback') || a.notes.toLowerCase().includes('requested'))
-            ).filter(a => !hotLeads.includes(a));
-            
-            const followUps = todayActions.filter(a => !hotLeads.includes(a) && !callbacks.includes(a));
-            
-            let html = '';
-            
-            if (hotLeads.length > 0) {
-                html += `
-                    <div style="margin-bottom:2rem">
-                        <h4 style="font-size:1rem;margin-bottom:1rem;color:var(--danger);font-weight:700;display:flex;align-items:center;gap:0.5rem">
-                            🔥 HOT LEADS (${hotLeads.length})
-                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">Call these first!</span>
-                        </h4>
-                        ${hotLeads.map(a => renderActionCard(a, false)).join('')}
-                    </div>
-                `;
-            }
-            
-            if (callbacks.length > 0) {
-                html += `
-                    <div style="margin-bottom:2rem">
-                        <h4 style="font-size:1rem;margin-bottom:1rem;color:var(--warning);font-weight:700;display:flex;align-items:center;gap:0.5rem">
-                            ⏰ CALLBACKS (${callbacks.length})
-                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:400">They're expecting your call</span>
-                        </h4>
-                        ${callbacks.map(a => renderActionCard(a, false)).join('')}
-                    </div>
-                `;
-            }
-            
-            if (followUps.length > 0) {
-                html += `
-                    <div>
-                        <h4 style="font-size:1rem;margin-bottom:1rem;color:var(--text-secondary);font-weight:700;display:flex;align-items:center;gap:0.5rem">
-                            📧 FOLLOW-UPS (${followUps.length})
-                        </h4>
-                        ${followUps.map(a => renderActionCard(a, false)).join('')}
-                    </div>
-                `;
-            }
-            
-            list.innerHTML = html;
-        }
-        
-        function renderWeek(weekActions) {
-            const list = document.getElementById('week-list');
-            const count = document.getElementById('week-count');
-            
-            count.textContent = weekActions.length;
-            
-            if (weekActions.length === 0) {
-                list.innerHTML = '<div class="empty-state" style="padding:2rem"><div class="empty-text">No actions scheduled this week</div></div>';
+            if (!lead) {
+                currentIndex++;
+                renderCurrent();
                 return;
             }
             
-            list.innerHTML = weekActions.map(a => renderActionCard(a, false)).join('');
+            const daysSince = Math.floor((new Date(today) - new Date(action.date)) / (1000 * 60 * 60 * 24));
+            const isOverdue = action.date < today;
+            const isHot = lead.stage === 'interested' || lead.stage === 'meeting';
+            const isCallback = action.notes && action.notes.toLowerCase().includes('callback');
+            
+            let badge = '⚡ Next Action';
+            let badgeClass = '';
+            if (isOverdue) {
+                badge = `🔴 ${daysSince} Day${daysSince > 1 ? 's' : ''} Overdue`;
+            } else if (isHot) {
+                badge = '🔥 Hot Lead';
+                badgeClass = 'hot';
+            } else if (isCallback) {
+                badge = '⏰ Callback';
+                badgeClass = 'callback';
+            }
+            
+            const typeIcon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[action.type] || '📋';
+            const typeName = {call: 'Call', email: 'Email', follow_up: 'Follow up with', meeting: 'Meeting with'}[action.type] || action.type;
+            
+            container.innerHTML = `
+                <div class="current-action">
+                    <div class="action-badge ${badgeClass}">${badge}</div>
+                    <div class="action-title">${typeIcon} ${typeName} ${lead.company}</div>
+                    
+                    <div class="action-context">
+                        ${lead.last_activity ? `
+                            <div class="context-item">
+                                <span style="opacity:.5">Last contact:</span>
+                                <span>${formatDate(lead.last_activity)}</span>
+                                ${lead.last_activity_outcome ? `<span style="opacity:.5">•</span><span>${formatOutcome(lead.last_activity_outcome)}</span>` : ''}
+                            </div>
+                        ` : ''}
+                        ${action.notes ? `<div class="context-item" style="font-style:italic;opacity:.8">"${action.notes}"</div>` : ''}
+                    </div>
+                    
+                    <div class="contact-card">
+                        ${lead.contact ? `<div class="contact-name">${lead.contact}</div>` : ''}
+                        ${lead.phone ? `
+                            <div class="contact-item">
+                                <span class="contact-icon">📞</span>
+                                <a href="tel:${lead.phone}">${lead.phone}</a>
+                            </div>
+                        ` : ''}
+                        ${lead.email ? `
+                            <div class="contact-item">
+                                <span class="contact-icon">📧</span>
+                                <a href="mailto:${lead.email}">${lead.email}</a>
+                            </div>
+                        ` : ''}
+                        ${lead.address ? `
+                            <div class="contact-item">
+                                <span class="contact-icon">📍</span>
+                                <span style="font-size:.85rem;opacity:.8">${lead.address}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${action.type === 'call' && lead.phone ? `
+                        <button class="primary-action" onclick="handlePrimaryAction()">
+                            📞 CALL NOW
+                        </button>
+                    ` : action.type === 'email' && lead.email ? `
+                        <button class="primary-action" onclick="handlePrimaryAction()">
+                            ✉️ COMPOSE EMAIL
+                        </button>
+                    ` : `
+                        <button class="primary-action" onclick="showOutcomePanel()">
+                            ✓ MARK AS DONE
+                        </button>
+                    `}
+                    
+                    <div class="secondary-actions">
+                        <button class="secondary-btn success" onclick="showOutcomePanel()">✓ Done</button>
+                        <button class="secondary-btn" onclick="rescheduleAction()">⏰ Later</button>
+                        <button class="secondary-btn" onclick="skipAction()">Skip</button>
+                    </div>
+                    
+                    <div class="outcome-panel" id="outcome-panel">
+                        <div class="outcome-label">What happened?</div>
+                        <div class="outcome-grid" id="outcome-grid"></div>
+                        <textarea class="notes-input" id="outcome-notes" placeholder="Notes (optional)..."></textarea>
+                        <button class="save-btn" onclick="saveOutcome()">Save & Continue</button>
+                    </div>
+                </div>
+            `;
+            
+            renderQueue(priorityActions);
         }
         
-        function renderCompleted(completedActions) {
-            const section = document.getElementById('completed-section');
-            const list = document.getElementById('completed-list');
-            const count = document.getElementById('completed-count');
+        function renderQueue(priorityActions) {
+            const upcoming = priorityActions.slice(currentIndex + 1, currentIndex + 6);
+            const list = document.getElementById('queue-list');
+            const section = document.getElementById('up-next-section');
             
-            if (completedActions.length === 0) {
+            if (upcoming.length === 0) {
                 section.style.display = 'none';
                 return;
             }
             
             section.style.display = 'block';
-            count.textContent = completedActions.length;
+            document.getElementById('queue-count').textContent = (priorityActions.length - currentIndex - 1) + ' more';
             
-            list.innerHTML = completedActions.map(a => renderActionCard(a, false, true)).join('');
-        }
-        
-        function renderActionCard(action, isOverdue, isCompleted = false) {
-            const lead = leads.find(l => l.id === action.lead_id);
-            if (!lead) return '';
-            
-            const today = getToday();
-            const daysDiff = Math.floor((new Date(today) - new Date(action.date)) / (1000 * 60 * 60 * 24));
-            const overdueDays = daysDiff > 0 ? daysDiff : 0;
-            
-            const typeIcon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[action.type] || '📋';
-            const typeName = {call: 'Call', email: 'Email', follow_up: 'Follow-up', meeting: 'Meeting'}[action.type] || action.type;
-            
-            const cardClass = isCompleted ? 'action-card completed' : isOverdue ? 'action-card overdue' : 'action-card today';
-            
-            return `
-                <div class="${cardClass}">
-                    <div class="action-header">
-                        <div>
-                            <div class="action-lead" onclick="openLead('${lead.id}')">${lead.company}</div>
-                            <div class="action-type">${typeIcon} ${typeName} ${action.time ? 'at ' + action.time : ''}</div>
+            list.innerHTML = upcoming.map(a => {
+                const lead = leads.find(l => l.id === a.lead_id);
+                if (!lead) return '';
+                
+                const icon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[a.type] || '📋';
+                const isHot = lead.stage === 'interested' || lead.stage === 'meeting';
+                
+                return `
+                    <div class="queue-item" onclick="jumpToAction('${a.id}')">
+                        <div class="queue-title">
+                            ${icon} ${lead.company}
+                            ${isHot ? '<span style="color:var(--calls)">🔥</span>' : ''}
                         </div>
-                        <div style="text-align:right">
-                            <div class="action-time">${formatDate(action.date)}</div>
-                            ${isOverdue ? `<div class="action-overdue-badge">${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue</div>` : ''}
-                        </div>
+                        <div class="queue-meta">${a.notes || 'Follow-up'}</div>
                     </div>
-                    
-                    <div class="action-contact">
-                        ${lead.phone ? `<div class="contact-item">📞 <a href="tel:${lead.phone}">${lead.phone}</a></div>` : ''}
-                        ${lead.email ? `<div class="contact-item">📧 <a href="mailto:${lead.email}">${lead.email}</a></div>` : ''}
-                        ${lead.contact ? `<div class="contact-item">👤 ${lead.contact}</div>` : ''}
-                    </div>
-                    
-                    ${action.notes ? `<div class="action-notes">"${action.notes}"</div>` : ''}
-                    
-                    ${!isCompleted ? `
-                        <div class="action-buttons">
-                            ${action.type === 'call' && lead.phone ? `
-                                <button class="action-btn primary" onclick="handleCall('${action.id}', '${lead.phone}')">
-                                    📞 CALL NOW
-                                </button>
-                            ` : ''}
-                            ${action.type === 'email' && lead.email ? `
-                                <button class="action-btn primary" onclick="handleEmail('${action.id}', '${lead.email}', '${lead.contact || lead.company}')">
-                                    ✉️ COMPOSE
-                                </button>
-                            ` : ''}
-                            <button class="action-btn success" onclick="completeAction('${action.id}')">
-                                ✓ Done
-                            </button>
-                            <button class="action-btn secondary" onclick="rescheduleAction('${action.id}')">
-                                ⏰ Reschedule
-                            </button>
-                            <button class="action-btn secondary" onclick="skipAction('${action.id}')">
-                                Skip
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+                `;
+            }).join('');
         }
         
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            if (dateStr === today.toISOString().split('T')[0]) return 'Today';
-            if (dateStr === tomorrow.toISOString().split('T')[0]) return 'Tomorrow';
-            
-            const daysDiff = Math.floor((date - today) / (1000 * 60 * 60 * 24));
-            if (daysDiff < 0) return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
-            if (daysDiff < 7) return date.toLocaleDateString('en-GB', {weekday: 'long'});
-            
-            return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
-        }
-        
-        function handleCall(actionId, phone) {
-            // Copy to clipboard
-            navigator.clipboard.writeText(phone).then(() => {
-                toast(`📋 ${phone} copied to clipboard!`);
-            });
-            
-            // Try to open phone link (works on mobile)
-            window.location.href = `tel:${phone}`;
-        }
-        
-        function handleEmail(actionId, email, name) {
-            const subject = encodeURIComponent(`Following up - SummitFlow`);
-            const body = encodeURIComponent(`Hi ${name},\n\n`);
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`, '_blank');
-            
-            toast('✉️ Gmail compose opened');
-        }
-        
-        function completeAction(actionId) {
-            const action = actions.find(a => a.id === actionId);
-            if (!action) return;
-            
+        function handlePrimaryAction() {
+            const priorityActions = getPriorityActions();
+            const action = priorityActions[currentIndex];
             const lead = leads.find(l => l.id === action.lead_id);
-            if (!lead) return;
             
-            // Show outcome modal
-            showOutcomeModal(actionId, action, lead);
+            if (action.type === 'call' && lead.phone) {
+                navigator.clipboard.writeText(lead.phone).then(() => {
+                    toast(`📋 ${lead.phone} copied!`);
+                });
+                window.location.href = `tel:${lead.phone}`;
+            } else if (action.type === 'email' && lead.email) {
+                const subject = encodeURIComponent(`Following up - SummitFlow`);
+                const body = encodeURIComponent(`Hi ${lead.contact || 'there'},\n\n`);
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${lead.email}&su=${subject}&body=${body}`, '_blank');
+                toast('✉️ Gmail opened');
+            }
+            
+            setTimeout(() => showOutcomePanel(), 500);
         }
         
-        function showOutcomeModal(actionId, action, lead) {
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto';
+        function showOutcomePanel() {
+            if (showingOutcome) return;
+            showingOutcome = true;
+            
+            const panel = document.getElementById('outcome-panel');
+            const priorityActions = getPriorityActions();
+            const action = priorityActions[currentIndex];
             
             const outcomes = action.type === 'call' ? [
-                {value: 'no_answer', label: '📵 No Answer', next: 'callback-1day'},
-                {value: 'voicemail', label: '📞 Voicemail', next: 'follow-up-2days'},
-                {value: 'gatekeeper', label: '🚪 Gatekeeper', next: 'callback-2days'},
-                {value: 'callback', label: '⏰ Callback Requested', next: 'callback-custom'},
-                {value: 'not_interested', label: '❌ Not Interested', next: 'none'},
-                {value: 'interested', label: '🔥 Interested!', next: 'hot-follow-up'},
-                {value: 'meeting', label: '🎉 Meeting Booked!', next: 'post-meeting'}
+                {value: 'no_answer', label: '📵 No Answer'},
+                {value: 'voicemail', label: '📞 Voicemail'},
+                {value: 'gatekeeper', label: '🚪 Gatekeeper'},
+                {value: 'callback', label: '⏰ Callback'},
+                {value: 'not_interested', label: '❌ Not Interested'},
+                {value: 'interested', label: '🔥 Interested!'},
+                {value: 'meeting', label: '🎉 Meeting!'}
             ] : [
-                {value: 'sent', label: '✉️ Email Sent', next: 'follow-up-3days'},
-                {value: 'bounced', label: '⚠️ Bounced', next: 'none'},
-                {value: 'replied', label: '💬 They Replied!', next: 'hot-follow-up'}
+                {value: 'sent', label: '✉️ Sent'},
+                {value: 'bounced', label: '⚠️ Bounced'},
+                {value: 'replied', label: '💬 Replied'}
             ];
             
-            modal.innerHTML = `
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:500px;width:90%;margin:2rem">
-                    <h3 style="margin-bottom:0.5rem;font-size:1.25rem">✅ Complete Action</h3>
-                    <p style="color:var(--text-secondary);margin-bottom:1.5rem">${lead.company} - ${action.type === 'call' ? 'Call' : 'Email'}</p>
-                    
-                    <div style="margin-bottom:1.5rem">
-                        <label style="display:block;margin-bottom:0.75rem;font-weight:600">What happened?</label>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem" id="outcome-grid">
-                            ${outcomes.map(o => `
-                                <button class="outcome-btn" data-outcome="${o.value}" data-next="${o.next}" style="
-                                    padding:0.875rem;
-                                    background:var(--surface);
-                                    border:2px solid var(--border);
-                                    border-radius:var(--radius-sm);
-                                    color:var(--text);
-                                    cursor:pointer;
-                                    font-size:0.9rem;
-                                    font-weight:500;
-                                    transition:all .2s;
-                                    text-align:left;
-                                " onmouseover="this.style.borderColor='var(--calls)'" onmouseout="this.style.borderColor='var(--border)'" onclick="selectOutcome(this)">
-                                    ${o.label}
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom:1.5rem">
-                        <label style="display:block;margin-bottom:0.5rem;font-weight:600">Notes (optional)</label>
-                        <textarea id="outcome-notes" style="
-                            width:100%;
-                            min-height:80px;
-                            background:var(--surface);
-                            border:1px solid var(--border);
-                            border-radius:6px;
-                            padding:0.75rem;
-                            color:var(--text);
-                            font-family:inherit;
-                            resize:vertical;
-                        " placeholder="Any important details..."></textarea>
-                    </div>
-                    
-                    <div style="display:flex;gap:0.75rem">
-                        <button class="action-btn" style="flex:1" onclick="this.closest('.modal-overlay').remove()">
-                            Cancel
-                        </button>
-                        <button class="action-btn primary" style="flex:1" onclick="saveOutcome('${actionId}', '${action.lead_id}')">
-                            Save & Continue
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
+            document.getElementById('outcome-grid').innerHTML = outcomes.map(o => 
+                `<button class="outcome-btn" data-outcome="${o.value}" onclick="selectOutcome('${o.value}')">${o.label}</button>`
+            ).join('');
+            
+            panel.classList.add('active');
+            panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
         }
         
-        let selectedOutcome = null;
-        let selectedNext = null;
-        
-        function selectOutcome(btn) {
-            document.querySelectorAll('.outcome-btn').forEach(b => {
-                b.style.borderColor = 'var(--border)';
-                b.style.background = 'var(--surface)';
+        function selectOutcome(outcome) {
+            selectedOutcome = outcome;
+            document.querySelectorAll('.outcome-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.outcome === outcome) {
+                    btn.classList.add('selected');
+                }
             });
-            btn.style.borderColor = 'var(--calls)';
-            btn.style.background = 'var(--calls-glow)';
-            selectedOutcome = btn.dataset.outcome;
-            selectedNext = btn.dataset.next;
         }
         
-        async function saveOutcome(actionId, leadId) {
+        async function saveOutcome() {
             if (!selectedOutcome) {
-                toast('⚠️ Please select an outcome', 'error');
+                toast('⚠️ Select an outcome', 'error');
                 return;
             }
             
+            const priorityActions = getPriorityActions();
+            const action = priorityActions[currentIndex];
             const notes = document.getElementById('outcome-notes').value;
             
             try {
-                // Mark action complete
                 await db.from('actions').update({
                     status: 'completed',
                     completed_at: new Date().toISOString()
-                }).eq('id', actionId);
+                }).eq('id', action.id);
                 
-                const action = actions.find(a => a.id === actionId);
-                if (action) action.status = 'completed';
-                
-                // Log activity
                 await db.from('activities').insert({
-                    lead_id: leadId,
+                    lead_id: action.lead_id,
                     type: action.type,
                     outcome: selectedOutcome,
-                    notes: notes || action.notes || 'Completed from actions page'
+                    notes: notes || action.notes || 'Completed'
                 });
                 
-                // Update lead
                 await db.from('leads').update({
                     last_activity: new Date().toISOString(),
                     last_activity_type: action.type,
                     last_activity_outcome: selectedOutcome
-                }).eq('id', leadId);
+                }).eq('id', action.lead_id);
                 
-                // Create follow-up action based on outcome
-                await createFollowUpAction(leadId, selectedNext, selectedOutcome);
+                await createFollowUp(action.lead_id, selectedOutcome, action.type);
                 
-                document.querySelector('.modal-overlay')?.remove();
-                toast('✅ Completed! Follow-up created');
+                action.status = 'completed';
                 
-                // Reload actions
                 const {data} = await db.from('actions').select('*').order('date', {ascending: true});
                 actions = data || [];
-                render();
+                
+                showingOutcome = false;
+                selectedOutcome = null;
+                document.getElementById('outcome-panel').classList.remove('active');
+                
+                toast('✅ Completed!');
+                currentIndex++;
+                renderCurrent();
             } catch(e) {
                 console.error(e);
                 toast('❌ Failed: ' + e.message, 'error');
             }
         }
         
-        async function createFollowUpAction(leadId, nextType, outcome) {
-            if (nextType === 'none') return;
-            
+        async function createFollowUp(leadId, outcome, type) {
             const today = new Date();
-            let followUpDate = new Date(today);
+            const followUpDate = new Date(today);
+            let offset = 1;
             let actionType = 'call';
-            let actionNotes = '';
+            let notes = '';
             
-            switch(nextType) {
-                case 'callback-1day':
-                    followUpDate.setDate(followUpDate.getDate() + 1);
-                    actionNotes = 'Follow-up call after no answer';
-                    break;
-                case 'follow-up-2days':
-                    followUpDate.setDate(followUpDate.getDate() + 2);
-                    actionNotes = 'Follow-up after voicemail';
-                    break;
-                case 'callback-2days':
-                    followUpDate.setDate(followUpDate.getDate() + 2);
-                    actionNotes = 'Callback after gatekeeper';
-                    break;
-                case 'callback-custom':
-                    followUpDate.setDate(followUpDate.getDate() + 1);
-                    actionNotes = 'Callback as requested';
-                    break;
-                case 'hot-follow-up':
-                    followUpDate.setDate(followUpDate.getDate() + 1);
-                    actionNotes = '🔥 HOT LEAD - Follow up immediately';
-                    break;
-                case 'post-meeting':
-                    followUpDate.setDate(followUpDate.getDate() + 1);
-                    actionType = 'email';
-                    actionNotes = 'Send meeting confirmation';
-                    break;
-                case 'follow-up-3days':
-                    followUpDate.setDate(followUpDate.getDate() + 3);
-                    actionNotes = 'Check if they received email';
-                    break;
+            if (type === 'call') {
+                switch(outcome) {
+                    case 'no_answer':
+                        offset = 1;
+                        notes = 'Follow-up after no answer';
+                        break;
+                    case 'voicemail':
+                        offset = 2;
+                        notes = 'Follow-up after voicemail';
+                        break;
+                    case 'callback':
+                        offset = 1;
+                        notes = 'Callback as requested';
+                        break;
+                    case 'interested':
+                        offset = 1;
+                        notes = '🔥 HOT - Follow up immediately';
+                        break;
+                    case 'meeting':
+                        offset = 1;
+                        actionType = 'email';
+                        notes = 'Send meeting confirmation';
+                        break;
+                    default:
+                        return;
+                }
+            } else {
+                offset = 3;
+                notes = 'Check if they saw email';
             }
             
-            if (actionNotes) {
-                await db.from('actions').insert({
-                    lead_id: leadId,
-                    type: actionType,
-                    date: followUpDate.toISOString().split('T')[0],
-                    notes: actionNotes,
-                    status: 'planned'
-                });
-            }
+            followUpDate.setDate(followUpDate.getDate() + offset);
+            
+            await db.from('actions').insert({
+                lead_id: leadId,
+                type: actionType,
+                date: followUpDate.toISOString().split('T')[0],
+                notes: notes,
+                status: 'planned'
+            });
         }
         
-        async function skipAction(actionId) {
+        async function skipAction() {
+            const priorityActions = getPriorityActions();
+            const action = priorityActions[currentIndex];
+            
             try {
-                const {error} = await db.from('actions').update({
-                    status: 'skipped'
-                }).eq('id', actionId);
+                await db.from('actions').update({status: 'skipped'}).eq('id', action.id);
+                action.status = 'skipped';
                 
-                if (error) throw error;
-                
-                const action = actions.find(a => a.id === actionId);
-                if (action) action.status = 'skipped';
-                
-                toast('⏭️ Action skipped');
-                render();
+                toast('⏭️ Skipped');
+                currentIndex++;
+                renderCurrent();
             } catch(e) {
                 console.error(e);
                 toast('❌ Failed', 'error');
             }
         }
         
-        function rescheduleAction(actionId) {
-            const action = actions.find(a => a.id === actionId);
-            if (!action) return;
+        function rescheduleAction() {
+            const choice = prompt('Reschedule to:\n1. Tomorrow\n2. In 2 Days\n3. Next Week\n\nEnter 1, 2, or 3:');
             
-            // Show quick reschedule modal
-            showRescheduleModal(actionId);
-        }
-        
-        function showRescheduleModal(actionId) {
+            if (!choice || choice < 1 || choice > 3) return;
+            
             const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const twoDays = new Date(today);
-            twoDays.setDate(twoDays.getDate() + 2);
-            const nextWeek = new Date(today);
-            nextWeek.setDate(nextWeek.getDate() + 7);
+            const dates = [1, 2, 7];
+            const offset = dates[choice - 1];
+            const newDate = new Date(today);
+            newDate.setDate(newDate.getDate() + offset);
             
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999';
-            modal.innerHTML = `
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:400px;width:90%">
-                    <h3 style="margin-bottom:1.5rem;font-size:1.25rem">⏰ Reschedule Action</h3>
-                    <div style="display:flex;flex-direction:column;gap:0.75rem">
-                        <button class="action-btn secondary" style="width:100%" onclick="quickReschedule('${actionId}', '${tomorrow.toISOString().split('T')[0]}')">
-                            Tomorrow (${tomorrow.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'})})
-                        </button>
-                        <button class="action-btn secondary" style="width:100%" onclick="quickReschedule('${actionId}', '${twoDays.toISOString().split('T')[0]}')">
-                            In 2 Days (${twoDays.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'})})
-                        </button>
-                        <button class="action-btn secondary" style="width:100%" onclick="quickReschedule('${actionId}', '${nextWeek.toISOString().split('T')[0]}')">
-                            Next Week (${nextWeek.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'})})
-                        </button>
-                        <button class="action-btn secondary" style="width:100%" onclick="customReschedule('${actionId}')">
-                            📅 Custom Date
-                        </button>
-                    </div>
-                    <button class="action-btn" style="width:100%;margin-top:1rem" onclick="this.closest('.modal-overlay').remove()">
-                        Cancel
-                    </button>
-                </div>
-            `;
-            document.body.appendChild(modal);
+            quickReschedule(newDate.toISOString().split('T')[0]);
         }
         
-        async function quickReschedule(actionId, newDate) {
+        async function quickReschedule(newDate) {
+            const priorityActions = getPriorityActions();
+            const action = priorityActions[currentIndex];
+            
             try {
-                const {error} = await db.from('actions').update({date: newDate}).eq('id', actionId);
-                if (error) throw error;
+                await db.from('actions').update({date: newDate}).eq('id', action.id);
+                action.date = newDate;
                 
-                const action = actions.find(a => a.id === actionId);
-                if (action) action.date = newDate;
+                const {data} = await db.from('actions').select('*').order('date', {ascending: true});
+                actions = data || [];
                 
-                document.querySelector('.modal-overlay')?.remove();
-                toast('⏰ Rescheduled to ' + formatDate(newDate));
-                render();
+                toast('⏰ Rescheduled');
+                renderCurrent();
             } catch(e) {
                 console.error(e);
                 toast('❌ Failed', 'error');
             }
         }
         
-        function customReschedule(actionId) {
-            const newDate = prompt('Enter date (YYYY-MM-DD):');
-            if (!newDate) return;
-            quickReschedule(actionId, newDate);
+        function jumpToAction(actionId) {
+            const priorityActions = getPriorityActions();
+            const index = priorityActions.findIndex(a => a.id === actionId);
+            if (index !== -1) {
+                currentIndex = index;
+                renderCurrent();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
         }
         
-        function openLead(leadId) {
-            window.location = `summitflow-pipeline.html?lead=${leadId}`;
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+                
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    handlePrimaryAction();
+                } else if (e.key === 'd' || e.key === 'D') {
+                    showOutcomePanel();
+                } else if (e.key === 's' || e.key === 'S') {
+                    skipAction();
+                } else if (e.key === 'n' || e.key === 'N') {
+                    currentIndex++;
+                    renderCurrent();
+                }
+            });
         }
         
-        function toggleWeek() {
-            const content = document.getElementById('week-content');
-            const arrow = document.getElementById('week-arrow');
-            content.classList.toggle('open');
-            arrow.classList.toggle('open');
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const daysDiff = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff === 0) return 'Today';
+            if (daysDiff === 1) return 'Yesterday';
+            if (daysDiff < 7) return daysDiff + ' days ago';
+            
+            return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
         }
         
-        function toggleCompleted() {
-            const content = document.getElementById('completed-content');
-            const arrow = document.getElementById('completed-arrow');
-            content.classList.toggle('open');
-            arrow.classList.toggle('open');
+        function formatOutcome(outcome) {
+            const map = {
+                no_answer: 'No Answer',
+                voicemail: 'Voicemail',
+                callback: 'Callback',
+                interested: 'Interested',
+                meeting: 'Meeting',
+                not_interested: 'Not Interested'
+            };
+            return map[outcome] || outcome;
         }
         
         function toast(msg, type = '') {
