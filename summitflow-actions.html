@@ -20,33 +20,47 @@
             --purple:#8B5CF6;--purple-glow:rgba(139,92,246,0.25);
             --radius:16px;--radius-sm:10px;
         }
-        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;touch-action:pan-y}
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
         
         .loading{position:fixed;inset:0;background:var(--bg-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s}
         .loading.hidden{opacity:0;pointer-events:none}
         .spinner{width:48px;height:48px;border:3px solid var(--surface);border-top-color:var(--calls);border-radius:50%;animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
         
-        /* STICKY HEADER */
-        .header{position:sticky;top:0;background:rgba(19,20,22,0.95);border-bottom:1px solid var(--border);padding:1rem 1.5rem;z-index:100;backdrop-filter:blur(20px)}
-        .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
-        .logo{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem}
-        .nav-icon{background:var(--surface);border:1px solid var(--border);padding:.5rem .75rem;border-radius:8px;cursor:pointer;font-size:.9rem;text-decoration:none;color:var(--text);transition:all .2s}
-        .nav-icon:hover{border-color:var(--border-hover)}
-        .time{font-size:.85rem;color:var(--text-muted)}
+        /* NAVIGATION */
+        .nav{position:fixed;top:0;left:0;right:0;height:70px;background:rgba(19,20,22,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000;backdrop-filter:blur(20px)}
+        .nav-left{display:flex;align-items:center;gap:2rem}
+        .logo{display:flex;align-items:center;gap:.75rem;font-size:1.5rem;font-weight:700;text-decoration:none;color:var(--text)}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--calls),var(--emails));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
+        .nav-tabs{display:flex;gap:.5rem}
+        .nav-tab{padding:.5rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-secondary);text-decoration:none;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .2s}
+        .nav-tab:hover{background:var(--surface);color:var(--text)}
+        .nav-tab.active{background:var(--calls-glow);border-color:var(--calls);color:var(--calls)}
+        .sync{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted)}
+        .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+        
+        /* HEADER */
+        .header{position:sticky;top:70px;background:rgba(19,20,22,0.95);border-bottom:1px solid var(--border);padding:1rem 2rem;z-index:100;backdrop-filter:blur(20px)}
         .progress-bar{height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:.75rem}
         .progress-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--calls));transition:width .3s}
-        .stats-row{display:flex;gap:1.5rem;font-size:.85rem}
+        .header-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.75rem}
+        .stats-row{display:flex;gap:1.5rem;font-size:.9rem}
         .stat{display:flex;align-items:center;gap:.5rem}
         .stat-value{font-weight:700;font-family:'JetBrains Mono',monospace}
         .stat.danger .stat-value{color:var(--danger)}
         
-        /* MAIN CONTENT */
-        .main{padding:0;max-width:600px;margin:0 auto}
+        /* VIEW TOGGLE */
+        .view-toggle{display:flex;gap:.5rem;background:var(--surface);padding:.25rem;border-radius:8px}
+        .toggle-btn{padding:.5rem 1.25rem;background:transparent;border:none;color:var(--text-secondary);font-size:.85rem;font-weight:600;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit}
+        .toggle-btn.active{background:var(--calls);color:#fff}
+        .toggle-btn:hover:not(.active){background:var(--bg-elevated)}
         
-        /* CURRENT ACTION CARD */
-        .current-action{padding:2rem 1.5rem;min-height:calc(100vh - 200px);display:flex;flex-direction:column;justify-content:center}
+        /* MAIN */
+        .main{padding-top:140px;max-width:1200px;margin:0 auto;padding-left:2rem;padding-right:2rem;padding-bottom:3rem}
+        
+        /* FOCUS MODE */
+        .focus-mode{max-width:600px;margin:0 auto}
+        .current-action{padding:2rem 0;min-height:calc(100vh - 320px);display:flex;flex-direction:column;justify-content:center}
         .action-badge{display:inline-block;padding:.375rem .875rem;background:var(--danger-glow);color:var(--danger);border-radius:50px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1.5rem;animation:pulse 2s infinite}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
         .action-badge.hot{background:var(--calls-glow);color:var(--calls)}
@@ -56,79 +70,112 @@
         .action-context{color:var(--text-secondary);font-size:.95rem;margin-bottom:2rem}
         .context-item{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
         
-        .contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:2rem}
-        .contact-name{font-size:1.1rem;font-weight:600;margin-bottom:1rem}
+        .contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.5rem;margin-bottom:2rem}
+        .contact-name{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:var(--text)}
         .contact-item{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;font-size:.95rem}
         .contact-item:last-child{margin-bottom:0}
-        .contact-item a{color:var(--emails);text-decoration:none;font-weight:500}
+        .contact-item a{color:var(--emails);text-decoration:none;font-weight:500;transition:color .2s}
+        .contact-item a:hover{color:var(--calls)}
         .contact-icon{font-size:1.1rem;width:24px;text-align:center}
         
-        /* PRIMARY BUTTON */
-        .primary-action{width:100%;padding:1.5rem;font-size:1.25rem;font-weight:700;border-radius:var(--radius);border:none;background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;cursor:pointer;margin-bottom:1.5rem;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.75rem;box-shadow:0 8px 25px var(--calls-glow);user-select:none}
+        .primary-action{width:100%;padding:1.5rem;font-size:1.25rem;font-weight:700;border-radius:var(--radius);border:none;background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff;cursor:pointer;margin-bottom:1.5rem;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.75rem;box-shadow:0 8px 25px var(--calls-glow)}
         .primary-action:hover{transform:translateY(-4px);box-shadow:0 12px 35px var(--calls-glow)}
         .primary-action:active{transform:translateY(-2px)}
         
-        /* SECONDARY ACTIONS */
         .secondary-actions{display:flex;gap:.75rem}
-        .secondary-btn{flex:1;padding:1rem;font-size:.9rem;font-weight:600;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;user-select:none}
+        .secondary-btn{flex:1;padding:1rem;font-size:.9rem;font-weight:600;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
         .secondary-btn:hover{border-color:var(--border-hover);background:var(--bg-elevated);transform:translateY(-2px)}
         .secondary-btn:active{transform:translateY(0)}
         .secondary-btn.success{border-color:var(--success);color:var(--success)}
         .secondary-btn.success:hover{background:var(--success);color:#fff}
         
-        /* OUTCOME SELECTOR */
         .outcome-panel{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);display:none}
         .outcome-panel.active{display:block;animation:slideDown .3s}
         @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
         .outcome-label{font-size:.9rem;font-weight:600;margin-bottom:1rem;color:var(--text-secondary)}
         .outcome-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
-        .outcome-btn{padding:.875rem;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s;text-align:center;user-select:none}
-        .outcome-btn:hover{border-color:var(--calls)}
-        .outcome-btn:active{transform:scale(.98)}
+        .outcome-btn{padding:.875rem;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s;text-align:center}
+        .outcome-btn:hover{border-color:var(--calls);transform:translateY(-2px)}
+        .outcome-btn:active{transform:translateY(0)}
         .outcome-btn.selected{border-color:var(--calls);background:var(--calls-glow);color:var(--calls)}
         .notes-input{width:100%;min-height:80px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.875rem;color:var(--text);font-family:inherit;resize:vertical;margin-bottom:1rem;font-size:.9rem}
         .notes-input:focus{outline:none;border-color:var(--calls)}
-        .save-btn{width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius-sm);border:none;background:var(--success);color:#fff;cursor:pointer;font-family:inherit;transition:all .2s;user-select:none}
+        .save-btn{width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius-sm);border:none;background:var(--success);color:#fff;cursor:pointer;font-family:inherit;transition:all .2s}
         .save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--success-glow)}
         .save-btn:active{transform:translateY(0)}
         
-        /* UP NEXT SECTION */
-        .up-next{background:var(--bg-card);border-top:1px solid var(--border);padding:1.5rem;margin-top:2rem}
+        .up-next{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-top:2rem}
         .up-next-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
         .up-next-title{font-size:1rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em}
-        .queue-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:.75rem;cursor:pointer;transition:all .2s;user-select:none}
+        .queue-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:.75rem;cursor:pointer;transition:all .2s}
         .queue-item:hover{border-color:var(--border-hover);transform:translateX(4px)}
         .queue-item:active{transform:translateX(2px)}
         .queue-item:last-child{margin-bottom:0}
         .queue-title{font-weight:600;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
         .queue-meta{font-size:.8rem;color:var(--text-muted)}
         
-        /* EMPTY STATE */
+        /* QUEUE MODE */
+        .queue-mode{display:none}
+        .queue-mode.active{display:block}
+        
+        .section{margin-bottom:2.5rem}
+        .section-header{margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
+        .section-title{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:.75rem}
+        .section-badge{background:var(--danger-glow);color:var(--danger);padding:.25rem .75rem;border-radius:50px;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace}
+        .section-badge.warning{background:var(--warning-glow);color:var(--warning)}
+        .section-badge.success{background:var(--success-glow);color:var(--success)}
+        
+        .action-card{background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:1rem;transition:all .2s}
+        .action-card:hover{border-color:var(--border-hover);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+        .action-card.overdue{border-color:var(--danger);background:linear-gradient(135deg,transparent,var(--danger-glow))}
+        .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
+        .card-lead{font-size:1.1rem;font-weight:600}
+        .card-meta{font-size:.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap}
+        .card-contact{display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap;font-size:.9rem;color:var(--text-secondary)}
+        .card-contact a{color:var(--emails);text-decoration:none}
+        .card-contact a:hover{text-decoration:underline}
+        .card-actions{display:flex;gap:.75rem;flex-wrap:wrap}
+        .card-btn{padding:.625rem 1.25rem;font-size:.85rem;font-weight:600;border-radius:50px;cursor:pointer;font-family:inherit;border:none;transition:all .2s}
+        .card-btn.primary{background:linear-gradient(135deg,var(--calls),#FF8F6B);color:#fff}
+        .card-btn.primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px var(--calls-glow)}
+        .card-btn.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+        .card-btn.secondary:hover{border-color:var(--border-hover);background:var(--bg-elevated)}
+        .card-btn.success{background:var(--success-glow);color:var(--success);border:1px solid var(--success)}
+        .card-btn.success:hover{background:var(--success);color:#fff}
+        
+        .subsection{margin-bottom:2rem}
+        .subsection-title{font-size:.95rem;font-weight:700;margin-bottom:1rem;color:var(--text-secondary);display:flex;align-items:center;gap:.5rem}
+        
+        .collapsible{cursor:pointer;user-select:none}
+        .collapsible-content{max-height:0;overflow:hidden;transition:max-height .3s ease}
+        .collapsible-content.open{max-height:5000px}
+        .collapsible-arrow{transition:transform .3s;display:inline-block;margin-right:.5rem}
+        .collapsible-arrow.open{transform:rotate(90deg)}
+        
         .empty-state{padding:4rem 2rem;text-align:center}
-        .empty-icon{font-size:4rem;margin-bottom:1rem}
+        .empty-icon{font-size:4rem;margin-bottom:1rem;opacity:.5}
         .empty-title{font-size:1.5rem;font-weight:700;margin-bottom:.5rem}
         .empty-text{color:var(--text-secondary);margin-bottom:2rem}
         
-        /* TOAST */
-        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:1px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s;box-shadow:0 8px 25px rgba(0,0,0,.5)}
+        .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-card);border:2px solid var(--success);color:var(--text);padding:1rem 2rem;border-radius:50px;font-weight:600;z-index:10000;opacity:0;transition:all .3s;box-shadow:0 8px 25px rgba(0,0,0,.5)}
         .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
         .toast.error{border-color:var(--danger);color:var(--danger)}
         
-        /* KEYBOARD HINT */
-        .keyboard-hint{position:fixed;bottom:1rem;right:1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.5rem .875rem;font-size:.7rem;color:var(--text-muted);opacity:.3;transition:opacity .2s;z-index:50;user-select:none}
-        .keyboard-hint:hover{opacity:1}
-        
-        /* MOBILE OPTIMIZATIONS */
         @media(max-width:768px){
-            .header{padding:1rem}
-            .current-action{padding:1.5rem 1rem;min-height:calc(100vh - 180px)}
+            .nav{padding:0 1rem;height:60px}
+            .nav-tabs{display:none}
+            .header{padding:1rem;top:60px}
+            .main{padding-left:1rem;padding-right:1rem;padding-top:130px}
+            .current-action{padding:1.5rem 0;min-height:calc(100vh - 240px)}
             .action-title{font-size:1.5rem}
             .primary-action{font-size:1.1rem;padding:1.25rem}
             .secondary-actions{gap:.5rem}
-            .secondary-btn{padding:.875rem;font-size:.85rem}
+            .secondary-btn{font-size:.85rem}
             .outcome-grid{grid-template-columns:1fr}
-            .keyboard-hint{display:none}
-            .stats-row{font-size:.75rem;gap:1rem}
+            .stats-row{font-size:.75rem;gap:1rem;flex-wrap:wrap}
+            .card-actions{width:100%}
+            .card-btn{flex:1}
+            .view-toggle{width:100%;margin-top:.5rem}
         }
     </style>
 </head>
@@ -138,51 +185,121 @@
         <div style="color:var(--text-secondary);margin-top:1rem">Loading actions...</div>
     </div>
     
-    <div class="header">
-        <div class="header-top">
-            <div class="logo">
+    <nav class="nav">
+        <div class="nav-left">
+            <a href="summitflow-dashboard.html" class="logo">
                 <div class="logo-icon">⚡</div>
-                <span>Actions</span>
-            </div>
-            <div style="display:flex;gap:.5rem;align-items:center">
-                <div class="time" id="current-time"></div>
-                <a href="summitflow-pipeline-v2.html" class="nav-icon">☰</a>
+                SummitFlow
+            </a>
+            <div class="nav-tabs">
+                <a href="summitflow-leads-hub.html" class="nav-tab">Leads Hub</a>
+                <a href="summitflow-pipeline.html" class="nav-tab">Pipeline</a>
+                <span class="nav-tab active">Actions</span>
+                <a href="summitflow-dashboard.html" class="nav-tab">Dashboard</a>
             </div>
         </div>
+        <div class="sync">
+            <div class="sync-dot" id="sync-dot"></div>
+            <span id="sync-text">Connected</span>
+        </div>
+    </nav>
+
+    <div class="header">
         <div class="progress-bar">
             <div class="progress-fill" id="progress-fill" style="width:0%"></div>
         </div>
-        <div class="stats-row">
-            <div class="stat">
-                <span class="stat-value" id="stat-done">0</span>/<span class="stat-value" id="stat-total">0</span>
-                <span>today</span>
+        <div class="header-row">
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-value" id="stat-done">0</span>/<span class="stat-value" id="stat-total">0</span>
+                    <span>today</span>
+                </div>
+                <div class="stat danger" id="overdue-stat" style="display:none">
+                    <span>🔴</span>
+                    <span class="stat-value" id="stat-overdue">0</span>
+                    <span>overdue</span>
+                </div>
+                <div class="stat">
+                    <span>🔥</span>
+                    <span class="stat-value" id="stat-streak">0</span>
+                    <span>streak</span>
+                </div>
             </div>
-            <div class="stat danger" id="overdue-stat" style="display:none">
-                <span>🔴</span>
-                <span class="stat-value" id="stat-overdue">0</span>
-                <span>overdue</span>
-            </div>
-            <div class="stat">
-                <span>🔥</span>
-                <span class="stat-value" id="stat-streak">0</span>
+            <div class="view-toggle">
+                <button class="toggle-btn active" id="focus-toggle" onclick="switchView('focus')">⚡ Focus</button>
+                <button class="toggle-btn" id="queue-toggle" onclick="switchView('queue')">📋 Queue</button>
             </div>
         </div>
     </div>
 
     <main class="main">
-        <div id="current-action-container"></div>
-        
-        <div class="up-next" id="up-next-section" style="display:none">
-            <div class="up-next-header">
-                <div class="up-next-title">Up Next</div>
-                <div style="font-size:.85rem;color:var(--text-muted)" id="queue-count">0 actions</div>
+        <!-- FOCUS MODE -->
+        <div class="focus-mode" id="focus-view">
+            <div id="current-action-container"></div>
+            <div class="up-next" id="up-next-section" style="display:none">
+                <div class="up-next-header">
+                    <div class="up-next-title">Up Next</div>
+                    <div style="font-size:.85rem;color:var(--text-muted)" id="queue-count">0 more</div>
+                </div>
+                <div id="queue-list"></div>
             </div>
-            <div id="queue-list"></div>
+        </div>
+
+        <!-- QUEUE MODE -->
+        <div class="queue-mode" id="queue-view">
+            <!-- OVERDUE -->
+            <div class="section" id="overdue-section" style="display:none">
+                <div class="section-header">
+                    <div class="section-title">
+                        🔴 OVERDUE
+                        <span class="section-badge" id="overdue-badge">0</span>
+                    </div>
+                </div>
+                <div id="overdue-list"></div>
+            </div>
+
+            <!-- TODAY -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">
+                        ⚡ TODAY
+                        <span class="section-badge warning" id="today-badge">0</span>
+                    </div>
+                </div>
+                <div id="today-list"></div>
+            </div>
+
+            <!-- THIS WEEK -->
+            <div class="section">
+                <div class="section-header collapsible" onclick="toggleWeek()">
+                    <div class="section-title">
+                        <span class="collapsible-arrow" id="week-arrow">▶</span>
+                        📅 THIS WEEK
+                        <span class="section-badge success" id="week-badge">0</span>
+                    </div>
+                </div>
+                <div class="collapsible-content" id="week-content">
+                    <div id="week-list"></div>
+                </div>
+            </div>
+
+            <!-- COMPLETED TODAY -->
+            <div class="section" id="completed-section" style="display:none">
+                <div class="section-header collapsible" onclick="toggleCompleted()">
+                    <div class="section-title">
+                        <span class="collapsible-arrow" id="completed-arrow">▶</span>
+                        ✅ COMPLETED TODAY
+                        <span class="section-badge success" id="completed-badge">0</span>
+                    </div>
+                </div>
+                <div class="collapsible-content" id="completed-content">
+                    <div id="completed-list"></div>
+                </div>
+            </div>
         </div>
     </main>
 
     <div class="toast" id="toast"></div>
-    <div class="keyboard-hint">SPACE=Action • D=Done • S=Skip • N=Next</div>
 
     <script>
         const SUPABASE_URL = 'https://drxmeoeugymlgadajwmn.supabase.co';
@@ -194,6 +311,7 @@
         let currentIndex = 0;
         let showingOutcome = false;
         let selectedOutcome = null;
+        let currentView = 'focus';
         
         document.addEventListener('DOMContentLoaded', load);
         
@@ -207,29 +325,20 @@
                 if (e2) throw e2;
                 leads = lds || [];
                 
-                console.log('Loaded:', actions.length, 'actions,', leads.length, 'leads');
+                console.log('✅ Loaded:', actions.length, 'actions,', leads.length, 'leads');
                 
-                updateTime();
-                setInterval(updateTime, 60000);
-                
-                renderCurrent();
+                renderAll();
                 setupKeyboard();
                 hide();
             } catch(e) {
-                console.error(e);
-                toast('❌ Connection failed', 'error');
+                console.error('❌ Load error:', e);
+                toast('❌ Failed to load', 'error');
                 hide();
             }
         }
         
         function hide() {
             document.getElementById('loading').classList.add('hidden');
-        }
-        
-        function updateTime() {
-            const now = new Date();
-            const time = now.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
-            document.getElementById('current-time').textContent = time;
         }
         
         function getToday() {
@@ -263,8 +372,16 @@
             return planned;
         }
         
-        function renderCurrent() {
-            const priorityActions = getPriorityActions();
+        function renderAll() {
+            updateStats();
+            if (currentView === 'focus') {
+                renderFocusMode();
+            } else {
+                renderQueueMode();
+            }
+        }
+        
+        function updateStats() {
             const today = getToday();
             const todayActions = actions.filter(a => a.status === 'planned' && a.date === today);
             const completedToday = actions.filter(a => a.status === 'completed' && a.completed_at && a.completed_at.startsWith(today));
@@ -277,8 +394,11 @@
             
             const progress = todayActions.length > 0 ? (completedToday.length / todayActions.length) * 100 : 0;
             document.getElementById('progress-fill').style.width = progress + '%';
-            document.getElementById('stat-streak').textContent = completedToday.length > 0 ? completedToday.length : '0';
-            
+            document.getElementById('stat-streak').textContent = completedToday.length;
+        }
+        
+        function renderFocusMode() {
+            const priorityActions = getPriorityActions();
             const container = document.getElementById('current-action-container');
             
             if (currentIndex >= priorityActions.length) {
@@ -286,8 +406,8 @@
                     <div class="empty-state">
                         <div class="empty-icon">🎉</div>
                         <div class="empty-title">All Caught Up!</div>
-                        <div class="empty-text">No pending actions. You're crushing it!</div>
-                        <button class="primary-action" style="max-width:300px;margin:0 auto" onclick="window.location='summitflow-pipeline-v2.html'">
+                        <div class="empty-text">No pending actions. You're absolutely crushing it!</div>
+                        <button class="primary-action" style="max-width:300px;margin:0 auto" onclick="window.location='summitflow-pipeline.html'">
                             Go to Pipeline
                         </button>
                     </div>
@@ -301,10 +421,11 @@
             
             if (!lead) {
                 currentIndex++;
-                renderCurrent();
+                renderFocusMode();
                 return;
             }
             
+            const today = getToday();
             const daysSince = Math.floor((new Date(today) - new Date(action.date)) / (1000 * 60 * 60 * 24));
             const isOverdue = action.date < today;
             const isHot = lead.stage === 'interested' || lead.stage === 'meeting';
@@ -333,9 +454,9 @@
                     <div class="action-context">
                         ${lead.last_activity ? `
                             <div class="context-item">
-                                <span style="opacity:.5">Last contact:</span>
-                                <span>${formatDate(lead.last_activity)}</span>
-                                ${lead.last_activity_outcome ? `<span style="opacity:.5">•</span><span>${formatOutcome(lead.last_activity_outcome)}</span>` : ''}
+                                <span style="opacity:.6">Last contact:</span>
+                                <span style="font-weight:600">${formatDate(lead.last_activity)}</span>
+                                ${lead.last_activity_outcome ? `<span style="opacity:.6">•</span><span>${formatOutcome(lead.last_activity_outcome)}</span>` : ''}
                             </div>
                         ` : ''}
                         ${action.notes ? `<div class="context-item" style="font-style:italic;opacity:.8">"${action.notes}"</div>` : ''}
@@ -343,38 +464,17 @@
                     
                     <div class="contact-card">
                         ${lead.contact ? `<div class="contact-name">${lead.contact}</div>` : ''}
-                        ${lead.phone ? `
-                            <div class="contact-item">
-                                <span class="contact-icon">📞</span>
-                                <a href="tel:${lead.phone}">${lead.phone}</a>
-                            </div>
-                        ` : ''}
-                        ${lead.email ? `
-                            <div class="contact-item">
-                                <span class="contact-icon">📧</span>
-                                <a href="mailto:${lead.email}">${lead.email}</a>
-                            </div>
-                        ` : ''}
-                        ${lead.address ? `
-                            <div class="contact-item">
-                                <span class="contact-icon">📍</span>
-                                <span style="font-size:.85rem;opacity:.8">${lead.address}</span>
-                            </div>
-                        ` : ''}
+                        ${lead.phone ? `<div class="contact-item"><span class="contact-icon">📞</span><a href="tel:${lead.phone}">${lead.phone}</a></div>` : ''}
+                        ${lead.email ? `<div class="contact-item"><span class="contact-icon">📧</span><a href="mailto:${lead.email}">${lead.email}</a></div>` : ''}
+                        ${lead.address ? `<div class="contact-item"><span class="contact-icon">📍</span><span style="font-size:.85rem;opacity:.8">${lead.address}</span></div>` : ''}
                     </div>
                     
                     ${action.type === 'call' && lead.phone ? `
-                        <button class="primary-action" onclick="handlePrimaryAction()">
-                            📞 CALL NOW
-                        </button>
+                        <button class="primary-action" onclick="handlePrimaryAction()">📞 CALL NOW</button>
                     ` : action.type === 'email' && lead.email ? `
-                        <button class="primary-action" onclick="handlePrimaryAction()">
-                            ✉️ COMPOSE EMAIL
-                        </button>
+                        <button class="primary-action" onclick="handlePrimaryAction()">✉️ COMPOSE EMAIL</button>
                     ` : `
-                        <button class="primary-action" onclick="showOutcomePanel()">
-                            ✓ MARK AS DONE
-                        </button>
+                        <button class="primary-action" onclick="showOutcomePanel()">✓ MARK AS DONE</button>
                     `}
                     
                     <div class="secondary-actions">
@@ -386,45 +486,173 @@
                     <div class="outcome-panel" id="outcome-panel">
                         <div class="outcome-label">What happened?</div>
                         <div class="outcome-grid" id="outcome-grid"></div>
-                        <textarea class="notes-input" id="outcome-notes" placeholder="Notes (optional)..."></textarea>
-                        <button class="save-btn" onclick="saveOutcome()">Save & Continue</button>
+                        <textarea class="notes-input" id="outcome-notes" placeholder="Add notes about this interaction..."></textarea>
+                        <button class="save-btn" onclick="saveOutcome()">Save & Continue →</button>
                     </div>
                 </div>
             `;
             
-            renderQueue(priorityActions);
+            // Render up next
+            const upcoming = priorityActions.slice(currentIndex + 1, currentIndex + 6);
+            if (upcoming.length > 0) {
+                document.getElementById('up-next-section').style.display = 'block';
+                document.getElementById('queue-count').textContent = (priorityActions.length - currentIndex - 1) + ' more';
+                document.getElementById('queue-list').innerHTML = upcoming.map(a => {
+                    const l = leads.find(x => x.id === a.lead_id);
+                    if (!l) return '';
+                    const icon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[a.type] || '📋';
+                    const hot = l.stage === 'interested' || l.stage === 'meeting';
+                    return `
+                        <div class="queue-item" onclick="jumpToAction('${a.id}')">
+                            <div class="queue-title">${icon} ${l.company} ${hot ? '<span style="color:var(--calls)">🔥</span>' : ''}</div>
+                            <div class="queue-meta">${a.notes || 'Follow-up action'}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                document.getElementById('up-next-section').style.display = 'none';
+            }
         }
         
-        function renderQueue(priorityActions) {
-            const upcoming = priorityActions.slice(currentIndex + 1, currentIndex + 6);
-            const list = document.getElementById('queue-list');
-            const section = document.getElementById('up-next-section');
+        function renderQueueMode() {
+            const today = getToday();
+            const overdue = actions.filter(a => a.status === 'planned' && a.date < today);
+            const todayActions = actions.filter(a => a.status === 'planned' && a.date === today);
+            const weekActions = actions.filter(a => {
+                const actionDate = new Date(a.date);
+                const todayDate = new Date(today);
+                const daysDiff = Math.floor((actionDate - todayDate) / (1000 * 60 * 60 * 24));
+                return a.status === 'planned' && daysDiff > 0 && daysDiff <= 7;
+            });
+            const completedToday = actions.filter(a => a.status === 'completed' && a.completed_at && a.completed_at.startsWith(today));
             
-            if (upcoming.length === 0) {
-                section.style.display = 'none';
-                return;
+            // Overdue
+            if (overdue.length > 0) {
+                document.getElementById('overdue-section').style.display = 'block';
+                document.getElementById('overdue-badge').textContent = overdue.length;
+                document.getElementById('overdue-list').innerHTML = overdue.map(a => renderActionCard(a, true)).join('');
+            } else {
+                document.getElementById('overdue-section').style.display = 'none';
             }
             
-            section.style.display = 'block';
-            document.getElementById('queue-count').textContent = (priorityActions.length - currentIndex - 1) + ' more';
-            
-            list.innerHTML = upcoming.map(a => {
+            // Today - categorized
+            document.getElementById('today-badge').textContent = todayActions.length;
+            const hotLeads = todayActions.filter(a => {
                 const lead = leads.find(l => l.id === a.lead_id);
-                if (!lead) return '';
-                
-                const icon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[a.type] || '📋';
-                const isHot = lead.stage === 'interested' || lead.stage === 'meeting';
-                
-                return `
-                    <div class="queue-item" onclick="jumpToAction('${a.id}')">
-                        <div class="queue-title">
-                            ${icon} ${lead.company}
-                            ${isHot ? '<span style="color:var(--calls)">🔥</span>' : ''}
-                        </div>
-                        <div class="queue-meta">${a.notes || 'Follow-up'}</div>
+                return lead && (lead.stage === 'interested' || lead.stage === 'meeting');
+            });
+            const callbacks = todayActions.filter(a => 
+                a.notes && a.notes.toLowerCase().includes('callback')
+            ).filter(a => !hotLeads.includes(a));
+            const followUps = todayActions.filter(a => !hotLeads.includes(a) && !callbacks.includes(a));
+            
+            let todayHTML = '';
+            if (hotLeads.length > 0) {
+                todayHTML += `
+                    <div class="subsection">
+                        <div class="subsection-title">🔥 Hot Leads (${hotLeads.length}) - Call these first!</div>
+                        ${hotLeads.map(a => renderActionCard(a)).join('')}
                     </div>
                 `;
-            }).join('');
+            }
+            if (callbacks.length > 0) {
+                todayHTML += `
+                    <div class="subsection">
+                        <div class="subsection-title">⏰ Callbacks (${callbacks.length}) - They're expecting you</div>
+                        ${callbacks.map(a => renderActionCard(a)).join('')}
+                    </div>
+                `;
+            }
+            if (followUps.length > 0) {
+                todayHTML += `
+                    <div class="subsection">
+                        <div class="subsection-title">📧 Follow-ups (${followUps.length})</div>
+                        ${followUps.map(a => renderActionCard(a)).join('')}
+                    </div>
+                `;
+            }
+            if (todayActions.length === 0) {
+                todayHTML = '<div class="empty-state" style="padding:3rem 2rem"><div class="empty-icon">🎉</div><div class="empty-title">No actions scheduled for today</div><div class="empty-text">You\'re all caught up!</div></div>';
+            }
+            document.getElementById('today-list').innerHTML = todayHTML;
+            
+            // This Week
+            document.getElementById('week-badge').textContent = weekActions.length;
+            document.getElementById('week-list').innerHTML = weekActions.length > 0 
+                ? weekActions.map(a => renderActionCard(a)).join('')
+                : '<div class="empty-state" style="padding:3rem 2rem"><div class="empty-text">Nothing scheduled this week</div></div>';
+            
+            // Completed
+            if (completedToday.length > 0) {
+                document.getElementById('completed-section').style.display = 'block';
+                document.getElementById('completed-badge').textContent = completedToday.length;
+                document.getElementById('completed-list').innerHTML = completedToday.map(a => renderActionCard(a, false, true)).join('');
+            } else {
+                document.getElementById('completed-section').style.display = 'none';
+            }
+        }
+        
+        function renderActionCard(action, isOverdue = false, isCompleted = false) {
+            const lead = leads.find(l => l.id === action.lead_id);
+            if (!lead) return '';
+            
+            const icon = {call: '📞', email: '📧', follow_up: '🔄', meeting: '🤝'}[action.type] || '📋';
+            const today = getToday();
+            const daysDiff = Math.floor((new Date(today) - new Date(action.date)) / (1000 * 60 * 60 * 24));
+            
+            return `
+                <div class="action-card ${isOverdue ? 'overdue' : ''}" ${isCompleted ? 'style="opacity:.6"' : ''}>
+                    <div class="card-header">
+                        <div>
+                            <div class="card-lead">${lead.company}</div>
+                            <div class="card-meta">
+                                ${icon} ${action.type.charAt(0).toUpperCase() + action.type.slice(1)}
+                                ${isOverdue ? `<span style="color:var(--danger);font-weight:700">• ${daysDiff}d overdue</span>` : ''}
+                                ${action.notes ? `<span>• ${action.notes}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-contact">
+                        ${lead.phone ? `<a href="tel:${lead.phone}">📞 ${lead.phone}</a>` : ''}
+                        ${lead.email ? `<a href="mailto:${lead.email}">📧 ${lead.email}</a>` : ''}
+                    </div>
+                    ${!isCompleted ? `
+                        <div class="card-actions">
+                            ${action.type === 'call' && lead.phone ? `<button class="card-btn primary" onclick="quickCall('${action.id}', '${lead.phone}')">📞 Call</button>` : ''}
+                            ${action.type === 'email' && lead.email ? `<button class="card-btn primary" onclick="quickEmail('${action.id}', '${lead.email}', '${lead.contact || lead.company}')">✉️ Email</button>` : ''}
+                            <button class="card-btn success" onclick="quickComplete('${action.id}')">✓ Done</button>
+                            <button class="card-btn secondary" onclick="quickSkip('${action.id}')">Skip</button>
+                        </div>
+                    ` : '<div style="color:var(--success);font-size:.85rem;font-weight:600">✅ Completed</div>'}
+                </div>
+            `;
+        }
+        
+        function switchView(view) {
+            currentView = view;
+            if (view === 'focus') {
+                document.getElementById('focus-view').style.display = 'block';
+                document.getElementById('queue-view').style.display = 'none';
+                document.getElementById('focus-toggle').classList.add('active');
+                document.getElementById('queue-toggle').classList.remove('active');
+                renderFocusMode();
+            } else {
+                document.getElementById('focus-view').style.display = 'none';
+                document.getElementById('queue-view').style.display = 'block';
+                document.getElementById('focus-toggle').classList.remove('active');
+                document.getElementById('queue-toggle').classList.add('active');
+                renderQueueMode();
+            }
+        }
+        
+        function toggleWeek() {
+            document.getElementById('week-content').classList.toggle('open');
+            document.getElementById('week-arrow').classList.toggle('open');
+        }
+        
+        function toggleCompleted() {
+            document.getElementById('completed-content').classList.toggle('open');
+            document.getElementById('completed-arrow').classList.toggle('open');
         }
         
         function handlePrimaryAction() {
@@ -433,17 +661,15 @@
             const lead = leads.find(l => l.id === action.lead_id);
             
             if (action.type === 'call' && lead.phone) {
-                navigator.clipboard.writeText(lead.phone).then(() => {
-                    toast(`📋 ${lead.phone} copied!`);
-                });
+                navigator.clipboard.writeText(lead.phone).catch(() => {});
                 window.location.href = `tel:${lead.phone}`;
+                toast('📋 Number copied to clipboard!');
             } else if (action.type === 'email' && lead.email) {
-                const subject = encodeURIComponent(`Following up - SummitFlow`);
+                const subject = encodeURIComponent('Following up - SummitFlow');
                 const body = encodeURIComponent(`Hi ${lead.contact || 'there'},\n\n`);
                 window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${lead.email}&su=${subject}&body=${body}`, '_blank');
-                toast('✉️ Gmail opened');
+                toast('✉️ Gmail compose opened');
             }
-            
             setTimeout(() => showOutcomePanel(), 500);
         }
         
@@ -462,11 +688,11 @@
                 {value: 'callback', label: '⏰ Callback'},
                 {value: 'not_interested', label: '❌ Not Interested'},
                 {value: 'interested', label: '🔥 Interested!'},
-                {value: 'meeting', label: '🎉 Meeting!'}
+                {value: 'meeting', label: '🎉 Meeting Booked!'}
             ] : [
                 {value: 'sent', label: '✉️ Sent'},
                 {value: 'bounced', label: '⚠️ Bounced'},
-                {value: 'replied', label: '💬 Replied'}
+                {value: 'replied', label: '💬 They Replied!'}
             ];
             
             document.getElementById('outcome-grid').innerHTML = outcomes.map(o => 
@@ -474,22 +700,20 @@
             ).join('');
             
             panel.classList.add('active');
-            panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            setTimeout(() => panel.scrollIntoView({behavior: 'smooth', block: 'nearest'}), 100);
         }
         
         function selectOutcome(outcome) {
             selectedOutcome = outcome;
             document.querySelectorAll('.outcome-btn').forEach(btn => {
                 btn.classList.remove('selected');
-                if (btn.dataset.outcome === outcome) {
-                    btn.classList.add('selected');
-                }
+                if (btn.dataset.outcome === outcome) btn.classList.add('selected');
             });
         }
         
         async function saveOutcome() {
             if (!selectedOutcome) {
-                toast('⚠️ Select an outcome', 'error');
+                toast('⚠️ Please select an outcome', 'error');
                 return;
             }
             
@@ -498,28 +722,12 @@
             const notes = document.getElementById('outcome-notes').value;
             
             try {
-                await db.from('actions').update({
-                    status: 'completed',
-                    completed_at: new Date().toISOString()
-                }).eq('id', action.id);
-                
-                await db.from('activities').insert({
-                    lead_id: action.lead_id,
-                    type: action.type,
-                    outcome: selectedOutcome,
-                    notes: notes || action.notes || 'Completed'
-                });
-                
-                await db.from('leads').update({
-                    last_activity: new Date().toISOString(),
-                    last_activity_type: action.type,
-                    last_activity_outcome: selectedOutcome
-                }).eq('id', action.lead_id);
-                
+                await db.from('actions').update({status: 'completed', completed_at: new Date().toISOString()}).eq('id', action.id);
+                await db.from('activities').insert({lead_id: action.lead_id, type: action.type, outcome: selectedOutcome, notes: notes || 'Completed from actions page'});
+                await db.from('leads').update({last_activity: new Date().toISOString(), last_activity_type: action.type, last_activity_outcome: selectedOutcome}).eq('id', action.lead_id);
                 await createFollowUp(action.lead_id, selectedOutcome, action.type);
                 
                 action.status = 'completed';
-                
                 const {data} = await db.from('actions').select('*').order('date', {ascending: true});
                 actions = data || [];
                 
@@ -527,62 +735,37 @@
                 selectedOutcome = null;
                 document.getElementById('outcome-panel').classList.remove('active');
                 
-                toast('✅ Completed!');
+                toast('✅ Completed! Follow-up created');
                 currentIndex++;
-                renderCurrent();
+                renderAll();
             } catch(e) {
-                console.error(e);
-                toast('❌ Failed: ' + e.message, 'error');
+                console.error('Save error:', e);
+                toast('❌ Failed to save: ' + e.message, 'error');
             }
         }
         
         async function createFollowUp(leadId, outcome, type) {
             const today = new Date();
             const followUpDate = new Date(today);
-            let offset = 1;
-            let actionType = 'call';
-            let notes = '';
+            let offset = 1, actionType = 'call', notes = '';
             
             if (type === 'call') {
                 switch(outcome) {
-                    case 'no_answer':
-                        offset = 1;
-                        notes = 'Follow-up after no answer';
-                        break;
-                    case 'voicemail':
-                        offset = 2;
-                        notes = 'Follow-up after voicemail';
-                        break;
-                    case 'callback':
-                        offset = 1;
-                        notes = 'Callback as requested';
-                        break;
-                    case 'interested':
-                        offset = 1;
-                        notes = '🔥 HOT - Follow up immediately';
-                        break;
-                    case 'meeting':
-                        offset = 1;
-                        actionType = 'email';
-                        notes = 'Send meeting confirmation';
-                        break;
-                    default:
-                        return;
+                    case 'no_answer': offset = 1; notes = 'Follow-up call after no answer'; break;
+                    case 'voicemail': offset = 2; notes = 'Follow-up after voicemail'; break;
+                    case 'gatekeeper': offset = 2; notes = 'Callback after gatekeeper'; break;
+                    case 'callback': offset = 1; notes = 'Callback as requested'; break;
+                    case 'interested': offset = 1; notes = '🔥 HOT LEAD - Follow up immediately'; break;
+                    case 'meeting': offset = 1; actionType = 'email'; notes = 'Send meeting confirmation email'; break;
+                    default: return;
                 }
             } else {
                 offset = 3;
-                notes = 'Check if they saw email';
+                notes = 'Check if they received/read the email';
             }
             
             followUpDate.setDate(followUpDate.getDate() + offset);
-            
-            await db.from('actions').insert({
-                lead_id: leadId,
-                type: actionType,
-                date: followUpDate.toISOString().split('T')[0],
-                notes: notes,
-                status: 'planned'
-            });
+            await db.from('actions').insert({lead_id: leadId, type: actionType, date: followUpDate.toISOString().split('T')[0], notes, status: 'planned'});
         }
         
         async function skipAction() {
@@ -592,27 +775,22 @@
             try {
                 await db.from('actions').update({status: 'skipped'}).eq('id', action.id);
                 action.status = 'skipped';
-                
-                toast('⏭️ Skipped');
+                toast('⏭️ Action skipped');
                 currentIndex++;
-                renderCurrent();
+                renderAll();
             } catch(e) {
                 console.error(e);
-                toast('❌ Failed', 'error');
+                toast('❌ Failed to skip', 'error');
             }
         }
         
         function rescheduleAction() {
             const choice = prompt('Reschedule to:\n1. Tomorrow\n2. In 2 Days\n3. Next Week\n\nEnter 1, 2, or 3:');
-            
             if (!choice || choice < 1 || choice > 3) return;
             
-            const today = new Date();
-            const dates = [1, 2, 7];
-            const offset = dates[choice - 1];
-            const newDate = new Date(today);
+            const offset = [1, 2, 7][choice - 1];
+            const newDate = new Date();
             newDate.setDate(newDate.getDate() + offset);
-            
             quickReschedule(newDate.toISOString().split('T')[0]);
         }
         
@@ -623,15 +801,13 @@
             try {
                 await db.from('actions').update({date: newDate}).eq('id', action.id);
                 action.date = newDate;
-                
                 const {data} = await db.from('actions').select('*').order('date', {ascending: true});
                 actions = data || [];
-                
-                toast('⏰ Rescheduled');
-                renderCurrent();
+                toast('⏰ Rescheduled to ' + formatDate(newDate));
+                renderAll();
             } catch(e) {
                 console.error(e);
-                toast('❌ Failed', 'error');
+                toast('❌ Failed to reschedule', 'error');
             }
         }
         
@@ -640,25 +816,74 @@
             const index = priorityActions.findIndex(a => a.id === actionId);
             if (index !== -1) {
                 currentIndex = index;
-                renderCurrent();
+                renderFocusMode();
                 window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        }
+        
+        async function quickCall(actionId, phone) {
+            navigator.clipboard.writeText(phone).catch(() => {});
+            window.location.href = `tel:${phone}`;
+            toast('📋 ' + phone + ' copied!');
+        }
+        
+        async function quickEmail(actionId, email, name) {
+            const subject = encodeURIComponent('Following up - SummitFlow');
+            const body = encodeURIComponent(`Hi ${name},\n\n`);
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`, '_blank');
+            toast('✉️ Gmail opened');
+        }
+        
+        async function quickComplete(actionId) {
+            if (!confirm('Mark as complete without outcome tracking?')) return;
+            
+            try {
+                await db.from('actions').update({status: 'completed', completed_at: new Date().toISOString()}).eq('id', actionId);
+                const action = actions.find(a => a.id === actionId);
+                if (action) action.status = 'completed';
+                
+                const {data} = await db.from('actions').select('*').order('date', {ascending: true});
+                actions = data || [];
+                
+                toast('✅ Action completed');
+                renderAll();
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
+            }
+        }
+        
+        async function quickSkip(actionId) {
+            try {
+                await db.from('actions').update({status: 'skipped'}).eq('id', actionId);
+                const action = actions.find(a => a.id === actionId);
+                if (action) action.status = 'skipped';
+                toast('⏭️ Skipped');
+                renderAll();
+            } catch(e) {
+                console.error(e);
+                toast('❌ Failed', 'error');
             }
         }
         
         function setupKeyboard() {
             document.addEventListener('keydown', (e) => {
                 if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+                if (currentView !== 'focus') return;
                 
                 if (e.code === 'Space') {
                     e.preventDefault();
                     handlePrimaryAction();
                 } else if (e.key === 'd' || e.key === 'D') {
+                    e.preventDefault();
                     showOutcomePanel();
                 } else if (e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
                     skipAction();
                 } else if (e.key === 'n' || e.key === 'N') {
+                    e.preventDefault();
                     currentIndex++;
-                    renderCurrent();
+                    renderAll();
                 }
             });
         }
@@ -667,22 +892,21 @@
             const date = new Date(dateStr);
             const today = new Date();
             const daysDiff = Math.floor((today - date) / (1000 * 60 * 60 * 24));
-            
-            if (daysDiff === 0) return 'Today';
-            if (daysDiff === 1) return 'Yesterday';
+            if (daysDiff === 0) return 'today';
+            if (daysDiff === 1) return 'yesterday';
             if (daysDiff < 7) return daysDiff + ' days ago';
-            
             return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
         }
         
         function formatOutcome(outcome) {
             const map = {
-                no_answer: 'No Answer',
-                voicemail: 'Voicemail',
-                callback: 'Callback',
-                interested: 'Interested',
-                meeting: 'Meeting',
-                not_interested: 'Not Interested'
+                no_answer: 'No Answer', 
+                voicemail: 'Voicemail', 
+                callback: 'Callback Requested', 
+                interested: 'Interested', 
+                meeting: 'Meeting Booked', 
+                not_interested: 'Not Interested',
+                gatekeeper: 'Gatekeeper'
             };
             return map[outcome] || outcome;
         }
